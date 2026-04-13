@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A&amp;C Lead Manager</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <h1>A&amp;C Lead Manager</h1>
+      <p class="tagline">Leads, reminders, appointments &amp; proposals — all in one place</p>
+    </div>
+    <div class="company-switch" role="tablist" aria-label="Company">
+      <button class="company-btn active" data-company="all" role="tab">All</button>
+      <button class="company-btn construction" data-company="construction" role="tab">A&amp;C Construction</button>
+      <button class="company-btn cleaning" data-company="cleaning" role="tab">A&amp;C Cleaning</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="stats">
+      <div class="stat-card">
+        <span class="stat-label">Total Leads</span>
+        <span class="stat-value" id="stat-total">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">New</span>
+        <span class="stat-value" id="stat-new">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Contacted</span>
+        <span class="stat-value" id="stat-contacted">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Proposal Sent</span>
+        <span class="stat-value" id="stat-proposal">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Won</span>
+        <span class="stat-value" id="stat-won">0</span>
+      </div>
+      <div class="stat-card highlight">
+        <span class="stat-label">Due Reminders</span>
+        <span class="stat-value" id="stat-due">0</span>
+      </div>
+    </section>
+
+    <section class="toolbar">
+      <input type="text" id="search" placeholder="Search by name, phone, address, email..." />
+      <select id="filter-status">
+        <option value="all">All Statuses</option>
+        <option value="new">New</option>
+        <option value="contacted">Contacted</option>
+        <option value="appointment">Appointment Set</option>
+        <option value="proposal">Proposal Sent</option>
+        <option value="won">Won</option>
+        <option value="lost">Lost</option>
+      </select>
+      <button id="add-lead-btn" class="primary">+ New Lead</button>
+      <button id="export-btn" class="secondary">Export</button>
+      <button id="import-btn" class="secondary">Import</button>
+      <input type="file" id="import-file" accept="application/json" hidden />
+    </section>
+
+    <section class="reminders-panel" id="reminders-panel">
+      <h2>Upcoming &amp; Due Reminders</h2>
+      <ul id="reminders-list" class="reminders-list"></ul>
+    </section>
+
+    <section class="leads-section">
+      <h2>Leads</h2>
+      <div id="leads-grid" class="leads-grid"></div>
+      <p id="empty-state" class="empty-state">No leads yet. Click <strong>+ New Lead</strong> to add one.</p>
+    </section>
+  </main>
+
+  <!-- Lead Modal -->
+  <div class="modal-backdrop" id="lead-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <header class="modal-header">
+        <h2 id="modal-title">New Lead</h2>
+        <button class="icon-btn" id="close-modal" aria-label="Close">&times;</button>
+      </header>
+      <form id="lead-form" class="modal-body">
+        <input type="hidden" id="lead-id" />
+
+        <div class="form-row">
+          <label>
+            Company
+            <select id="lead-company" required>
+              <option value="construction">A&amp;C Construction</option>
+              <option value="cleaning">A&amp;C Cleaning</option>
+            </select>
+          </label>
+          <label>
+            Status
+            <select id="lead-status">
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="appointment">Appointment Set</option>
+              <option value="proposal">Proposal Sent</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            Full Name *
+            <input type="text" id="lead-name" required />
+          </label>
+          <label>
+            Phone
+            <input type="tel" id="lead-phone" placeholder="(555) 555-5555" />
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            Email
+            <input type="email" id="lead-email" />
+          </label>
+          <label>
+            Source
+            <input type="text" id="lead-source" placeholder="Referral, Google, Yelp..." />
+          </label>
+        </div>
+
+        <label>
+          Service Address
+          <input type="text" id="lead-address" />
+        </label>
+
+        <label>
+          Job / Service Requested
+          <input type="text" id="lead-service" placeholder="Kitchen remodel, deep clean, ..." />
+        </label>
+
+        <label>
+          Estimated Value ($)
+          <input type="number" id="lead-value" min="0" step="0.01" />
+        </label>
+
+        <label>
+          Notes
+          <textarea id="lead-notes" rows="3" placeholder="Anything helpful to remember..."></textarea>
+        </label>
+
+        <fieldset class="reminder-block">
+          <legend>Reminder</legend>
+          <div class="form-row">
+            <label>
+              Type
+              <select id="reminder-type">
+                <option value="none">None</option>
+                <option value="call">Call</option>
+                <option value="text">Text</option>
+                <option value="appointment">Appointment</option>
+                <option value="proposal">Send Proposal</option>
+                <option value="followup">Follow-up</option>
+              </select>
+            </label>
+            <label>
+              Date &amp; Time
+              <input type="datetime-local" id="reminder-when" />
+            </label>
+          </div>
+          <label>
+            Reminder Note
+            <input type="text" id="reminder-note" placeholder="Optional - what to say / discuss" />
+          </label>
+        </fieldset>
+
+        <footer class="modal-footer">
+          <button type="button" id="delete-lead" class="danger" hidden>Delete Lead</button>
+          <span class="spacer"></span>
+          <button type="button" id="cancel-lead" class="secondary">Cancel</button>
+          <button type="submit" class="primary">Save Lead</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <!-- Proposal Modal -->
+  <div class="modal-backdrop" id="proposal-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="proposal-title">
+      <header class="modal-header">
+        <h2 id="proposal-title">Create Proposal</h2>
+        <button class="icon-btn" id="close-proposal" aria-label="Close">&times;</button>
+      </header>
+      <form id="proposal-form" class="modal-body">
+        <input type="hidden" id="proposal-lead-id" />
+        <label>
+          Scope of Work
+          <textarea id="proposal-scope" rows="5" required placeholder="Describe what will be done..."></textarea>
+        </label>
+        <div class="form-row">
+          <label>
+            Price ($)
+            <input type="number" id="proposal-price" min="0" step="0.01" required />
+          </label>
+          <label>
+            Estimated Start
+            <input type="date" id="proposal-start" />
+          </label>
+        </div>
+        <label>
+          Terms / Notes
+          <textarea id="proposal-terms" rows="3" placeholder="Payment terms, warranty, exclusions..."></textarea>
+        </label>
+        <footer class="modal-footer">
+          <span class="spacer"></span>
+          <button type="button" id="cancel-proposal" class="secondary">Cancel</button>
+          <button type="submit" class="primary">Generate &amp; Send</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
