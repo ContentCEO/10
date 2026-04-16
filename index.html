@@ -69,6 +69,59 @@
       <ul id="reminders-list" class="reminders-list"></ul>
     </section>
 
+    <section class="finder-section" id="finder-section">
+      <div class="finder-header">
+        <h2>Lead Finder &mdash; Remodeling Jobs Near You</h2>
+        <span class="finder-status" id="finder-status">Idle</span>
+      </div>
+      <p class="finder-disclaimer">
+        Pulls public Craigslist RSS feeds for labor gigs and household services
+        wanted in your area. Posts older than the max age are filtered out.
+        Phone numbers are extracted from the post text when the poster included one.
+        Many posts only expose an anonymous email relay &mdash; in that case, click
+        the post link to reply.
+      </p>
+
+      <div class="finder-config">
+        <label>
+          Craigslist Region
+          <input type="text" id="finder-region" value="boston" />
+          <small>e.g. boston, nh, sfbay, newyork</small>
+        </label>
+        <label>
+          ZIP Code
+          <input type="text" id="finder-zip" value="01742" maxlength="5" />
+        </label>
+        <label>
+          Radius (miles)
+          <input type="number" id="finder-radius" value="20" min="1" max="100" />
+        </label>
+        <label>
+          Max Age (days)
+          <input type="number" id="finder-max-age" value="30" min="1" max="180" />
+        </label>
+        <label>
+          Scan Every (minutes)
+          <input type="number" id="finder-interval" value="15" min="5" max="240" />
+        </label>
+        <label class="finder-keywords">
+          Keywords (comma-separated)
+          <input type="text" id="finder-keywords" value="remodel, kitchen remodel, bathroom remodel, renovation, addition, basement finish, deck, flooring, tile, drywall, framing, siding, roofing, general contractor, handyman, carpenter" />
+        </label>
+      </div>
+
+      <div class="finder-controls">
+        <button id="finder-scan-now" class="primary">Scan Now</button>
+        <button id="finder-toggle" class="secondary">Start Continuous Scan</button>
+        <button id="finder-clear" class="secondary">Clear Results</button>
+        <span class="finder-meta" id="finder-meta"></span>
+      </div>
+
+      <div class="finder-results" id="finder-results">
+        <p class="empty-state">No findings yet. Click <strong>Scan Now</strong> to search.</p>
+      </div>
+    </section>
+
     <section class="leads-section">
       <h2>Leads</h2>
       <div id="leads-grid" class="leads-grid"></div>

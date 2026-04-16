@@ -2,6 +2,16 @@
 // State is persisted in localStorage. No backend required.
 
 const STORAGE_KEY = 'ac-lead-manager-v1';
+const FINDER_KEY = 'ac-lead-finder-v1';
+// Public CORS proxy. Craigslist blocks cross-origin fetches from browsers, so
+// we relay through allorigins. If it goes down, the scan will surface an error
+// and the user can change this to another proxy or host their own.
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+// Craigslist categories worth pinging for a remodeling contractor:
+//   lbg = labor gigs (homeowners posting work they need done)
+//   ggg = all gigs (fallback / catches cross-posts)
+const FINDER_CATEGORIES = ['lbg', 'ggg'];
+const PHONE_REGEX = /(?:\+?1[\s.-]?)?\(?\b[2-9]\d{2}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g;
 const COMPANY_LABELS = {
   construction: 'A&C Construction',
   cleaning: 'A&C Cleaning',
@@ -25,6 +35,25 @@ let state = {
   notifiedReminders: new Set(),
 };
 
+let finder = {
+  config: {
+    region: 'boston',
+    zip: '01742',
+    radius: 20,
+    maxAgeDays: 30,
+    intervalMinutes: 15,
+    keywords: 'remodel, kitchen remodel, bathroom remodel, renovation, addition, basement finish, deck, flooring, tile, drywall, framing, siding, roofing, general contractor, handyman, carpenter',
+  },
+  findings: [],
+  seenLinks: new Set(),
+  importedLinks: new Set(),
+  lastScanAt: null,
+  nextScanAt: null,
+  running: false,
+  timerId: null,
+  scanning: false,
+};
+
 // ---------- Persistence ----------
 function loadState() {
   try {
@@ -46,6 +75,32 @@ function saveState() {
     notifiedReminders: Array.from(state.notifiedReminders),
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}
+
+function loadFinder() {
+  try {
+    const raw = localStorage.getItem(FINDER_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed.config) finder.config = { ...finder.config, ...parsed.config };
+    if (Array.isArray(parsed.findings)) finder.findings = parsed.findings;
+    if (Array.isArray(parsed.seenLinks)) finder.seenLinks = new Set(parsed.seenLinks);
+    if (Array.isArray(parsed.importedLinks)) finder.importedLinks = new Set(parsed.importedLinks);
+    if (parsed.lastScanAt) finder.lastScanAt = parsed.lastScanAt;
+  } catch (e) {
+    console.warn('Failed to load finder state', e);
+  }
+}
+
+function saveFinder() {
+  const payload = {
+    config: finder.config,
+    findings: finder.findings.slice(0, 500),
+    seenLinks: Array.from(finder.seenLinks).slice(-2000),
+    importedLinks: Array.from(finder.importedLinks).slice(-2000),
+    lastScanAt: finder.lastScanAt,
+  };
+  localStorage.setItem(FINDER_KEY, JSON.stringify(payload));
 }
 
 // ---------- Utilities ----------
@@ -499,6 +554,284 @@ function importData(file) {
   reader.readAsText(file);
 }
 
+// ---------- Lead Finder (Scraper) ----------
+function buildFeedUrl(region, category, query, zip, radiusMiles) {
+  const params = new URLSearchParams({
+    format: 'rss',
+    query: query,
+    postal: zip,
+    search_distance: String(radiusMiles),
+  });
+  return `https://${region}.craigslist.org/search/${category}?${params.toString()}`;
+}
+
+async function fetchViaProxy(url) {
+  const proxied = CORS_PROXY + encodeURIComponent(url);
+  const resp = await fetch(proxied, { cache: 'no-store' });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.text();
+}
+
+function parseRSS(xmlText) {
+  const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  const err = doc.querySelector('parsererror');
+  if (err) throw new Error('Feed parse error');
+  // Craigslist uses RDF/RSS 1.0 with <item> elements.
+  const items = Array.from(doc.getElementsByTagName('item'));
+  const findChild = (parent, localName) => {
+    for (const child of parent.children) {
+      if (child.localName === localName || child.nodeName === localName) {
+        return child;
+      }
+    }
+    return null;
+  };
+  const getText = (parent, localName) => {
+    const el = findChild(parent, localName);
+    return el ? (el.textContent || '').trim() : '';
+  };
+  return items.map((item) => ({
+    title: getText(item, 'title'),
+    link: getText(item, 'link'),
+    description: getText(item, 'description'),
+    pubDate: getText(item, 'date') || getText(item, 'pubDate'),
+  }));
+}
+
+function stripHtml(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html || '';
+  return (div.textContent || div.innerText || '').trim();
+}
+
+function extractPhone(text) {
+  if (!text) return '';
+  const matches = text.match(PHONE_REGEX);
+  return matches ? matches[0].trim() : '';
+}
+
+function parseKeywords(raw) {
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function readFinderConfigFromUI() {
+  finder.config = {
+    region: document.getElementById('finder-region').value.trim() || 'boston',
+    zip: document.getElementById('finder-zip').value.trim() || '01742',
+    radius: Math.max(1, parseInt(document.getElementById('finder-radius').value, 10) || 20),
+    maxAgeDays: Math.max(1, parseInt(document.getElementById('finder-max-age').value, 10) || 30),
+    intervalMinutes: Math.max(5, parseInt(document.getElementById('finder-interval').value, 10) || 15),
+    keywords: document.getElementById('finder-keywords').value,
+  };
+  saveFinder();
+}
+
+function applyFinderConfigToUI() {
+  document.getElementById('finder-region').value = finder.config.region;
+  document.getElementById('finder-zip').value = finder.config.zip;
+  document.getElementById('finder-radius').value = finder.config.radius;
+  document.getElementById('finder-max-age').value = finder.config.maxAgeDays;
+  document.getElementById('finder-interval').value = finder.config.intervalMinutes;
+  document.getElementById('finder-keywords').value = finder.config.keywords;
+}
+
+async function runScan() {
+  if (finder.scanning) return;
+  finder.scanning = true;
+  setFinderStatus('Scanning...');
+
+  readFinderConfigFromUI();
+  const keywords = parseKeywords(finder.config.keywords);
+  const cutoff = Date.now() - finder.config.maxAgeDays * 86400000;
+
+  const feedUrls = [];
+  for (const kw of keywords) {
+    for (const cat of FINDER_CATEGORIES) {
+      feedUrls.push(buildFeedUrl(finder.config.region, cat, kw, finder.config.zip, finder.config.radius));
+    }
+  }
+
+  let newCount = 0;
+  let errorCount = 0;
+  const startedAt = Date.now();
+
+  for (const url of feedUrls) {
+    try {
+      const xml = await fetchViaProxy(url);
+      const items = parseRSS(xml);
+      for (const item of items) {
+        if (!item.link || finder.seenLinks.has(item.link)) continue;
+        const pubMs = item.pubDate ? new Date(item.pubDate).getTime() : NaN;
+        if (Number.isFinite(pubMs) && pubMs < cutoff) continue;
+        const text = stripHtml(item.description);
+        const phone = extractPhone(item.title + ' ' + text);
+        const finding = {
+          id: 'f_' + Math.random().toString(36).slice(2, 10),
+          title: item.title || '(no title)',
+          link: item.link,
+          summary: text.slice(0, 400),
+          phone,
+          pubDate: item.pubDate || '',
+          foundAt: new Date().toISOString(),
+          source: `craigslist/${finder.config.region}`,
+        };
+        finder.seenLinks.add(item.link);
+        finder.findings.unshift(finding);
+        newCount += 1;
+      }
+    } catch (e) {
+      errorCount += 1;
+      console.warn('Scan fetch failed for', url, e);
+    }
+    // Gentle throttle between feed hits so we don't hammer the proxy.
+    await new Promise((r) => setTimeout(r, 400));
+  }
+
+  finder.findings = finder.findings.slice(0, 500);
+  finder.lastScanAt = new Date().toISOString();
+  saveFinder();
+  renderFinder();
+
+  const secs = Math.round((Date.now() - startedAt) / 1000);
+  const msg = errorCount
+    ? `Scan done in ${secs}s — ${newCount} new, ${errorCount} feed errors`
+    : `Scan done in ${secs}s — ${newCount} new findings`;
+  setFinderStatus(finder.running ? `Running — ${msg}` : `Idle — ${msg}`);
+  showToast(msg, errorCount ? 'error' : 'success');
+  finder.scanning = false;
+}
+
+function startContinuousScan() {
+  if (finder.running) return;
+  readFinderConfigFromUI();
+  finder.running = true;
+  document.getElementById('finder-toggle').textContent = 'Stop Continuous Scan';
+  const intervalMs = finder.config.intervalMinutes * 60 * 1000;
+  const tick = () => {
+    runScan();
+    finder.nextScanAt = new Date(Date.now() + intervalMs).toISOString();
+    renderFinderMeta();
+  };
+  tick();
+  finder.timerId = setInterval(tick, intervalMs);
+  finder.nextScanAt = new Date(Date.now() + intervalMs).toISOString();
+  renderFinderMeta();
+}
+
+function stopContinuousScan() {
+  finder.running = false;
+  if (finder.timerId) {
+    clearInterval(finder.timerId);
+    finder.timerId = null;
+  }
+  finder.nextScanAt = null;
+  document.getElementById('finder-toggle').textContent = 'Start Continuous Scan';
+  setFinderStatus('Idle');
+  renderFinderMeta();
+}
+
+function setFinderStatus(text) {
+  const el = document.getElementById('finder-status');
+  if (el) el.textContent = text;
+}
+
+function renderFinderMeta() {
+  const el = document.getElementById('finder-meta');
+  if (!el) return;
+  const parts = [];
+  if (finder.lastScanAt) parts.push(`Last scan: ${formatDateTime(finder.lastScanAt)}`);
+  if (finder.running && finder.nextScanAt) parts.push(`Next scan: ${formatDateTime(finder.nextScanAt)}`);
+  parts.push(`${finder.findings.length} findings stored`);
+  el.textContent = parts.join(' · ');
+}
+
+function renderFinder() {
+  const container = document.getElementById('finder-results');
+  if (!container) return;
+  renderFinderMeta();
+
+  if (finder.findings.length === 0) {
+    container.innerHTML = '<p class="empty-state">No findings yet. Click <strong>Scan Now</strong> to search.</p>';
+    return;
+  }
+
+  container.innerHTML = '';
+  for (const f of finder.findings.slice(0, 200)) {
+    const card = document.createElement('div');
+    card.className = 'finding-card' + (finder.importedLinks.has(f.link) ? ' imported' : '');
+    const phoneHtml = f.phone
+      ? `<a class="finding-phone" href="tel:${encodeURIComponent(f.phone)}">&#128222; ${escapeHtml(f.phone)}</a>`
+      : '<span class="finding-nophone">No phone in post — use Craigslist reply link</span>';
+    const dateHtml = f.pubDate
+      ? `<span class="finding-date">${formatDateTime(f.pubDate)}</span>`
+      : '';
+    card.innerHTML = `
+      <div class="finding-head">
+        <a class="finding-title" href="${escapeHtml(f.link)}" target="_blank" rel="noopener">${escapeHtml(f.title)}</a>
+        ${dateHtml}
+      </div>
+      <div class="finding-body">${escapeHtml(f.summary)}</div>
+      <div class="finding-foot">
+        ${phoneHtml}
+        <span class="finding-source">${escapeHtml(f.source)}</span>
+        <span class="spacer"></span>
+        <button class="secondary" data-action="import-construction" data-id="${f.id}">
+          ${finder.importedLinks.has(f.link) ? 'Imported ✓' : '+ Add as Construction Lead'}
+        </button>
+        <button class="secondary" data-action="dismiss" data-id="${f.id}">Dismiss</button>
+      </div>
+    `;
+    container.appendChild(card);
+  }
+}
+
+function importFindingAsLead(findingId) {
+  const f = finder.findings.find((x) => x.id === findingId);
+  if (!f) return;
+  if (finder.importedLinks.has(f.link)) {
+    showToast('Already imported', 'error');
+    return;
+  }
+  const lead = {
+    id: uid(),
+    createdAt: Date.now(),
+    company: 'construction',
+    status: 'new',
+    name: f.title.slice(0, 80),
+    phone: f.phone || '',
+    email: '',
+    source: f.source,
+    address: '',
+    service: f.title,
+    value: null,
+    notes: `${f.summary}\n\nSource: ${f.link}\nPosted: ${f.pubDate || 'unknown'}`,
+    reminder: { type: 'call', when: null, note: 'Follow up on Craigslist lead' },
+  };
+  state.leads.push(lead);
+  finder.importedLinks.add(f.link);
+  saveState();
+  saveFinder();
+  render();
+  renderFinder();
+  showToast('Imported as new construction lead', 'success');
+}
+
+function dismissFinding(findingId) {
+  finder.findings = finder.findings.filter((x) => x.id !== findingId);
+  saveFinder();
+  renderFinder();
+}
+
+function clearFindings() {
+  if (!confirm('Clear all current findings? (Seen-post history is kept so dedup still works.)')) return;
+  finder.findings = [];
+  saveFinder();
+  renderFinder();
+}
+
 // ---------- Events ----------
 function initEvents() {
   // Company tabs
@@ -606,18 +939,44 @@ function initEvents() {
       closeProposalModal();
     }
   });
+
+  // Lead Finder
+  document.getElementById('finder-scan-now').addEventListener('click', () => {
+    runScan();
+  });
+  document.getElementById('finder-toggle').addEventListener('click', () => {
+    if (finder.running) stopContinuousScan();
+    else startContinuousScan();
+  });
+  document.getElementById('finder-clear').addEventListener('click', clearFindings);
+  document.getElementById('finder-results').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (btn.dataset.action === 'import-construction') importFindingAsLead(id);
+    if (btn.dataset.action === 'dismiss') dismissFinding(id);
+  });
+  // Persist config on change so it survives a reload.
+  ['finder-region', 'finder-zip', 'finder-radius', 'finder-max-age', 'finder-interval', 'finder-keywords']
+    .forEach((id) => {
+      document.getElementById(id).addEventListener('change', readFinderConfigFromUI);
+    });
 }
 
 // ---------- Init ----------
 function init() {
   loadState();
+  loadFinder();
   initEvents();
+  applyFinderConfigToUI();
   render();
+  renderFinder();
   requestNotificationsIfNeeded();
   checkReminders();
   setInterval(() => {
     checkReminders();
     render();
+    renderFinderMeta();
   }, 60000);
 }
 
