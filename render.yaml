@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: ac-lead-finder
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: node server/index.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATA_DIR
+        value: /var/data
+      - key: API_TOKEN
+        generateValue: true
+      - key: GOOGLE_PLACES_API_KEY
+        sync: false
+      - key: FINDER_REGION
+        value: boston
+      - key: FINDER_ZIP
+        value: "01742"
+      - key: FINDER_RADIUS
+        value: "20"
+      - key: FINDER_MAX_AGE_DAYS
+        value: "30"
+      - key: FINDER_INTERVAL_MINUTES
+        value: "15"
+      - key: FINDER_LAT
+        value: "42.4604"
+      - key: FINDER_LNG
+        value: "-71.3489"
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1

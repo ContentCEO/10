@@ -545,3 +545,74 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-dim);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+/* ----- Lead Finder — Backend & Permits ----- */
+.finder-backend, .finder-permits {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  padding: 10px 14px;
+}
+.finder-backend summary, .finder-permits summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  list-style: none;
+  padding: 4px 0;
+}
+.finder-backend summary::before, .finder-permits summary::before {
+  content: '▸ ';
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-right: 4px;
+}
+.finder-backend[open] summary::before, .finder-permits[open] summary::before {
+  content: '▾ ';
+}
+.finder-backend-body, .finder-permits-body {
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.finder-backend-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.permit-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.permit-link {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 12px;
+}
+.permit-link:hover {
+  background: var(--surface);
+  border-color: var(--primary);
+}
+.permit-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex: 1;
+}

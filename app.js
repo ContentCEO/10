@@ -52,6 +52,11 @@ let finder = {
   running: false,
   timerId: null,
   scanning: false,
+  backend: {
+    url: '',
+    token: '',
+    connected: false,
+  },
 };
 
 // ---------- Persistence ----------
@@ -87,6 +92,7 @@ function loadFinder() {
     if (Array.isArray(parsed.seenLinks)) finder.seenLinks = new Set(parsed.seenLinks);
     if (Array.isArray(parsed.importedLinks)) finder.importedLinks = new Set(parsed.importedLinks);
     if (parsed.lastScanAt) finder.lastScanAt = parsed.lastScanAt;
+    if (parsed.backend) finder.backend = { ...finder.backend, ...parsed.backend, connected: false };
   } catch (e) {
     console.warn('Failed to load finder state', e);
   }
@@ -99,6 +105,7 @@ function saveFinder() {
     seenLinks: Array.from(finder.seenLinks).slice(-2000),
     importedLinks: Array.from(finder.importedLinks).slice(-2000),
     lastScanAt: finder.lastScanAt,
+    backend: { url: finder.backend.url, token: finder.backend.token },
   };
   localStorage.setItem(FINDER_KEY, JSON.stringify(payload));
 }
@@ -808,7 +815,7 @@ function importFindingAsLead(findingId) {
     service: f.title,
     value: null,
     notes: `${f.summary}\n\nSource: ${f.link}\nPosted: ${f.pubDate || 'unknown'}`,
-    reminder: { type: 'call', when: null, note: 'Follow up on Craigslist lead' },
+    reminder: { type: 'call', when: null, note: 'Follow up on scraped lead' },
   };
   state.leads.push(lead);
   finder.importedLinks.add(f.link);
@@ -817,12 +824,25 @@ function importFindingAsLead(findingId) {
   render();
   renderFinder();
   showToast('Imported as new construction lead', 'success');
+  // If this finding came from the backend, tell the server it's claimed so it
+  // stops appearing in future syncs.
+  if (f.serverId && backendConfigured() && finder.backend.connected) {
+    backendRequest(`/api/findings/${f.serverId}/import`, {
+      method: 'POST',
+      body: JSON.stringify({ company: 'construction' }),
+    }).catch((e) => console.warn('backend import notify failed:', e));
+  }
 }
 
 function dismissFinding(findingId) {
+  const f = finder.findings.find((x) => x.id === findingId);
   finder.findings = finder.findings.filter((x) => x.id !== findingId);
   saveFinder();
   renderFinder();
+  if (f && f.serverId && backendConfigured() && finder.backend.connected) {
+    backendRequest(`/api/findings/${f.serverId}/dismiss`, { method: 'POST' })
+      .catch((e) => console.warn('backend dismiss notify failed:', e));
+  }
 }
 
 function clearFindings() {
@@ -830,6 +850,247 @@ function clearFindings() {
   finder.findings = [];
   saveFinder();
   renderFinder();
+}
+
+// ---------- Backend Client ----------
+function backendConfigured() {
+  return Boolean(finder.backend.url);
+}
+
+function backendHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (finder.backend.token) h.Authorization = 'Bearer ' + finder.backend.token;
+  return h;
+}
+
+async function backendRequest(pathname, options = {}) {
+  if (!backendConfigured()) throw new Error('Backend URL not set');
+  const url = finder.backend.url.replace(/\/+$/, '') + pathname;
+  const resp = await fetch(url, {
+    ...options,
+    headers: { ...backendHeaders(), ...(options.headers || {}) },
+  });
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => '');
+    throw new Error(`HTTP ${resp.status}: ${text.slice(0, 200)}`);
+  }
+  const ct = resp.headers.get('content-type') || '';
+  return ct.includes('application/json') ? await resp.json() : await resp.text();
+}
+
+async function backendTest() {
+  readBackendConfigFromUI();
+  setBackendMeta('Testing...');
+  try {
+    const health = await backendRequest('/api/health');
+    finder.backend.connected = true;
+    saveFinder();
+    updateBackendUI();
+    const parts = [
+      'Connected',
+      health.googlePlacesConfigured ? 'Places: on' : 'Places: OFF (no key)',
+      health.authRequired ? 'Auth: required' : 'Auth: open',
+    ];
+    setBackendMeta(parts.join(' · '));
+    showToast('Backend connected', 'success');
+  } catch (e) {
+    finder.backend.connected = false;
+    updateBackendUI();
+    setBackendMeta('Connection failed: ' + e.message);
+    showToast('Backend connection failed', 'error');
+  }
+}
+
+async function backendSync() {
+  if (!backendConfigured()) return;
+  setBackendMeta('Syncing...');
+  try {
+    const data = await backendRequest('/api/findings?limit=500');
+    let added = 0;
+    for (const f of data.findings || []) {
+      if (finder.seenLinks.has(f.link)) continue;
+      finder.findings.unshift({
+        id: 'srv_' + f.id,
+        title: f.title,
+        link: f.link,
+        summary: f.summary,
+        phone: f.phone,
+        pubDate: f.pubDate,
+        foundAt: f.foundAt,
+        source: f.source,
+        serverId: f.id,
+      });
+      finder.seenLinks.add(f.link);
+      added += 1;
+    }
+    finder.findings = finder.findings.slice(0, 500);
+    finder.lastScanAt = new Date().toISOString();
+    saveFinder();
+    renderFinder();
+    setBackendMeta(`Sync done — ${added} new · server has ${(data.findings || []).length} findings`);
+    showToast(`Synced ${added} new findings`, 'success');
+  } catch (e) {
+    setBackendMeta('Sync failed: ' + e.message);
+    showToast('Sync failed: ' + e.message, 'error');
+  }
+}
+
+async function backendTriggerScan(withPlaces) {
+  if (!backendConfigured()) return;
+  const label = withPlaces ? 'Triggering scan + Places...' : 'Triggering scan...';
+  setBackendMeta(label);
+  try {
+    await backendRequest('/api/scan/trigger?places=' + (withPlaces ? 'true' : 'false'), { method: 'POST' });
+    setBackendMeta('Scan running on server — click Sync in ~30s');
+    showToast('Server scan triggered', 'success');
+  } catch (e) {
+    setBackendMeta('Trigger failed: ' + e.message);
+    showToast('Trigger failed', 'error');
+  }
+}
+
+function readBackendConfigFromUI() {
+  finder.backend.url = document.getElementById('backend-url').value.trim();
+  finder.backend.token = document.getElementById('backend-token').value.trim();
+  saveFinder();
+}
+
+function applyBackendConfigToUI() {
+  document.getElementById('backend-url').value = finder.backend.url || '';
+  document.getElementById('backend-token').value = finder.backend.token || '';
+  updateBackendUI();
+}
+
+function updateBackendUI() {
+  const enabled = finder.backend.connected && backendConfigured();
+  document.getElementById('backend-sync').disabled = !enabled;
+  document.getElementById('backend-trigger').disabled = !enabled;
+  document.getElementById('backend-trigger-places').disabled = !enabled;
+}
+
+function setBackendMeta(text) {
+  const el = document.getElementById('backend-meta');
+  if (el) el.textContent = text;
+}
+
+// ---------- Permit Helpers ----------
+async function loadPermitLinks() {
+  const container = document.getElementById('permit-links');
+  if (!container) return;
+  // Static fallback list — matches server-side ACCELA_QUICK_LINKS.
+  const links = [
+    { town: 'Concord, MA',   url: 'https://aca-prod.accela.com/CONCORD/Cap/CapHome.aspx?module=Building&TabName=Home' },
+    { town: 'Acton, MA',     url: 'https://permitsearch.acton-ma.gov/' },
+    { town: 'Lincoln, MA',   url: 'https://www.lincolntown.org/270/Building' },
+    { town: 'Carlisle, MA',  url: 'https://www.carlislema.gov/building-department' },
+    { town: 'Bedford, MA',   url: 'https://www.bedfordma.gov/inspectional-services' },
+    { town: 'Sudbury, MA',   url: 'https://sudbury.ma.us/buildingdepartment/' },
+    { town: 'Lexington, MA', url: 'https://www.lexingtonma.gov/186/Building-and-Construction' },
+    { town: 'Maynard, MA',   url: 'https://www.townofmaynard-ma.gov/government/departments/building-department/' },
+    { town: 'Stow, MA',      url: 'https://www.stow-ma.gov/building-department' },
+    { town: 'Wayland, MA',   url: 'https://www.wayland.ma.us/building-department' },
+    { town: 'Weston, MA',    url: 'https://www.weston.org/174/Building-Department' },
+  ];
+  container.innerHTML = '';
+  for (const l of links) {
+    const a = document.createElement('a');
+    a.href = l.url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.className = 'permit-link';
+    a.textContent = l.town;
+    container.appendChild(a);
+  }
+}
+
+async function handlePermitUpload(file) {
+  const town = document.getElementById('permit-town').value.trim() || 'Concord, MA';
+  const text = await file.text();
+  if (backendConfigured() && finder.backend.connected) {
+    try {
+      const res = await backendRequest(
+        `/api/permits/import?format=csv&town=${encodeURIComponent(town)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/csv' },
+          body: text,
+        }
+      );
+      showToast(`Imported ${res.newCount || 0} permits to backend`, 'success');
+      if (finder.backend.connected) backendSync();
+    } catch (e) {
+      showToast('Import failed: ' + e.message, 'error');
+    }
+  } else {
+    // Client-side fallback: parse CSV locally and add as findings.
+    const count = ingestPermitCsvClientSide(text, town);
+    showToast(`Imported ${count} permits (client-side)`, 'success');
+  }
+}
+
+function ingestPermitCsvClientSide(text, town) {
+  const rows = parseCsvClient(text);
+  if (rows.length < 2) return 0;
+  const headers = rows[0].map((h) => h.toLowerCase().trim());
+  const findKey = (names) => headers.findIndex((h) => names.includes(h));
+  const idx = {
+    address: findKey(['address', 'site address', 'location', 'property address']),
+    date: findKey(['date', 'issue date', 'issued', 'application date']),
+    desc: findKey(['description', 'work description', 'scope', 'project', 'subtype', 'type']),
+    owner: findKey(['owner', 'owner name', 'applicant', 'applicant name', 'contact', 'name']),
+    phone: findKey(['phone', 'owner phone', 'contact phone', 'telephone']),
+    permit: findKey(['permit number', 'permit_number', 'permit #', 'permit', 'record number', 'number']),
+  };
+  let newCount = 0;
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const address = idx.address >= 0 ? r[idx.address] : '';
+    const date = idx.date >= 0 ? r[idx.date] : '';
+    const desc = idx.desc >= 0 ? r[idx.desc] : '';
+    const owner = idx.owner >= 0 ? r[idx.owner] : '';
+    const phone = idx.phone >= 0 ? r[idx.phone] : '';
+    const permit = idx.permit >= 0 ? r[idx.permit] : '';
+    if (!address && !permit) continue;
+    const link = `permit://${town}/${encodeURIComponent(permit || address)}/${encodeURIComponent(date)}`;
+    if (finder.seenLinks.has(link)) continue;
+    finder.findings.unshift({
+      id: 'f_' + Math.random().toString(36).slice(2, 10),
+      title: `${desc || 'Building permit'} — ${address || '(no address)'}`,
+      link,
+      summary: [owner && `Owner: ${owner}`, date && `Date: ${date}`, permit && `Permit: ${permit}`]
+        .filter(Boolean).join(' · '),
+      phone: phone || '',
+      pubDate: date || new Date().toISOString(),
+      foundAt: new Date().toISOString(),
+      source: `permits/${town}`,
+    });
+    finder.seenLinks.add(link);
+    newCount += 1;
+  }
+  saveFinder();
+  renderFinder();
+  return newCount;
+}
+
+function parseCsvClient(text) {
+  const rows = [];
+  let row = [], cur = '', inQuote = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuote) {
+      if (c === '"' && text[i + 1] === '"') { cur += '"'; i++; }
+      else if (c === '"') { inQuote = false; }
+      else { cur += c; }
+    } else {
+      if (c === '"') inQuote = true;
+      else if (c === ',') { row.push(cur); cur = ''; }
+      else if (c === '\r') { /* skip */ }
+      else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+      else { cur += c; }
+    }
+  }
+  if (cur.length || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter((r) => r.some((v) => v && v.length));
 }
 
 // ---------- Events ----------
@@ -961,6 +1222,25 @@ function initEvents() {
     .forEach((id) => {
       document.getElementById(id).addEventListener('change', readFinderConfigFromUI);
     });
+
+  // Backend wiring
+  document.getElementById('backend-test').addEventListener('click', backendTest);
+  document.getElementById('backend-sync').addEventListener('click', backendSync);
+  document.getElementById('backend-trigger').addEventListener('click', () => backendTriggerScan(false));
+  document.getElementById('backend-trigger-places').addEventListener('click', () => backendTriggerScan(true));
+  ['backend-url', 'backend-token'].forEach((id) => {
+    document.getElementById(id).addEventListener('change', readBackendConfigFromUI);
+  });
+
+  // Permits
+  document.getElementById('permit-upload-btn').addEventListener('click', () => {
+    document.getElementById('permit-file').click();
+  });
+  document.getElementById('permit-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handlePermitUpload(file);
+    e.target.value = '';
+  });
 }
 
 // ---------- Init ----------
@@ -969,6 +1249,8 @@ function init() {
   loadFinder();
   initEvents();
   applyFinderConfigToUI();
+  applyBackendConfigToUI();
+  loadPermitLinks();
   render();
   renderFinder();
   requestNotificationsIfNeeded();
@@ -978,6 +1260,11 @@ function init() {
     render();
     renderFinderMeta();
   }, 60000);
+  // If backend was configured previously, test the connection on startup
+  // so the sync buttons unlock automatically.
+  if (backendConfigured()) {
+    backendTest().catch(() => {});
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

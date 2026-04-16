@@ -82,6 +82,32 @@
         the post link to reply.
       </p>
 
+      <details class="finder-backend">
+        <summary>Backend Mode (recommended for 24/7 scanning)</summary>
+        <div class="finder-backend-body">
+          <p class="finder-disclaimer">
+            Point this at a deployed backend and scanning runs server-side around
+            the clock, including Google Places business prospecting (if a key is
+            configured on the server) and permit imports.
+          </p>
+          <label>
+            Backend URL
+            <input type="url" id="backend-url" placeholder="https://your-app.onrender.com" />
+          </label>
+          <label>
+            API Token
+            <input type="password" id="backend-token" placeholder="paste from Render env var" />
+          </label>
+          <div class="finder-controls">
+            <button id="backend-test" class="secondary">Test Connection</button>
+            <button id="backend-sync" class="primary" disabled>Sync Findings From Server</button>
+            <button id="backend-trigger" class="secondary" disabled>Trigger Server Scan</button>
+            <button id="backend-trigger-places" class="secondary" disabled>Trigger + Google Places</button>
+            <span class="finder-meta" id="backend-meta"></span>
+          </div>
+        </div>
+      </details>
+
       <div class="finder-config">
         <label>
           Craigslist Region
@@ -111,11 +137,31 @@
       </div>
 
       <div class="finder-controls">
-        <button id="finder-scan-now" class="primary">Scan Now</button>
-        <button id="finder-toggle" class="secondary">Start Continuous Scan</button>
+        <button id="finder-scan-now" class="primary">Scan Now (Client)</button>
+        <button id="finder-toggle" class="secondary">Start Continuous Scan (Client)</button>
         <button id="finder-clear" class="secondary">Clear Results</button>
         <span class="finder-meta" id="finder-meta"></span>
       </div>
+
+      <details class="finder-permits">
+        <summary>Permits — Concord + 20-mile radius towns</summary>
+        <div class="finder-permits-body">
+          <p class="finder-disclaimer">
+            MA town permit systems don't expose clean public APIs. Open a
+            town's portal below, export recent building permits (CSV), then
+            upload here to convert each permit into a finding.
+          </p>
+          <div id="permit-links" class="permit-links"></div>
+          <div class="finder-controls">
+            <label class="permit-upload">
+              Town (for imported file)
+              <input type="text" id="permit-town" placeholder="Concord, MA" />
+            </label>
+            <button id="permit-upload-btn" class="secondary">Upload Permit CSV</button>
+            <input type="file" id="permit-file" accept=".csv,text/csv" hidden />
+          </div>
+        </div>
+      </details>
 
       <div class="finder-results" id="finder-results">
         <p class="empty-state">No findings yet. Click <strong>Scan Now</strong> to search.</p>

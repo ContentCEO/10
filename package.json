@@ -1,0 +1,21 @@
+{
+  "name": "ac-lead-finder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A&C Lead Manager with Craigslist + Google Places + permit scrapers",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "fast-xml-parser": "^4.5.0",
+    "node-cron": "^3.0.3"
+  }
+}
