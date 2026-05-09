@@ -1,0 +1,15 @@
+import Stripe from "stripe";
+
+let cached: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+  if (!cached) {
+    cached = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2024-09-30.acacia",
+    });
+  }
+  return cached;
+}
