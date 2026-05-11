@@ -124,10 +124,12 @@ export async function POST(request: Request) {
       }
 
       const fields = lead.field_data ?? [];
-      const name =
-        fieldValue(fields, ["full_name", "name"]) ??
+      const composed =
         [fieldValue(fields, ["first_name"]), fieldValue(fields, ["last_name"])]
-          .filter(Boolean).join(" ").trim() ||
+          .filter(Boolean).join(" ").trim();
+      const name =
+        fieldValue(fields, ["full_name", "name"]) ||
+        composed ||
         "Meta lead";
       const platform: LeadSourceChannel =
         lead.platform === "ig" || lead.platform === "instagram"
