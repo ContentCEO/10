@@ -1,41 +1,16 @@
 import Link from "next/link";
-import { Flame, MapPin, ShoppingCart, Sparkles } from "lucide-react";
+import { ShoppingCart, Sparkles, Store } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import {
-  BUDGET_LABELS,
-  TIMELINE_LABELS,
-  type MarketplaceLead,
-} from "@/lib/marketplace";
-import {
-  SOURCE_CHANNEL_LABELS,
-  type LeadSourceChannel,
-} from "@/lib/lead-intake";
+import { type MarketplaceLead } from "@/lib/marketplace";
 import { formatDate } from "@/lib/utils";
-import { ClaimButton } from "./ClaimButton";
 import { DisputeButton } from "./DisputeButton";
 import { WalletBar } from "./WalletBar";
-
-const SOURCE_TONE: Record<LeadSourceChannel, string> = {
-  google_ads:       "bg-blue-100 text-blue-700 ring-blue-200",
-  meta_facebook:    "bg-indigo-100 text-indigo-700 ring-indigo-200",
-  meta_instagram:   "bg-pink-100 text-pink-700 ring-pink-200",
-  website_form:     "bg-emerald-100 text-emerald-700 ring-emerald-200",
-  marketplace_form: "bg-amber-100 text-amber-700 ring-amber-200",
-  webhook:          "bg-slate-100 text-slate-700 ring-slate-200",
-  manual:           "bg-slate-100 text-slate-700 ring-slate-200",
-  scraped:          "bg-violet-100 text-violet-700 ring-violet-200",
-};
+import { MarketplaceCard } from "./MarketplaceCard";
 
 export const dynamic = "force-dynamic";
 
 function money(cents: number) {
   return `$${(cents / 100).toFixed(0)}`;
-}
-
-function scoreTone(score: number) {
-  if (score >= 75) return "bg-emerald-100 text-emerald-700 ring-emerald-200";
-  if (score >= 50) return "bg-amber-100 text-amber-700 ring-amber-200";
-  return "bg-slate-100 text-slate-600 ring-slate-200";
 }
 
 export default async function MarketplacePage({
@@ -66,29 +41,44 @@ export default async function MarketplacePage({
     supabase.from("profiles").select("credit_cents").eq("id", user.id).single(),
   ]);
 
-  const rows  = (available ?? []) as MarketplaceLead[];
-  const mine  = (claimed ?? []) as MarketplaceLead[];
+  const rows    = (available ?? []) as MarketplaceLead[];
+  const mine    = (claimed ?? []) as MarketplaceLead[];
   const balance = profile?.credit_cents ?? 0;
+  const hotCount = rows.filter((r) => r.ai_score >= 80).length;
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Lead marketplace</h1>
-          <p className="text-sm text-slate-500">
-            Fresh homeowner project requests, scored by AI. Claim a lead — your wallet
-            is charged automatically.
-          </p>
+      <header className="relative card p-6 sm:p-7 overflow-hidden">
+        <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-brand-gradient opacity-15 blur-3xl" />
+        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div className="min-w-0">
+            <span className="section-eyebrow"><Store className="h-3.5 w-3.5" /> Marketplace</span>
+            <h1 className="mt-2 display-h2">Lead marketplace</h1>
+            <p className="mt-2 text-sm text-ink-600">
+              Fresh homeowner project requests, scored by AI. Claim a lead — your wallet
+              is charged automatically.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              <span className="badge bg-brand-100 text-brand-700 ring-brand-200">
+                {rows.length} available
+              </span>
+              {hotCount > 0 && (
+                <span className="badge bg-rose-100 text-rose-700 ring-rose-200">
+                  🔥 {hotCount} hot
+                </span>
+              )}
+            </div>
+          </div>
+          <a href="/find-pro" target="_blank" rel="noreferrer" className="btn-secondary hidden sm:inline-flex shrink-0">
+            <Sparkles className="h-4 w-4" /> Homeowner view
+          </a>
         </div>
-        <a href="/find-pro" target="_blank" rel="noreferrer" className="btn-secondary hidden sm:inline-flex">
-          <Sparkles className="h-4 w-4" /> See homeowner page
-        </a>
       </header>
 
       {searchParams.topup === "success" && (
         <div className="card p-4 bg-emerald-50 border-emerald-200 text-emerald-900 text-sm">
           ✅ Top-up successful! Your wallet will reflect the new balance once Stripe finishes processing
-          (usually a few seconds). Refresh if you don't see it yet.
+          (usually a few seconds). Refresh if you don&apos;t see it yet.
         </div>
       )}
 
@@ -103,91 +93,48 @@ export default async function MarketplacePage({
       </form>
 
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold">Available ({rows.length})</h2>
-          <span className="text-xs text-slate-500">Sorted by AI score</span>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="section-title">Available now</h2>
+          <span className="text-xs text-ink-500">Sorted by AI score</span>
         </div>
 
         {rows.length ? (
-          <ul className="grid md:grid-cols-2 gap-3">
-            {rows.map((l) => {
-              const affordable = balance >= l.price_cents;
-              const source = (l as MarketplaceLead & { source_channel?: LeadSourceChannel }).source_channel ?? "marketplace_form";
-              return (
-                <li key={l.id} className="card card-hover p-5 flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold">{l.service_type}</h3>
-                      <div className="text-xs text-slate-500 flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3" />
-                        {[l.city, l.zip].filter(Boolean).join(" · ") || "Location not provided"}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className={`badge ${scoreTone(l.ai_score)}`}>
-                        <Flame className="h-3 w-3 mr-1" />
-                        {l.ai_score}/100
-                      </span>
-                      <span className={`badge ${SOURCE_TONE[source]} text-[10px]`}>
-                        {SOURCE_CHANNEL_LABELS[source]}
-                      </span>
-                    </div>
-                  </div>
-
-                  {l.ai_summary && (
-                    <p className="text-sm text-slate-700 italic">"{l.ai_summary}"</p>
-                  )}
-
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                    <dt className="text-slate-500">Budget</dt>
-                    <dd className="text-right">{BUDGET_LABELS[l.budget]}</dd>
-                    <dt className="text-slate-500">Timeline</dt>
-                    <dd className="text-right">{TIMELINE_LABELS[l.timeline]}</dd>
-                    <dt className="text-slate-500">Posted</dt>
-                    <dd className="text-right">{formatDate(l.created_at)}</dd>
-                  </dl>
-
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                    <div>
-                      <span className="text-lg font-bold gradient-text">{money(l.price_cents)}</span>
-                      {!affordable && (
-                        <div className="text-xs text-rose-600 mt-0.5">
-                          Need {money(l.price_cents - balance)} more
-                        </div>
-                      )}
-                    </div>
-                    <ClaimButton id={l.id} disabled={!affordable} />
-                  </div>
-                </li>
-              );
-            })}
+          <ul className="grid md:grid-cols-2 gap-4">
+            {rows.map((l) => (
+              <MarketplaceCard key={l.id} lead={l} balanceCents={balance} />
+            ))}
           </ul>
         ) : (
-          <div className="card p-8 text-center text-sm text-slate-500">
-            No leads match that filter right now. Try the <strong>Seed samples</strong> button
-            above to generate 5 AI-crafted sample leads for testing.
+          <div className="card p-10 text-center">
+            <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-glow mb-4">
+              <Store className="h-6 w-6" />
+            </div>
+            <p className="text-sm text-ink-600 max-w-sm mx-auto">
+              No leads match that filter right now. Try the <strong>Seed samples</strong> button
+              above to generate 5 AI-crafted sample leads for testing.
+            </p>
           </div>
         )}
       </section>
 
       {mine.length > 0 && (
         <section>
-          <h2 className="font-semibold mb-3 flex items-center gap-2">
+          <h2 className="section-title mb-4 flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" /> Your claimed leads
           </h2>
-          <ul className="card divide-y divide-slate-100">
+          <ul className="card divide-y divide-ink-100">
             {mine.map((l) => (
-              <li key={l.id} className="px-4 py-3 flex items-center justify-between gap-3">
-                <div className="min-w-0">
+              <li key={l.id} className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-ink-50/50 transition-colors">
+                <div className="min-w-0 flex-1">
                   <div className="font-medium truncate">{l.name} · {l.service_type}</div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-ink-500">
                     {[l.city, l.zip].filter(Boolean).join(" · ") || "—"} ·
                     Claimed {l.bought_at ? formatDate(l.bought_at) : "—"} ·
-                    {" "}{money(l.price_cents)}
+                    {" "}<span className="tabular-nums font-medium text-ink-700">{money(l.price_cents)}</span>
                   </div>
                   <DisputeButton leadId={l.id} />
                 </div>
-                <Link href={`/leads?source=Marketplace`} className="btn-secondary !py-1 text-xs">
+                <Link href={`/leads?source=Marketplace`} className="btn-secondary !py-1.5 text-xs shrink-0">
                   Open in pipeline
                 </Link>
               </li>
