@@ -24,6 +24,9 @@ create table if not exists public.profiles (
   email text,
   full_name text,
   business_name text,
+  account_type text not null default 'contractor'
+    check (account_type in ('homeowner', 'contractor')),
+  credit_cents int not null default 0,
   stripe_customer_id text,
   stripe_subscription_id text,
   subscription_status subscription_status default 'trialing',
@@ -34,9 +37,15 @@ create table if not exists public.profiles (
 -- Auto-create a profile row when a user signs up.
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer as $$
+declare
+  acct text;
 begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email)
+  acct := coalesce(new.raw_user_meta_data->>'account_type', 'contractor');
+  if acct not in ('homeowner', 'contractor') then
+    acct := 'contractor';
+  end if;
+  insert into public.profiles (id, email, account_type)
+  values (new.id, new.email, acct)
   on conflict (id) do nothing;
   return new;
 end;

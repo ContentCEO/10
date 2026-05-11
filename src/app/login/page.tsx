@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
-  const next = search.get("next") || "/dashboard";
+  const nextParam = search.get("next");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,13 +20,24 @@ function LoginForm() {
     setLoading(true);
     setError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setError(error.message);
       setLoading(false);
       return;
     }
-    router.push(next);
+    let destination = nextParam ?? "";
+    if (!destination) {
+      const userId = data.user?.id;
+      if (userId) {
+        const { data: profile } = await supabase
+          .from("profiles").select("account_type").eq("id", userId).single();
+        destination = profile?.account_type === "homeowner" ? "/home" : "/dashboard";
+      } else {
+        destination = "/dashboard";
+      }
+    }
+    router.push(destination);
     router.refresh();
   }
 

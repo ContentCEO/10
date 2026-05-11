@@ -6,12 +6,15 @@ export type SubscriptionStatus =
   | "past_due"
   | "canceled"
   | "incomplete";
+export type AccountType = "contractor" | "homeowner";
 
 export interface Profile {
   id: string;
   email: string | null;
   full_name: string | null;
   business_name: string | null;
+  account_type: AccountType;
+  credit_cents: number;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   subscription_status: SubscriptionStatus;

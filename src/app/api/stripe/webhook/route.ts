@@ -1,18 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { SubscriptionStatus } from "@/lib/types";
 
 export const runtime = "nodejs";
-
-function admin() {
-  return createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } },
-  );
-}
 
 const TRACKED: ReadonlyArray<SubscriptionStatus> = [
   "trialing", "active", "past_due", "canceled", "incomplete",
@@ -25,17 +17,46 @@ function mapStatus(status: string): SubscriptionStatus {
 }
 
 async function syncSubscription(sub: Stripe.Subscription) {
+  const admin = createAdminClient();
   const customerId =
     typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-
-  const { data: profile } = await admin()
+  const { data: profile } = await admin
     .from("profiles").select("id").eq("stripe_customer_id", customerId).single();
   if (!profile) return;
-
-  await admin().from("profiles").update({
+  await admin.from("profiles").update({
     stripe_subscription_id: sub.id,
     subscription_status: mapStatus(sub.status),
   }).eq("id", profile.id);
+}
+
+async function applyWalletTopup(session: Stripe.Checkout.Session) {
+  const meta = session.metadata ?? {};
+  const userId = typeof meta.user_id === "string" ? meta.user_id : null;
+  const credit = Number(meta.credit_cents ?? 0);
+  if (!userId || !Number.isFinite(credit) || credit <= 0) return;
+
+  const admin = createAdminClient();
+
+  // Idempotency: don't double-apply on webhook retries.
+  const { data: existing } = await admin
+    .from("wallet_transactions")
+    .select("id").eq("reference", session.id).maybeSingle();
+  if (existing) return;
+
+  const { data: profile } = await admin
+    .from("profiles").select("credit_cents").eq("id", userId).single();
+  if (!profile) return;
+
+  const newBalance = (profile.credit_cents ?? 0) + credit;
+  await admin.from("profiles").update({ credit_cents: newBalance }).eq("id", userId);
+
+  await admin.from("wallet_transactions").insert({
+    user_id: userId,
+    amount_cents: credit,
+    kind: "topup",
+    reference: session.id,
+    description: `Wallet top-up · ${typeof meta.pack_id === "string" ? meta.pack_id : "pack"}`,
+  });
 }
 
 export async function POST(request: Request) {
@@ -60,6 +81,10 @@ export async function POST(request: Request) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
+      if (session.metadata?.kind === "wallet_topup") {
+        await applyWalletTopup(session);
+        break;
+      }
       if (session.subscription) {
         const subId = typeof session.subscription === "string"
           ? session.subscription : session.subscription.id;

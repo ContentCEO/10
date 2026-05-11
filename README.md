@@ -74,10 +74,15 @@ cp .env.example .env.local
 
 1. Create a Supabase project.
 2. Open the SQL editor and run the contents of `supabase/schema.sql`.
-3. Copy your project URL, anon key, and service role key into `.env.local`.
+3. Then run, in order, the files in `supabase/migrations/`:
+   - `2026-05-11_marketplace.sql` — lead marketplace tables and RLS
+   - `2026-05-11_wallet.sql` — wallet credit + atomic debit RPC
+   - `2026-05-11_account_type.sql` — homeowner / contractor account types
+4. Copy your project URL, anon key, and service role key into `.env.local`.
 
 The schema enables Row Level Security so each user can only see their own
-customers, leads, jobs, and follow-ups.
+customers, leads, jobs, and follow-ups. Marketplace leads are readable by any
+authenticated user while `available`, and only their buyer once `sold`.
 
 ### 3. AI provider
 
