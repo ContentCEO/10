@@ -27,6 +27,20 @@ create table if not exists public.profiles (
   account_type text not null default 'contractor'
     check (account_type in ('homeowner', 'contractor')),
   credit_cents int not null default 0,
+  headline text,
+  bio text,
+  services text[] not null default '{}',
+  service_zips text[] not null default '{}',
+  service_cities text[] not null default '{}',
+  years_in_business int,
+  phone_public text,
+  website text,
+  logo_url text,
+  hero_image_url text,
+  is_published boolean not null default false,
+  google_review_url text,
+  payment_link_url text,
+  auto_dispatch_enabled boolean not null default false,
   stripe_customer_id text,
   stripe_subscription_id text,
   subscription_status subscription_status default 'trialing',
@@ -99,11 +113,16 @@ create table if not exists public.leads (
   estimated_value numeric(10,2),
   status lead_status not null default 'new',
   notes text,
+  ai_score int check (ai_score between 0 and 100),
+  ai_summary text,
+  ai_scored_at timestamptz,
+  first_responded_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 create index if not exists leads_user_idx on public.leads(user_id);
 create index if not exists leads_status_idx on public.leads(status);
+create index if not exists leads_ai_score_idx on public.leads(ai_score desc nulls last);
 
 -- ============================================================
 -- JOBS

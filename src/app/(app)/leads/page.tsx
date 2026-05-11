@@ -26,12 +26,21 @@ function AgeBadge({ iso, status }: { iso: string; status: Lead["status"] }) {
   return <span className={`badge ${tone}`}>{label}</span>;
 }
 
-export default async function LeadsPage() {
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: { sort?: string };
+}) {
   const supabase = createClient();
-  const { data: leads } = await supabase
-    .from("leads")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const sortByScore = searchParams.sort === "score";
+  const base = supabase.from("leads").select("*");
+  const { data: leads } = await (
+    sortByScore
+      ? base
+          .order("ai_score", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false })
+      : base.order("created_at", { ascending: false })
+  );
   const rows = (leads ?? []) as Lead[];
   const staleCount = rows.filter(
     (l) => l.status !== "won" && l.status !== "lost" && ageDays(l.updated_at) >= 7,
@@ -49,9 +58,17 @@ export default async function LeadsPage() {
             </p>
           )}
         </div>
-        <Link href="/leads/new" className="btn-secondary">
-          <Plus className="h-4 w-4" /> New lead
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={sortByScore ? "/leads" : "/leads?sort=score"}
+            className="btn-secondary text-xs"
+          >
+            {sortByScore ? "Sort: Newest" : "Sort: AI score"}
+          </Link>
+          <Link href="/leads/new" className="btn-secondary">
+            <Plus className="h-4 w-4" /> New lead
+          </Link>
+        </div>
       </header>
 
       <QuickAdd />
@@ -63,6 +80,7 @@ export default async function LeadsPage() {
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium hidden sm:table-cell">Service</th>
               <th className="px-4 py-3 font-medium hidden md:table-cell">Source</th>
+              <th className="px-4 py-3 font-medium">Score</th>
               <th className="px-4 py-3 font-medium hidden md:table-cell">Estimated</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Age</th>
@@ -83,6 +101,19 @@ export default async function LeadsPage() {
                 <td className="px-4 py-3 hidden md:table-cell text-slate-600">
                   {lead.source ?? "—"}
                 </td>
+                <td className="px-4 py-3">
+                  {lead.ai_score != null ? (
+                    <span className={`badge ${
+                      lead.ai_score >= 75 ? "bg-emerald-100 text-emerald-700 ring-emerald-200" :
+                      lead.ai_score >= 50 ? "bg-amber-100 text-amber-700 ring-amber-200" :
+                                            "bg-rose-100 text-rose-700 ring-rose-200"
+                    }`}>
+                      {lead.ai_score}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 hidden md:table-cell">{formatCurrency(lead.estimated_value)}</td>
                 <td className="px-4 py-3"><LeadStatusBadge status={lead.status} /></td>
                 <td className="px-4 py-3">
@@ -91,7 +122,7 @@ export default async function LeadsPage() {
               </tr>
             )) : (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
                   No leads yet. Try the AI quick-add above, or
                   <Link href="/leads/new" className="text-brand-600 font-medium"> use the full form.</Link>
                 </td>

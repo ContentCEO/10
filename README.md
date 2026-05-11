@@ -83,6 +83,8 @@ cp .env.example .env.local
    - `2026-05-11_recurring.sql` — recurring service engine on customers
    - `2026-05-11_invoicing.sql` — invoices table + Stripe payment link
    - `2026-05-11_lead_sources.sql` — marketplace source attribution + dedupe
+   - `2026-05-11_lead_scoring.sql` — AI lead score + speed-to-lead on contractor leads
+   - `2026-05-11_messaging.sql` — outbound message log + auto-dispatch toggle
 4. Copy your project URL, anon key, and service role key into `.env.local`.
 
 The schema enables Row Level Security so each user can only see their own

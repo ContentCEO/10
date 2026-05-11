@@ -41,6 +41,7 @@ async function saveProfile(formData: FormData) {
     hero_image_url:  String(formData.get("hero_image_url") ?? "").trim() || null,
     google_review_url: String(formData.get("google_review_url") ?? "").trim() || null,
     payment_link_url:  String(formData.get("payment_link_url") ?? "").trim() || null,
+    auto_dispatch_enabled: formData.get("auto_dispatch_enabled") === "on",
     is_published:    formData.get("is_published") === "on",
   }).eq("id", user.id);
 
@@ -261,6 +262,15 @@ export default async function ProfilePage() {
           <span className="text-sm">
             <strong>Publish to directory</strong> — show me to homeowners at{" "}
             <code className="text-xs">/pros</code>.
+          </span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" name="auto_dispatch_enabled"
+            defaultChecked={(p?.auto_dispatch_enabled as boolean | undefined) ?? false} />
+          <span className="text-sm">
+            <strong>Auto-send drip follow-ups</strong> — when a calendar reminder is due,
+            ContractorFlow sends an AI-drafted SMS (or email) on your behalf. Requires
+            Twilio / Resend env vars configured by the admin.
           </span>
         </label>
 

@@ -36,20 +36,30 @@ export default async function HomeownerHome() {
 
   return (
     <div className="space-y-6">
-      <section className="card p-5 flex flex-wrap items-center justify-between gap-3 bg-brand-50 border-brand-100">
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow shrink-0">
+      <section className="grid sm:grid-cols-2 gap-3">
+        <Link href="/pros" className="card card-hover p-5 flex items-center gap-3 bg-brand-50 border-brand-100">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow shrink-0">
             <Users className="h-5 w-5" />
           </span>
-          <div>
-            <div className="font-semibold">Want to compare pros yourself?</div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold">Browse pros</div>
             <div className="text-xs text-slate-600">
-              Browse vetted contractors near you with verified credentials and reviews.
+              Vetted contractors with credentials + reviews.
             </div>
           </div>
-        </div>
-        <Link href="/pros" className="btn-primary">
-          Browse pros <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4 text-brand-600" />
+        </Link>
+        <Link href="/portal" className="card card-hover p-5 flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-glow shrink-0">
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold">My service portal</div>
+            <div className="text-xs text-slate-600">
+              See your jobs, invoices, and payments.
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-slate-400" />
         </Link>
       </section>
 

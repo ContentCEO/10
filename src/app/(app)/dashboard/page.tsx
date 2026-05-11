@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/StatCard";
 import { LeadStatusBadge } from "@/components/StatusBadge";
 import { SourceRoi } from "@/components/SourceRoi";
+import { SourceChannelRoi } from "@/components/SourceChannelRoi";
+import { YearOverYear } from "@/components/YearOverYear";
 import { ProfitInsights } from "@/components/ProfitInsights";
 import { WeeklyDigest } from "@/components/WeeklyDigest";
 import { ARAging } from "@/components/ARAging";
@@ -70,9 +72,13 @@ export default async function DashboardPage() {
 
       <WeeklyDigest />
 
+      <YearOverYear />
+
       <ARAging />
 
       <ProfitInsights />
+
+      <SourceChannelRoi />
 
       <SourceRoi />
 

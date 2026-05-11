@@ -20,6 +20,22 @@ export interface Profile {
   stripe_subscription_id: string | null;
   subscription_status: SubscriptionStatus;
   trial_ends_at: string | null;
+  // Public directory
+  headline: string | null;
+  bio: string | null;
+  services: string[];
+  service_zips: string[];
+  service_cities: string[];
+  years_in_business: number | null;
+  phone_public: string | null;
+  website: string | null;
+  logo_url: string | null;
+  hero_image_url: string | null;
+  is_published: boolean;
+  // Revenue / messaging
+  google_review_url: string | null;
+  payment_link_url: string | null;
+  auto_dispatch_enabled: boolean;
   created_at: string;
 }
 
@@ -61,6 +77,10 @@ export interface Lead {
   estimated_value: number | null;
   status: LeadStatus;
   notes: string | null;
+  ai_score: number | null;
+  ai_summary: string | null;
+  ai_scored_at: string | null;
+  first_responded_at: string | null;
   created_at: string;
   updated_at: string;
 }
