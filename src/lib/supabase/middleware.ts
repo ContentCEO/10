@@ -45,6 +45,7 @@ export async function updateSession(request: NextRequest) {
     path === "/sitemap.xml" ||
     path === "/robots.txt" ||
     path === "/cost-calculator" ||
+    (path.startsWith("/google") && path.endsWith(".html")) ||
     path.startsWith("/_next") ||
     path.startsWith("/api/stripe/webhook") ||
     path.startsWith("/api/marketplace/intake") ||
