@@ -21,8 +21,15 @@ export function WalletBar({ balanceCents }: { balanceCents: number }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pack }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data?.error ?? "Could not start checkout");
+      const text = await res.text();
+      let data: { url?: string; error?: string } = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { /* non-JSON */ }
+      if (!res.ok || !data.url) {
+        throw new Error(
+          data.error ??
+          (text ? `HTTP ${res.status}: ${text.slice(0, 200)}` : `HTTP ${res.status}`),
+        );
+      }
       window.location.href = data.url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -39,8 +46,15 @@ export function WalletBar({ balanceCents }: { balanceCents: number }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ count: 5 }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error ?? "Seed failed");
+      const text = await res.text();
+      let data: { error?: string } = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { /* non-JSON */ }
+      if (!res.ok) {
+        throw new Error(
+          data.error ??
+          (text ? `HTTP ${res.status}: ${text.slice(0, 200)}` : `HTTP ${res.status}`),
+        );
+      }
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
