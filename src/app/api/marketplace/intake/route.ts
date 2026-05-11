@@ -20,6 +20,18 @@ export async function POST(request: Request) {
   if (!service_type) return NextResponse.json({ error: "Service is required" }, { status: 400 });
 
   const admin = createAdminClient();
+
+  // Partner widget attribution (reverse marketplace).
+  const partnerToken = typeof body?.partner_token === "string" ? body.partner_token : null;
+  let partnerWidget: { id: string; user_id: string; credit_per_lead_cents: number } | null = null;
+  if (partnerToken) {
+    const { data } = await admin
+      .from("partner_widgets")
+      .select("id,user_id,credit_per_lead_cents")
+      .eq("token", partnerToken).maybeSingle();
+    if (data) partnerWidget = data as { id: string; user_id: string; credit_per_lead_cents: number };
+  }
+
   const result = await insertMarketplaceLead(admin, {
     name,
     phone: typeof body?.phone === "string" ? body.phone || null : null,
@@ -36,6 +48,36 @@ export async function POST(request: Request) {
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 500 });
+  }
+
+  // Credit the partner who delivered this lead.
+  if (partnerWidget && !result.deduped) {
+    await admin.from("marketplace_leads")
+      .update({ partner_widget_id: partnerWidget.id })
+      .eq("id", result.id);
+    await admin.rpc("credit_wallet", {
+      p_user_id: partnerWidget.user_id,
+      p_amount: partnerWidget.credit_per_lead_cents,
+    });
+    await admin.from("wallet_transactions").insert({
+      user_id: partnerWidget.user_id,
+      amount_cents: partnerWidget.credit_per_lead_cents,
+      kind: "topup",
+      reference: result.id,
+      description: "Partner widget lead credit",
+    });
+    await admin.from("partner_widgets").update({
+      total_leads: 0, // overwritten below
+    });
+    // Counter increments via a select-then-update — keeps things simple.
+    const { data: w } = await admin.from("partner_widgets")
+      .select("total_leads,total_credit_cents").eq("id", partnerWidget.id).single();
+    if (w) {
+      await admin.from("partner_widgets").update({
+        total_leads: (w.total_leads ?? 0) + 1,
+        total_credit_cents: (w.total_credit_cents ?? 0) + partnerWidget.credit_per_lead_cents,
+      }).eq("id", partnerWidget.id);
+    }
   }
 
   // Log referral redemption if a code came through. The credit is applied

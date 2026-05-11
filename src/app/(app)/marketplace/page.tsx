@@ -12,6 +12,7 @@ import {
 } from "@/lib/lead-intake";
 import { formatDate } from "@/lib/utils";
 import { ClaimButton } from "./ClaimButton";
+import { DisputeButton } from "./DisputeButton";
 import { WalletBar } from "./WalletBar";
 
 const SOURCE_TONE: Record<LeadSourceChannel, string> = {
@@ -184,6 +185,7 @@ export default async function MarketplacePage({
                     Claimed {l.bought_at ? formatDate(l.bought_at) : "—"} ·
                     {" "}{money(l.price_cents)}
                   </div>
+                  <DisputeButton leadId={l.id} />
                 </div>
                 <Link href={`/leads?source=Marketplace`} className="btn-secondary !py-1 text-xs">
                   Open in pipeline

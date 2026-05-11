@@ -44,8 +44,11 @@ export async function updateSession(request: NextRequest) {
     PUBLIC_PATHS.includes(path) ||
     path === "/sitemap.xml" ||
     path === "/robots.txt" ||
+    path === "/manifest.webmanifest" ||
+    path === "/icon.svg" ||
     path === "/cost-calculator" ||
     (path.startsWith("/google") && path.endsWith(".html")) ||
+    path.startsWith("/permits/") ||
     path.startsWith("/_next") ||
     path.startsWith("/api/stripe/webhook") ||
     path.startsWith("/api/marketplace/intake") ||

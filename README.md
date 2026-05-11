@@ -87,6 +87,7 @@ cp .env.example .env.local
    - `2026-05-11_messaging.sql` — outbound message log + auto-dispatch toggle
    - `2026-05-11_employees.sql` — employee account type, invites, time entries, tasks, job photos
    - `2026-05-11_lead_gen_engine.sql` — alert webhook, referrals, scraper audit, message templates
+   - `2026-05-11_disputes_and_widgets.sql` — lead disputes (auto-refund) + partner widgets (reverse marketplace)
 4. Copy your project URL, anon key, and service role key into `.env.local`.
 
 The schema enables Row Level Security so each user can only see their own

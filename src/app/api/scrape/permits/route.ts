@@ -212,10 +212,51 @@ async function fetchChicago(limit: number): Promise<PermitLead[]> {
   });
 }
 
+// ---------- Lowell ----------
+interface LowellRow {
+  permit_number: string;
+  permit_type: string | null;
+  description: string | null;
+  estimated_cost: string | null;
+  address: string | null;
+  applicant_name: string | null;
+  zip: string | null;
+}
+async function fetchLowell(limit: number): Promise<PermitLead[]> {
+  const rows = await fetchSocrata<LowellRow>(
+    `https://data.lowellma.gov/resource/u4ye-bda4.json?$limit=${limit}`,
+  );
+  return rows.map((r) => ({
+    externalId: `lowell:${r.permit_number}`,
+    name: r.applicant_name || "Lowell permit holder",
+    address: r.address || null,
+    zip: r.zip || null,
+    city: "Lowell",
+    service_type: r.permit_type || r.description?.slice(0, 60) || "Permit",
+    estimated_cost: r.estimated_cost ? Number(r.estimated_cost.replace(/[^0-9.]/g, "")) : null,
+    notes: r.description ?? "",
+    raw: r as unknown as Record<string, unknown>,
+  }));
+}
+
+// ---------- Quincy / Brockton / Springfield ----------
+// These cities don't yet publish standardized Socrata feeds, but they post
+// permit logs as PDFs / town-clerk pages. Adding placeholder fetchers that
+// return [] so they show up in the registry — wire them when those cities
+// expose an API or via a CSV upload endpoint similar to /api/scrape/deeds.
+async function fetchEmpty(_: number): Promise<PermitLead[]> {
+  return [];
+}
+
 const SOURCES: CitySource[] = [
   { key: "boston_permits",     city: "Boston",     fetch: fetchBoston },
   { key: "cambridge_permits",  city: "Cambridge",  fetch: fetchCambridge },
   { key: "somerville_permits", city: "Somerville", fetch: fetchSomerville },
+  { key: "lowell_permits",     city: "Lowell",     fetch: fetchLowell },
+  { key: "quincy_permits",     city: "Quincy",     fetch: fetchEmpty },
+  { key: "brockton_permits",   city: "Brockton",   fetch: fetchEmpty },
+  { key: "springfield_permits",city: "Springfield",fetch: fetchEmpty },
+  { key: "worcester_permits",  city: "Worcester",  fetch: fetchEmpty },
   { key: "nyc_permits",        city: "New York",   fetch: fetchNyc },
   { key: "chicago_permits",    city: "Chicago",    fetch: fetchChicago },
 ];

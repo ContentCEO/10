@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   CalendarClock,
+  Code,
   Gift,
   Hammer,
   Handshake,
@@ -41,6 +42,7 @@ const nav = [
   { href: "/lsa-setup",     label: "Google LSA",    icon: ShieldCheck },
   { href: "/lead-gen",      label: "Lead Gen",      icon: Megaphone },
   { href: "/referrals",     label: "Referrals",     icon: Gift },
+  { href: "/widget",        label: "Widgets",       icon: Code },
   { href: "/integrations",  label: "Integrations",  icon: Plug },
   { href: "/profile",       label: "My Profile",    icon: UserCircle },
   { href: "/billing",       label: "Billing",       icon: Wallet },
