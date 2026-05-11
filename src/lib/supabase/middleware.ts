@@ -63,6 +63,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/public/") ||
     path.startsWith("/api/cron/") ||
     path.startsWith("/api/scrape/") ||
+    path.startsWith("/api/scrape/trigger-if-stale") ||
     path.startsWith("/api/voice/") ||
     path.startsWith("/api/diagnostics") ||
     path.startsWith("/embed/") ||

@@ -32,6 +32,14 @@ const KNOWN_SOURCES = Object.keys(SOURCE_LABELS);
 export default async function OpportunitiesPage() {
   const supabase = createClient();
 
+  // Fire-and-forget auto-trigger of any scraper whose last run is > 50 min ago.
+  // Keeps inventory fresh on the Hobby tier where cron frequency is limited.
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+  if (baseUrl) {
+    fetch(`${baseUrl}/api/scrape/trigger-if-stale`, { cache: "no-store" })
+      .catch(() => { /* ignore — best-effort */ });
+  }
+
   // Last 30 days of scraper activity.
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
   const { data: runs } = await supabase
