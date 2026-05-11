@@ -12,6 +12,7 @@ import {
   Code,
   Compass,
   Gift,
+  Globe,
   Hammer,
   Handshake,
   HardHat,
@@ -59,6 +60,7 @@ const SECTIONS: NavSection[] = [
       { href: "/marketplace",   label: "Marketplace",   icon: ShoppingCart },
       { href: "/opportunities", label: "Opportunities", icon: Activity },
       { href: "/auto-bid",      label: "AI auto-bid",   icon: Bot },
+      { href: "/distribution",  label: "Routes",        icon: Compass },
       { href: "/lead-gen",      label: "Capture form",  icon: Megaphone },
     ],
   },
@@ -92,10 +94,11 @@ const SECTIONS: NavSection[] = [
   {
     label: "Settings",
     items: [
-      { href: "/profile",       label: "My profile",    icon: UserCircle },
-      { href: "/partnerships",  label: "Partnerships",  icon: Handshake },
-      { href: "/lsa-setup",     label: "Google LSA",    icon: ShieldCheck },
-      { href: "/billing",       label: "Billing",       icon: Wallet },
+      { href: "/profile",        label: "My profile",     icon: UserCircle },
+      { href: "/partnerships",   label: "Partnerships",   icon: Handshake },
+      { href: "/lsa-setup",      label: "Google LSA",     icon: ShieldCheck },
+      { href: "/custom-domain",  label: "Custom domain",  icon: Globe },
+      { href: "/billing",        label: "Billing",        icon: Wallet },
     ],
   },
 ];

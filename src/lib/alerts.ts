@@ -7,6 +7,7 @@
 // failures are logged and swallowed.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sendPush, type PushSubscriptionRow } from "@/lib/push";
 
 interface AlertPayload {
   title: string;
@@ -77,9 +78,22 @@ export async function alertContractorOnLead(
     .select("alert_webhook_url,alert_phone")
     .eq("id", contractorId)
     .single();
-  if (!data) return;
-  const url = (data as { alert_webhook_url: string | null }).alert_webhook_url;
+  const url = (data as { alert_webhook_url: string | null } | null)?.alert_webhook_url;
   if (url) await sendLeadAlert(url, payload);
-  // SMS via Twilio is wired through src/lib/messaging.ts when env is set —
-  // we keep alerts off-the-critical-path here.
+
+  // Push notifications to every registered device for this contractor.
+  const { data: subs } = await admin
+    .from("push_subscriptions").select("endpoint,p256dh,auth,id")
+    .eq("user_id", contractorId);
+  for (const s of ((subs ?? []) as (PushSubscriptionRow & { id: string })[])) {
+    const result = await sendPush(s, {
+      title: `🔔 New lead: ${payload.title}`,
+      body: payload.body,
+      url: payload.link ?? "/leads",
+    });
+    if (result.expired) {
+      // Subscription dead — remove so we don't keep retrying it.
+      await admin.from("push_subscriptions").delete().eq("id", s.id);
+    }
+  }
 }

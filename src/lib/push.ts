@@ -1,15 +1,13 @@
-// Web Push subscription management.
+// Web Push delivery — uses the `web-push` library for RFC 8291 encryption.
 //
-// Sending push notifications properly requires RFC 8291 payload encryption,
-// which is a few hundred lines of cryptography. The right move is to install
-// `web-push` (16 KB, zero runtime deps) and use it here. To keep this MVP
-// dependency-free we expose the subscription storage and a stub send that
-// returns ok:false with a helpful error if the lib isn't installed.
-//
-// To enable real push:
-//   npm install web-push
-//   npx web-push generate-vapid-keys  →  put public + private in Vercel env
-//   Replace this stub with the library call.
+// Generate VAPID keys once:    npx web-push generate-vapid-keys
+// Then set in Vercel env vars:
+//   VAPID_PUBLIC_KEY        (server-side)
+//   VAPID_PRIVATE_KEY       (server-side)
+//   NEXT_PUBLIC_VAPID_KEY   (same as public — client subscribes with this)
+//   VAPID_SUBJECT           (mailto:you@yourdomain.com)
+
+import webpush from "web-push";
 
 export interface PushSubscriptionRow {
   endpoint: string;
@@ -24,14 +22,16 @@ export interface PushPayload {
   tag?: string;
 }
 
-export async function sendPush(
-  _sub: PushSubscriptionRow,
-  _payload: PushPayload,
-): Promise<{ ok: boolean; error?: string }> {
-  return {
-    ok: false,
-    error: "Install web-push and wire it here to enable delivery (subscription is stored).",
-  };
+let configured = false;
+function ensureConfigured(): boolean {
+  if (configured) return true;
+  const pub = process.env.VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  const subject = process.env.VAPID_SUBJECT ?? "mailto:hello@contractorflow.app";
+  if (!pub || !priv) return false;
+  webpush.setVapidDetails(subject, pub, priv);
+  configured = true;
+  return true;
 }
 
 export function pushConfigured(): boolean {
@@ -40,4 +40,30 @@ export function pushConfigured(): boolean {
 
 export function publicVapidKey(): string | null {
   return process.env.NEXT_PUBLIC_VAPID_KEY ?? null;
+}
+
+export async function sendPush(
+  sub: PushSubscriptionRow,
+  payload: PushPayload,
+): Promise<{ ok: boolean; error?: string; expired?: boolean }> {
+  if (!ensureConfigured()) {
+    return { ok: false, error: "VAPID keys not configured" };
+  }
+  try {
+    await webpush.sendNotification(
+      {
+        endpoint: sub.endpoint,
+        keys: { p256dh: sub.p256dh, auth: sub.auth },
+      },
+      JSON.stringify(payload),
+      { TTL: 86400, urgency: "high" },
+    );
+    return { ok: true };
+  } catch (e) {
+    const err = e as { statusCode?: number; message?: string };
+    if (err.statusCode === 404 || err.statusCode === 410) {
+      return { ok: false, expired: true, error: "Subscription expired" };
+    }
+    return { ok: false, error: err.message ?? "Push failed" };
+  }
 }
