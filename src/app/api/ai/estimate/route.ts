@@ -30,6 +30,32 @@ interface EstimateBody {
   photo_urls?:   unknown;
 }
 
+type ImgMedia = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+
+const ALLOWED_MEDIA: ImgMedia[] = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB per image
+
+async function fetchAsBase64(
+  url: string,
+): Promise<{ media_type: ImgMedia; data: string } | null> {
+  try {
+    const res = await fetch(url, { redirect: "follow" });
+    if (!res.ok) return null;
+    const ct = (res.headers.get("content-type") ?? "image/jpeg").toLowerCase();
+    const media = ALLOWED_MEDIA.find((m) => ct.includes(m)) ?? "image/jpeg";
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > MAX_BYTES) return null;
+    return { media_type: media, data: Buffer.from(buf).toString("base64") };
+  } catch {
+    return null;
+  }
+}
+
+// Match @anthropic-ai/sdk@0.30 ImageBlockParam shape exactly so strict TS is happy.
+type ContentBlock =
+  | { type: "text"; text: string }
+  | { type: "image"; source: { type: "base64"; media_type: ImgMedia; data: string } };
+
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: "AI is not configured" }, { status: 500 });
@@ -46,24 +72,27 @@ export async function POST(request: Request) {
     ? (body.photo_urls as unknown[]).filter((u): u is string => typeof u === "string").slice(0, 5)
     : [];
 
-  type Block =
-    | { type: "text"; text: string }
-    | { type: "image"; source: { type: "url"; url: string } };
+  // Fetch each image server-side and base64-encode it. Skip any that fail.
+  const images = await Promise.all(photoUrls.map(fetchAsBase64));
+  const okImages = images.filter((i): i is { media_type: ImgMedia; data: string } => i !== null);
 
-  const content: Block[] = [
+  const content: ContentBlock[] = [
     {
       type: "text",
       text:
 `Service: ${service}
 Details: ${details || "(none)"}
 Location: ${[city, zip].filter(Boolean).join(", ") || "(not provided)"}
-Photos provided: ${photoUrls.length}
+Photos provided: ${okImages.length}
 
 Return the JSON now.`,
     },
   ];
-  for (const url of photoUrls) {
-    content.push({ type: "image", source: { type: "url", url } });
+  for (const img of okImages) {
+    content.push({
+      type: "image",
+      source: { type: "base64", media_type: img.media_type, data: img.data },
+    });
   }
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
