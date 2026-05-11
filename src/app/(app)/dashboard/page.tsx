@@ -8,6 +8,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/StatCard";
 import { LeadStatusBadge } from "@/components/StatusBadge";
+import { SourceRoi } from "@/components/SourceRoi";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { FollowUp, Lead } from "@/lib/types";
 
@@ -63,6 +64,8 @@ export default async function DashboardPage() {
         <StatCard tone="amber"   label="Follow-ups due today" value={String(dueFollowUps?.length ?? 0)}
           icon={CalendarClock} />
       </section>
+
+      <SourceRoi />
 
       <section className="grid lg:grid-cols-2 gap-4">
         <div className="card p-5">

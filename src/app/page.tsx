@@ -66,6 +66,9 @@ export default function Landing() {
           ContractorFlow
         </Link>
         <nav className="flex items-center gap-2">
+          <Link href="/find-pro" className="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 hidden sm:inline">
+            For homeowners
+          </Link>
           <Link href="/login" className="btn-secondary">Log in</Link>
           <Link href="/signup" className="btn-primary">
             Start free trial <ArrowRight className="h-4 w-4" />

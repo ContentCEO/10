@@ -7,6 +7,8 @@ import {
   Hammer,
   LayoutDashboard,
   LogOut,
+  Megaphone,
+  ShoppingCart,
   Sparkles,
   Users,
   Wallet,
@@ -16,9 +18,11 @@ import { cn } from "@/lib/utils";
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leads", label: "Leads", icon: Sparkles },
+  { href: "/marketplace", label: "Marketplace", icon: ShoppingCart },
   { href: "/customers", label: "Customers", icon: Users },
   { href: "/jobs", label: "Jobs", icon: Hammer },
   { href: "/calendar", label: "Calendar", icon: CalendarClock },
+  { href: "/lead-gen", label: "Lead Gen", icon: Megaphone },
   { href: "/billing", label: "Billing", icon: Wallet },
 ];
 

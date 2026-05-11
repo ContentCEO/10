@@ -3,7 +3,15 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/auth/callback", "/api/stripe/webhook"];
+const PUBLIC_PATHS = [
+  "/",
+  "/login",
+  "/signup",
+  "/auth/callback",
+  "/find-pro",
+  "/api/stripe/webhook",
+  "/api/marketplace/intake",
+];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -35,7 +43,11 @@ export async function updateSession(request: NextRequest) {
   const isPublic =
     PUBLIC_PATHS.includes(path) ||
     path.startsWith("/_next") ||
-    path.startsWith("/api/stripe/webhook");
+    path.startsWith("/api/stripe/webhook") ||
+    path.startsWith("/api/marketplace/intake") ||
+    path.startsWith("/api/public/") ||
+    path.startsWith("/l/") ||
+    path.startsWith("/find-pro");
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

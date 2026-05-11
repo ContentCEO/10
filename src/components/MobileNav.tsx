@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  CalendarClock,
   Hammer,
   LayoutDashboard,
+  ShoppingCart,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils";
 const nav = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/leads", label: "Leads", icon: Sparkles },
+  { href: "/marketplace", label: "Market", icon: ShoppingCart },
   { href: "/jobs", label: "Jobs", icon: Hammer },
   { href: "/customers", label: "People", icon: Users },
-  { href: "/calendar", label: "Cal", icon: CalendarClock },
 ];
 
 export function MobileNav() {

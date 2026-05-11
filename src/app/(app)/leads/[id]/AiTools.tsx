@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, FileText, Copy, Check } from "lucide-react";
+import { Sparkles, FileText, Copy, Check, Layers } from "lucide-react";
 import type { Lead } from "@/lib/types";
 
-type Mode = "follow_up" | "proposal";
+type Mode = "follow_up" | "proposal" | "tiered_proposal";
 
 export function AiTools({ lead }: { lead: Lead }) {
   const [mode, setMode] = useState<Mode>("follow_up");
@@ -23,7 +23,11 @@ export function AiTools({ lead }: { lead: Lead }) {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId: lead.id, tone }),
+        body: JSON.stringify({
+          leadId: lead.id,
+          tone,
+          tiered: mode === "tiered_proposal",
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Failed to generate");
@@ -53,21 +57,26 @@ export function AiTools({ lead }: { lead: Lead }) {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setMode("follow_up")}
-          className={mode === "follow_up" ? "btn-primary" : "btn-secondary"}
-        >
-          <Sparkles className="h-4 w-4" /> Follow-up message
+        <button type="button" onClick={() => setMode("follow_up")}
+          className={mode === "follow_up" ? "btn-primary" : "btn-secondary"}>
+          <Sparkles className="h-4 w-4" /> Follow-up
         </button>
-        <button
-          type="button"
-          onClick={() => setMode("proposal")}
-          className={mode === "proposal" ? "btn-primary" : "btn-secondary"}
-        >
+        <button type="button" onClick={() => setMode("proposal")}
+          className={mode === "proposal" ? "btn-primary" : "btn-secondary"}>
           <FileText className="h-4 w-4" /> Proposal
         </button>
+        <button type="button" onClick={() => setMode("tiered_proposal")}
+          className={mode === "tiered_proposal" ? "btn-primary" : "btn-secondary"}>
+          <Layers className="h-4 w-4" /> Good / Better / Best
+        </button>
       </div>
+
+      {mode === "tiered_proposal" && (
+        <p className="text-xs text-slate-500">
+          Generates three pricing tiers — clients pick the middle option most often, which
+          typically lifts deal size 15–30%.
+        </p>
+      )}
 
       <div className="grid sm:grid-cols-2 gap-3">
         <div>
