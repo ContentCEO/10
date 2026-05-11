@@ -7,7 +7,7 @@ import { Hammer, Home, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
-type AccountType = "contractor" | "homeowner" | "employee";
+type AccountType = "contractor" | "homeowner" | "employee" | "agency";
 
 export default function SignupPage() {
   const router = useRouter();

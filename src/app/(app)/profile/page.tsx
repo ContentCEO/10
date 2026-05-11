@@ -42,6 +42,11 @@ async function saveProfile(formData: FormData) {
     google_review_url: String(formData.get("google_review_url") ?? "").trim() || null,
     payment_link_url:  String(formData.get("payment_link_url") ?? "").trim() || null,
     alert_webhook_url: String(formData.get("alert_webhook_url") ?? "").trim() || null,
+    alert_phone:       String(formData.get("alert_phone") ?? "").trim() || null,
+    brand_primary_color: String(formData.get("brand_primary_color") ?? "").trim() || null,
+    brand_accent_color:  String(formData.get("brand_accent_color") ?? "").trim() || null,
+    brand_logo_url:      String(formData.get("brand_logo_url") ?? "").trim() || null,
+    brand_custom_domain: String(formData.get("brand_custom_domain") ?? "").trim() || null,
     auto_dispatch_enabled: formData.get("auto_dispatch_enabled") === "on",
     is_published:    formData.get("is_published") === "on",
   }).eq("id", user.id);

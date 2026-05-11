@@ -7,7 +7,7 @@ export type SubscriptionStatus =
   | "past_due"
   | "canceled"
   | "incomplete";
-export type AccountType = "contractor" | "homeowner" | "employee";
+export type AccountType = "contractor" | "homeowner" | "employee" | "agency";
 
 export interface Profile {
   id: string;

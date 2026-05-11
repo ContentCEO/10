@@ -267,7 +267,8 @@ async function run() {
   const reddit     = await runScraper("/api/scrape/reddit");
   const permits    = await runScraper("/api/scrape/permits");
   const storms     = await runScraper("/api/scrape/storms?states=MA,NY,RI,NH,CT,VT,ME");
-  return { ok: true, recurring, expiration, dispatch, reddit, permits, storms, ranAt: new Date().toISOString() };
+  const autoBid    = await runScraper("/api/marketplace/auto-bid");
+  return { ok: true, recurring, expiration, dispatch, reddit, permits, storms, autoBid, ranAt: new Date().toISOString() };
 }
 
 export async function GET(request: Request) {

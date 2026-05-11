@@ -12,6 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .from("profiles").select("account_type").eq("id", user.id).single();
   if (profile?.account_type === "homeowner") redirect("/home");
   if (profile?.account_type === "employee")  redirect("/work");
+  if (profile?.account_type === "agency")    redirect("/agency");
 
   return (
     <div className="min-h-screen flex bg-slate-50">
