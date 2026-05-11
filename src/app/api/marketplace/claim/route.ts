@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scheduleLeadFollowUps } from "@/lib/follow-up-sequence";
+import { alertContractorOnLead } from "@/lib/alerts";
 
 export const runtime = "nodejs";
 
@@ -125,6 +126,16 @@ export async function POST(request: Request) {
 
   await scheduleLeadFollowUps(admin, {
     userId: user.id, leadId: pipelineLead.id, leadName: claimed.name,
+  });
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+  await alertContractorOnLead(admin, user.id, {
+    title: claimed.name,
+    body: `${claimed.service_type} · claimed from marketplace`,
+    source: "Marketplace",
+    service: claimed.service_type,
+    city: claimed.city ?? undefined,
+    link: baseUrl ? `${baseUrl}/leads/${pipelineLead.id}` : undefined,
   });
 
   return NextResponse.json({ ok: true, leadId: pipelineLead.id });

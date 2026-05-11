@@ -245,11 +245,28 @@ function isAuthorized(request: Request) {
   return request.headers.get("x-cron-secret") === expected;
 }
 
+async function runScraper(path: string): Promise<{ ok: boolean; data?: unknown; error?: string }> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+  if (!baseUrl) return { ok: false, error: "NEXT_PUBLIC_APP_URL not set" };
+  const secret = process.env.CRON_SECRET;
+  try {
+    const res = await fetch(`${baseUrl}${path}`, {
+      headers: secret ? { Authorization: `Bearer ${secret}` } : {},
+    });
+    const data = await res.json().catch(() => null);
+    return { ok: res.ok, data: data ?? undefined, error: res.ok ? undefined : `HTTP ${res.status}` };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "fetch failed" };
+  }
+}
+
 async function run() {
   const recurring  = await generateDueRecurringJobs();
   const expiration = await expireStaleMarketplaceLeads();
   const dispatch   = await dispatchDueDrips();
-  return { ok: true, recurring, expiration, dispatch, ranAt: new Date().toISOString() };
+  const reddit     = await runScraper("/api/scrape/reddit");
+  const permits    = await runScraper("/api/scrape/permits");
+  return { ok: true, recurring, expiration, dispatch, reddit, permits, ranAt: new Date().toISOString() };
 }
 
 export async function GET(request: Request) {

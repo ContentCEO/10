@@ -36,6 +36,8 @@ export interface Profile {
   google_review_url: string | null;
   payment_link_url: string | null;
   auto_dispatch_enabled: boolean;
+  alert_webhook_url: string | null;
+  alert_phone: string | null;
   created_at: string;
 }
 

@@ -37,5 +37,23 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
+
+  // Log referral redemption if a code came through. The credit is applied
+  // later when the lead actually closes (lead.status = 'won').
+  const refCode = typeof body?.referral_code === "string" ? body.referral_code.trim() : "";
+  if (refCode) {
+    const { data: codeRow } = await admin
+      .from("referral_codes").select("code,credit_cents,uses").eq("code", refCode).maybeSingle();
+    if (codeRow) {
+      await admin.from("referral_redemptions").insert({
+        code: codeRow.code,
+        referred_email: typeof body?.email === "string" ? body.email : null,
+        credit_cents: codeRow.credit_cents,
+      });
+      await admin.from("referral_codes")
+        .update({ uses: (codeRow.uses ?? 0) + 1 })
+        .eq("code", refCode);
+    }
+  }
   return NextResponse.json({ ok: true });
 }

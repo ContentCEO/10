@@ -41,6 +41,7 @@ async function saveProfile(formData: FormData) {
     hero_image_url:  String(formData.get("hero_image_url") ?? "").trim() || null,
     google_review_url: String(formData.get("google_review_url") ?? "").trim() || null,
     payment_link_url:  String(formData.get("payment_link_url") ?? "").trim() || null,
+    alert_webhook_url: String(formData.get("alert_webhook_url") ?? "").trim() || null,
     auto_dispatch_enabled: formData.get("auto_dispatch_enabled") === "on",
     is_published:    formData.get("is_published") === "on",
   }).eq("id", user.id);
@@ -253,6 +254,15 @@ export default async function ProfilePage() {
           <p className="mt-1 text-xs text-slate-500">
             Surfaces as a "Pay now" button on every public invoice page.
             Create a payment link in your Stripe dashboard and paste it here.
+          </p>
+        </div>
+        <div>
+          <label className="label" htmlFor="alert_webhook_url">Speed-to-lead alert webhook</label>
+          <input id="alert_webhook_url" name="alert_webhook_url" type="url" className="input"
+            placeholder="https://hooks.slack.com/services/… or Discord webhook"
+            defaultValue={(p?.alert_webhook_url as string | null) ?? ""} />
+          <p className="mt-1 text-xs text-slate-500">
+            Drops a notification in your Slack or Discord the moment a new lead lands. Fast response = ~70% close rate.
           </p>
         </div>
 

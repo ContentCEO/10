@@ -50,8 +50,11 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/marketplace/meta") ||
     path.startsWith("/api/public/") ||
     path.startsWith("/api/cron/") ||
+    path.startsWith("/api/scrape/") ||
     path.startsWith("/l/") ||
     path.startsWith("/i/") ||
+    path.startsWith("/r/") ||
+    path.startsWith("/local/") ||
     path.startsWith("/pros") ||
     path.startsWith("/find-pro");
 

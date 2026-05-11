@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scheduleLeadFollowUps } from "@/lib/follow-up-sequence";
+import { alertContractorOnLead } from "@/lib/alerts";
 
 export const runtime = "nodejs";
 
@@ -51,6 +52,15 @@ export async function POST(
 
   await scheduleLeadFollowUps(admin, {
     userId: profile.id, leadId: created.id, leadName: name,
+  });
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+  await alertContractorOnLead(admin, profile.id, {
+    title: name,
+    body: `${insert.service_type ?? "Service unknown"} · from your public form`,
+    source: "Website form",
+    service: insert.service_type ?? undefined,
+    link: baseUrl ? `${baseUrl}/leads/${created.id}` : undefined,
   });
 
   return NextResponse.json({ ok: true });

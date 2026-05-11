@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarClock,
+  Gift,
   Hammer,
   HardHat,
   LayoutDashboard,
@@ -31,6 +32,7 @@ const nav = [
   { href: "/team", label: "Team", icon: HardHat },
   { href: "/grow", label: "Grow", icon: TrendingUp },
   { href: "/lead-gen", label: "Lead Gen", icon: Megaphone },
+  { href: "/referrals", label: "Referrals", icon: Gift },
   { href: "/integrations", label: "Integrations", icon: Plug },
   { href: "/profile", label: "My Profile", icon: UserCircle },
   { href: "/billing", label: "Billing", icon: Wallet },
