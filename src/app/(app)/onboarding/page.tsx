@@ -146,25 +146,44 @@ export default async function OnboardingPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <header>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-brand-600" /> Get started
-        </h1>
-        <p className="text-sm text-slate-500">
-          Personalized walkthrough. Complete these {steps.length} steps and you'll
-          have a fully-tuned lead engine running on autopilot.
-        </p>
+      <header className="relative card p-6 sm:p-8 overflow-hidden">
+        <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-brand-gradient opacity-15 blur-3xl" />
+        <div className="absolute -left-16 -bottom-16 h-40 w-40 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 opacity-10 blur-3xl" />
+        <div className="relative">
+          <span className="badge bg-brand-50 text-brand-700 ring-brand-200 mb-3">
+            <Sparkles className="h-3 w-3 mr-1" /> Personalized
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            Let's get you to your <span className="gradient-text">first 100 leads</span>
+          </h1>
+          <p className="mt-2 text-sm text-slate-600 max-w-lg">
+            {steps.length} steps. Most contractors finish in under 30 minutes and
+            have leads flowing in within a week.
+          </p>
+        </div>
       </header>
 
       <section className="card p-5 relative overflow-hidden">
         <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-brand-gradient opacity-10 blur-2xl" />
         <div className="relative flex items-center justify-between">
-          <span className="text-sm text-slate-500">Setup progress</span>
-          <span className="text-lg font-bold gradient-text">{done} / {steps.length} · {pct}%</span>
+          <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+            Setup progress
+          </span>
+          <span className="text-lg font-bold gradient-text">
+            {done} / {steps.length} <span className="text-slate-400">·</span> {pct}%
+          </span>
         </div>
-        <div className="mt-3 h-2 rounded-full bg-slate-200 overflow-hidden">
-          <div className="h-full bg-brand-gradient transition-all" style={{ width: `${pct}%` }} />
+        <div className="mt-3 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+          <div
+            className="h-full bg-brand-gradient transition-all duration-500 ease-out"
+            style={{ width: `${pct}%`, backgroundSize: "200% 200%", animation: "gradient-pan 4s ease infinite" }}
+          />
         </div>
+        {pct === 100 && (
+          <p className="mt-3 text-sm font-medium text-emerald-700">
+            🎉 You're all set up. Time to focus on closing.
+          </p>
+        )}
       </section>
 
       <ol className="space-y-3">

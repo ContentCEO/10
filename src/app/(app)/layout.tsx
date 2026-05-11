@@ -9,7 +9,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
-    .from("profiles").select("account_type").eq("id", user.id).single();
+    .from("profiles").select("account_type,is_admin").eq("id", user.id).single();
   if (profile?.account_type === "homeowner") redirect("/home");
   if (profile?.account_type === "employee")  redirect("/work");
   if (profile?.account_type === "agency")    redirect("/agency");
