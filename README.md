@@ -90,6 +90,7 @@ cp .env.example .env.local
    - `2026-05-11_disputes_and_widgets.sql` — lead disputes (auto-refund) + partner widgets (reverse marketplace)
    - `2026-05-11_wave9_platform.sql` — auto-bid + booking + push + agency + brand + inbound SMS
    - `2026-05-11_notification_prefs.sql` — per-contractor notification toggles (email/push/webhook/SMS)
+   - `2026-05-11_onboarding_videos.sql` — per-profile onboarding video list (JSONB)
 4. Copy your project URL, anon key, and service role key into `.env.local`.
 
 The schema enables Row Level Security so each user can only see their own

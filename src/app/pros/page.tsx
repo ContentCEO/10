@@ -9,21 +9,46 @@ export const dynamic = "force-dynamic";
 export default async function ProDirectoryPage({
   searchParams,
 }: {
-  searchParams: { service?: string; zip?: string };
+  searchParams: { service?: string; zip?: string; q?: string };
 }) {
   const admin = createAdminClient();
 
-  let q = admin
+  // Pull all published contractors then filter client-side. Allows partial
+  // ZIP match (3-digit prefix matches a service area) and free-text geo
+  // matching against city names.
+  const { data: profilesData } = await admin
     .from("profiles")
     .select("id, business_name, headline, bio, services, service_zips, service_cities, years_in_business, logo_url, hero_image_url, phone_public, website, is_published, account_type")
     .eq("account_type", "contractor")
-    .eq("is_published", true);
+    .eq("is_published", true)
+    .limit(200);
 
-  if (searchParams.service) q = q.contains("services", [searchParams.service]);
-  if (searchParams.zip)     q = q.contains("service_zips", [searchParams.zip]);
+  let profiles = ((profilesData ?? []) as unknown) as DirectoryProfile[];
 
-  const { data: profilesData } = await q;
-  const profiles = ((profilesData ?? []) as unknown) as DirectoryProfile[];
+  const svc = (searchParams.service ?? "").trim().toLowerCase();
+  const zip = (searchParams.zip ?? "").trim();
+  const geo = (searchParams.q ?? "").trim().toLowerCase();
+
+  if (svc) {
+    profiles = profiles.filter((p) =>
+      (p.services ?? []).some((s) => s.toLowerCase().includes(svc)),
+    );
+  }
+  if (zip) {
+    const prefix = zip.slice(0, 3);
+    profiles = profiles.filter((p) =>
+      (p.service_zips ?? []).some((z) =>
+        z === zip || z.startsWith(prefix) || zip.startsWith(z.slice(0, 3)),
+      ),
+    );
+  }
+  if (geo) {
+    profiles = profiles.filter((p) =>
+      (p.service_cities ?? []).some((c) => c.toLowerCase().includes(geo)) ||
+      (p.business_name ?? "").toLowerCase().includes(geo) ||
+      (p.headline ?? "").toLowerCase().includes(geo),
+    );
+  }
 
   // Pull aggregate review stats for the visible profiles.
   const ids = profiles.map((p) => p.id);
@@ -62,13 +87,18 @@ export default async function ProDirectoryPage({
           Vetted pros with verified credentials and real reviews.
         </p>
 
-        <form className="card p-4 mt-6 grid sm:grid-cols-[1fr_140px_auto] gap-2" action="/pros">
+        <form className="card p-4 mt-6 grid sm:grid-cols-[1fr_1fr_140px_auto] gap-2" action="/pros">
           <input name="service" defaultValue={searchParams.service ?? ""}
             className="input" placeholder="Service (e.g. kitchen remodel)" />
+          <input name="q" defaultValue={searchParams.q ?? ""}
+            className="input" placeholder="City or area (e.g. Boston)" />
           <input name="zip" defaultValue={searchParams.zip ?? ""}
-            className="input" placeholder="ZIP" inputMode="numeric" />
+            className="input" placeholder="ZIP" inputMode="numeric" maxLength={5} />
           <button className="btn-primary">Filter</button>
         </form>
+        <p className="mt-2 text-xs text-slate-500">
+          Match by service, city, or ZIP (partial ZIP works — 3 digits matches the whole metro).
+        </p>
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-20">

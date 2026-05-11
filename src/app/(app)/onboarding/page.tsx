@@ -191,29 +191,44 @@ export default async function OnboardingPage() {
         ))}
       </ol>
 
-      <section className="card p-6">
+      <VideoSection videos={(p?.onboarding_videos as { title: string; youtube_id: string }[] | null) ?? []} />
+    </div>
+  );
+}
+
+function VideoSection({ videos }: { videos: { title: string; youtube_id: string }[] }) {
+  return (
+    <section className="card p-6">
+      <div className="flex items-center justify-between">
         <h2 className="font-semibold flex items-center gap-2">
           <Play className="h-4 w-4 text-brand-600" /> Video walkthroughs
         </h2>
-        <p className="text-sm text-slate-500 mt-1">
-          Embed videos here when you record them. Drop a YouTube ID in the
-          source code and they'll play inline.
+        <Link href="/onboarding/videos" className="btn-secondary !py-1 text-xs">
+          Manage videos
+        </Link>
+      </div>
+      {videos.length === 0 ? (
+        <p className="text-sm text-slate-500 mt-2">
+          No videos yet. <Link href="/onboarding/videos" className="text-brand-600">Paste YouTube URLs</Link> to embed your own walkthroughs.
         </p>
-        <div className="mt-4 grid sm:grid-cols-2 gap-3 text-sm">
-          {[
-            "Quick tour (5 min)",
-            "Setting up Google LSA",
-            "Wiring Google Ads + Meta",
-            "Building a referral funnel",
-            "AI auto-bid walk-through",
-            "Inviting your crew",
-          ].map((t) => (
-            <div key={t} className="aspect-video rounded-lg border border-dashed border-slate-300 grid place-items-center text-xs text-slate-400 bg-slate-50">
-              {t}
+      ) : (
+        <div className="mt-4 grid sm:grid-cols-2 gap-3">
+          {videos.map((v, i) => (
+            <div key={`${v.youtube_id}-${i}`} className="space-y-1">
+              <div className="aspect-video">
+                <iframe
+                  className="w-full h-full rounded-lg"
+                  src={`https://www.youtube.com/embed/${v.youtube_id}`}
+                  title={v.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              <div className="text-xs font-medium">{v.title}</div>
             </div>
           ))}
         </div>
-      </section>
-    </div>
+      )}
+    </section>
   );
 }
