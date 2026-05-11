@@ -1,47 +1,17 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
 import { ArrowRight, CheckCircle2, MapPin } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateText } from "@/lib/ai";
 import { Stars } from "@/components/Stars";
-import { isLocale, STRINGS, type Locale } from "@/lib/i18n";
+import { STRINGS, type Locale } from "@/lib/i18n";
 import type { ContractorReview, DirectoryProfile } from "@/lib/directory";
-import { LocalCaptureForm } from "../../../[service]/[city]/LocalCaptureForm";
+import { LocalCaptureForm } from "@/app/local/[service]/[city]/LocalCaptureForm";
 
-export const revalidate = 86400;
-
-function titleCase(slug: string) {
+export function titleCase(slug: string) {
   return slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { locale: string; service: string; city: string };
-}): Promise<Metadata> {
-  if (!isLocale(params.locale)) return {};
-  const service = titleCase(decodeURIComponent(params.service));
-  const city = titleCase(decodeURIComponent(params.city));
-  const titles: Record<Locale, string> = {
-    en: `${service} contractors in ${city}`,
-    es: `Contratistas de ${service} en ${city}`,
-    pt: `Empreiteiros de ${service} em ${city}`,
-  };
-  return {
-    title: `${titles[params.locale as Locale]} | ContractorFlow`,
-    alternates: {
-      canonical: `/local/${params.locale}/${params.service}/${params.city}`,
-      languages: {
-        en: `/local/${params.service}/${params.city}`,
-        es: `/local/es/${params.service}/${params.city}`,
-        pt: `/local/pt/${params.service}/${params.city}`,
-      },
-    },
-  };
-}
-
-async function localizedCopy(locale: Locale, service: string, city: string) {
+export async function generateLocalCopy(locale: Locale, service: string, city: string) {
   const langName = { en: "English", es: "Spanish", pt: "Portuguese" }[locale];
   try {
     const text = await generateText({
@@ -49,54 +19,46 @@ async function localizedCopy(locale: Locale, service: string, city: string) {
         `You write the body copy of a local-service SEO landing page in ${langName}. ` +
         "Output JSON with keys: 'tagline' (10-15 words), 'intro' (2 short paragraphs), " +
         "'why_us' (array of 3 short bullet strings), 'faq' (array of 3 { question, answer }). " +
-        "No prose outside the JSON, no markdown fences. All copy in the target language.",
+        "No prose outside the JSON, no markdown fences.",
       user: `Service: ${service}\nCity: ${city}`,
       maxTokens: 700,
     });
     const stripped = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
-    const parsed = JSON.parse(stripped) as {
+    return JSON.parse(stripped) as {
       tagline: string;
       intro: string;
       why_us: string[];
       faq: { question: string; answer: string }[];
     };
-    return parsed;
   } catch {
-    const fallbacks: Record<Locale, ReturnType<typeof shape>> = {
-      en: shape("English", service, city),
-      es: shape("Spanish", service, city),
-      pt: shape("Portuguese", service, city),
-    };
-    return fallbacks[locale];
+    return fallback(locale, service, city);
   }
 }
 
-function shape(lang: string, service: string, city: string) {
-  if (lang === "Spanish") {
+function fallback(locale: Locale, service: string, city: string) {
+  if (locale === "es") {
     return {
       tagline: `Profesionales de ${service.toLowerCase()} de confianza en ${city}.`,
-      intro:
-        `Busca un contratista para su proyecto de ${service.toLowerCase()} en ${city}? Esta en el lugar correcto. Conectamos propietarios con profesionales verificados y con licencia, normalmente dentro de las 24 horas y sin costo para usted.`,
-      why_us: ["Contratistas verificados", "Multiple cotizaciones, un formulario", "Totalmente gratis"],
+      intro: `Busca un contratista para su proyecto de ${service.toLowerCase()} en ${city}? Conectamos propietarios con profesionales verificados, normalmente dentro de las 24 horas y sin costo.`,
+      why_us: ["Contratistas verificados", "Multiples cotizaciones, un formulario", "Totalmente gratis"],
       faq: [
         { question: `Cuanto cuesta ${service.toLowerCase()} en ${city}?`,
-          answer: "Varia segun el alcance. Nuestra calculadora de IA le da un rango en 30 segundos." },
-        { question: "Tengo que pagar por este servicio?", answer: "No, los propietarios usan este servicio 100% gratis." },
-        { question: "Que tan rapido recibire una respuesta?", answer: "La mayoria recibe respuesta dentro de las 24 horas." },
+          answer: "Varia segun el alcance. Use nuestra calculadora de IA para un rango." },
+        { question: "Tengo que pagar?", answer: "No, 100% gratis para propietarios." },
+        { question: "Que tan rapido respondera?", answer: "La mayoria recibe respuesta dentro de 24 horas." },
       ],
     };
   }
-  if (lang === "Portuguese") {
+  if (locale === "pt") {
     return {
       tagline: `Profissionais de ${service.toLowerCase()} confiaveis em ${city}.`,
-      intro:
-        `Procurando um empreiteiro para seu projeto de ${service.toLowerCase()} em ${city}? Voce esta no lugar certo. Conectamos proprietarios com profissionais verificados e licenciados, normalmente dentro de 24 horas e sem custo para voce.`,
+      intro: `Procurando empreiteiro para seu projeto de ${service.toLowerCase()} em ${city}? Conectamos proprietarios com profissionais verificados, normalmente dentro de 24 horas e sem custo.`,
       why_us: ["Empreiteiros verificados", "Multiplos orcamentos, um formulario", "Totalmente gratis"],
       faq: [
         { question: `Quanto custa ${service.toLowerCase()} em ${city}?`,
-          answer: "Varia conforme o escopo. Nossa calculadora de IA da uma estimativa em 30 segundos." },
-        { question: "Eu pago por esse servico?", answer: "Nao, proprietarios usam este servico 100% gratuito." },
-        { question: "Em quanto tempo serei contatado?", answer: "A maioria recebe contato dentro de 24 horas." },
+          answer: "Varia conforme o escopo. Use nossa calculadora de IA." },
+        { question: "Eu pago?", answer: "Nao, 100% gratuito para proprietarios." },
+        { question: "Em quanto tempo serei contatado?", answer: "A maioria em 24 horas." },
       ],
     };
   }
@@ -106,22 +68,22 @@ function shape(lang: string, service: string, city: string) {
     why_us: ["Vetted contractors", "Multiple quotes, one form", "Free, no obligation"],
     faq: [
       { question: `How much does ${service.toLowerCase()} cost in ${city}?`,
-        answer: `Our AI estimator gives a free ballpark in 30 seconds.` },
+        answer: "Our AI estimator gives a free ballpark in 30 seconds." },
       { question: "Do I have to pay?", answer: "No — homeowners use this 100% free." },
       { question: "How quickly will I hear back?", answer: "Most homeowners hear from a pro within 24 hours." },
     ],
   };
 }
 
-export default async function LocalizedLandingPage({
-  params,
+export async function renderLocalizedPage({
+  locale, serviceSlug, citySlug,
 }: {
-  params: { locale: string; service: string; city: string };
+  locale: Locale;
+  serviceSlug: string;
+  citySlug: string;
 }) {
-  if (!isLocale(params.locale)) notFound();
-  const locale = params.locale as Locale;
-  const service = titleCase(decodeURIComponent(params.service));
-  const city = titleCase(decodeURIComponent(params.city));
+  const service = titleCase(decodeURIComponent(serviceSlug));
+  const city = titleCase(decodeURIComponent(citySlug));
   const strings = STRINGS[locale];
 
   const admin = createAdminClient();
@@ -158,12 +120,14 @@ export default async function LocalizedLandingPage({
     }
   }
 
-  const copy = await localizedCopy(locale, service, city);
+  const copy = await generateLocalCopy(locale, service, city);
+  const enHref = `/local/${serviceSlug}/${citySlug}`;
+  const esHref = `/local/es/${serviceSlug}/${citySlug}`;
+  const ptHref = `/local/pt/${serviceSlug}/${citySlug}`;
 
   return (
     <main className="min-h-screen" lang={locale}>
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[500px] bg-brand-radial blur-3xl" />
-
       <header className="mx-auto max-w-6xl px-6 py-5 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-semibold text-lg">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow">
@@ -171,11 +135,9 @@ export default async function LocalizedLandingPage({
           </span>
           ContractorFlow
         </Link>
-        <div className="flex items-center gap-2">
-          <Link href="#quote" className="btn-primary">
-            {strings.cta_get_quote} <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+        <Link href="#quote" className="btn-primary">
+          {strings.cta_get_quote} <ArrowRight className="h-4 w-4" />
+        </Link>
       </header>
 
       <section className="mx-auto max-w-6xl px-6 py-10 grid lg:grid-cols-2 gap-10 items-start">
@@ -200,15 +162,9 @@ export default async function LocalizedLandingPage({
           </ul>
           <div className="mt-6 text-xs text-slate-500">
             <span>Languages: </span>
-            {(["en", "es", "pt"] as Locale[]).map((l) => (
-              <Link key={l}
-                href={l === "en"
-                  ? `/local/${params.service}/${params.city}`
-                  : `/local/${l}/${params.service}/${params.city}`}
-                className={`mr-2 ${l === locale ? "font-semibold text-brand-700" : "underline"}`}>
-                {l.toUpperCase()}
-              </Link>
-            ))}
+            <Link href={enHref} className={`mr-2 ${locale === "en" ? "font-semibold text-brand-700" : "underline"}`}>EN</Link>
+            <Link href={esHref} className={`mr-2 ${locale === "es" ? "font-semibold text-brand-700" : "underline"}`}>ES</Link>
+            <Link href={ptHref} className={`mr-2 ${locale === "pt" ? "font-semibold text-brand-700" : "underline"}`}>PT</Link>
           </div>
         </div>
 
