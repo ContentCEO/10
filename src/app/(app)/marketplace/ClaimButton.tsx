@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function ClaimButton({ id }: { id: string }) {
+export function ClaimButton({ id, disabled }: { id: string; disabled?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +29,8 @@ export function ClaimButton({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button onClick={claim} disabled={loading} className="btn-primary text-xs !py-1.5">
-        {loading ? "Claiming…" : "Claim lead"}
+      <button onClick={claim} disabled={loading || disabled} className="btn-primary text-xs !py-1.5">
+        {loading ? "Claiming…" : disabled ? "Top up to claim" : "Claim lead"}
       </button>
       {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
