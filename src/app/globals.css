@@ -20,7 +20,7 @@ html, body {
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium tracking-tight transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
   }
   .btn-primary {
     @apply btn text-white shadow-glow;
@@ -29,23 +29,28 @@ html, body {
     animation: gradient-pan 6s ease infinite;
   }
   .btn-primary:hover { @apply shadow-lg -translate-y-px; }
+  .btn-primary:active { @apply translate-y-0; }
 
   .btn-secondary {
-    @apply btn bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-px;
+    @apply btn bg-white text-ink-700 border border-ink-200 hover:bg-ink-50 hover:border-ink-300 hover:-translate-y-px shadow-soft;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-700 hover:bg-ink-100;
   }
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 shadow-sm;
+    @apply btn bg-rose-600 text-white hover:bg-rose-700 shadow-soft;
   }
 
   .input {
-    @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100;
+    @apply w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm shadow-inner-soft transition placeholder:text-ink-400
+      focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-100;
   }
-  .label { @apply block text-sm font-medium text-slate-700 mb-1; }
+  .label { @apply block text-sm font-medium text-ink-700 mb-1.5; }
 
   .card {
-    @apply rounded-xl border border-slate-200/70 bg-white/90 backdrop-blur shadow-sm transition-shadow;
+    @apply rounded-2xl border border-ink-200/70 bg-white/90 backdrop-blur shadow-soft transition-all duration-200;
   }
-  .card-hover { @apply hover:shadow-card-hover hover:border-slate-300/70; }
+  .card-hover { @apply hover:shadow-soft-lg hover:border-ink-300/70 hover:-translate-y-0.5; }
 
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset;
@@ -59,19 +64,51 @@ html, body {
   }
 
   .stat-tile {
-    @apply relative overflow-hidden rounded-2xl border border-white/40 p-5 text-white shadow-glow;
+    @apply relative overflow-hidden rounded-2xl border border-white/40 p-5 text-white shadow-glow transition-transform duration-300;
   }
+  .stat-tile:hover { @apply -translate-y-0.5; }
   .stat-tile::after {
     content: "";
     @apply absolute inset-0 pointer-events-none;
     background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.25), transparent 50%);
   }
 
+  .kpi {
+    @apply card p-5 flex flex-col gap-1.5;
+  }
+  .kpi-label { @apply text-xs font-medium uppercase tracking-wider text-ink-500; }
+  .kpi-value { @apply text-3xl font-semibold tracking-tight text-ink-900; }
+  .kpi-delta-up { @apply inline-flex items-center gap-1 text-xs font-medium text-emerald-600; }
+  .kpi-delta-down { @apply inline-flex items-center gap-1 text-xs font-medium text-rose-600; }
+
   .pill-active {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 ring-1 ring-inset ring-emerald-500/20;
   }
   .pill-idle {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-slate-500/10 text-slate-600 ring-1 ring-inset ring-slate-500/20;
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-ink-500/10 text-ink-600 ring-1 ring-inset ring-ink-500/20;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold tracking-tight text-ink-900;
+  }
+  .section-eyebrow {
+    @apply inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600;
+  }
+  .display-h1 {
+    @apply text-5xl sm:text-6xl font-bold tracking-tight text-ink-900;
+  }
+  .display-h2 {
+    @apply text-3xl sm:text-4xl font-bold tracking-tight text-ink-900;
+  }
+  .lede {
+    @apply text-base sm:text-lg text-ink-600 leading-relaxed;
+  }
+
+  .surface-soft {
+    @apply rounded-2xl bg-gradient-to-br from-brand-50 via-white to-accent-400/10 border border-ink-200/60;
+  }
+  .ring-divider {
+    @apply ring-1 ring-inset ring-ink-200/70;
   }
 }
 
