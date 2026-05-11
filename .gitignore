@@ -8,4 +8,4 @@ out
 .vercel
 .turbo
 next-env.d.ts
-.tsbuildinfo
+*.tsbuildinfo
