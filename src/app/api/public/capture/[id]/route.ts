@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { scheduleLeadFollowUps } from "@/lib/follow-up-sequence";
 
 export const runtime = "nodejs";
 
@@ -39,10 +40,18 @@ export async function POST(
     status: "new" as const,
   };
 
-  const { error } = await admin.from("leads").insert(insert);
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const { data: created, error } = await admin
+    .from("leads").insert(insert).select("id").single();
+  if (error || !created) {
+    return NextResponse.json(
+      { error: error?.message ?? "Failed to create lead" },
+      { status: 500 },
+    );
   }
+
+  await scheduleLeadFollowUps(admin, {
+    userId: profile.id, leadId: created.id, leadName: name,
+  });
 
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateText } from "@/lib/ai";
+import { scheduleLeadFollowUps } from "@/lib/follow-up-sequence";
 
 export const runtime = "nodejs";
 
@@ -74,6 +75,10 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  await scheduleLeadFollowUps(supabase, {
+    userId: user.id, leadId: data.id, leadName: name,
+  });
 
   return NextResponse.json({ id: data.id });
 }

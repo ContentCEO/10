@@ -22,6 +22,15 @@ export interface Profile {
   created_at: string;
 }
 
+export type RecurringFrequency = "weekly" | "biweekly" | "monthly" | "quarterly";
+
+export const RECURRING_FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
+  weekly:    "Every week",
+  biweekly:  "Every 2 weeks",
+  monthly:   "Every month",
+  quarterly: "Every 3 months",
+};
+
 export interface Customer {
   id: string;
   user_id: string;
@@ -30,6 +39,11 @@ export interface Customer {
   email: string | null;
   address: string | null;
   notes: string | null;
+  recurring_frequency: RecurringFrequency | null;
+  recurring_service: string | null;
+  recurring_price: number | null;
+  recurring_next_at: string | null;
+  recurring_active: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -80,6 +80,7 @@ cp .env.example .env.local
    - `2026-05-11_account_type.sql` — homeowner / contractor account types
    - `2026-05-11_contractor_directory.sql` — public profile fields, credentials, photos, reviews
    - `2026-05-11_revenue.sql` — job cost tracking + review request fields
+   - `2026-05-11_recurring.sql` — recurring service engine on customers
 4. Copy your project URL, anon key, and service role key into `.env.local`.
 
 The schema enables Row Level Security so each user can only see their own
@@ -108,6 +109,23 @@ npm run dev
 ```
 
 Visit <http://localhost:3000>.
+
+### 6. Daily cron (optional, for recurring jobs + marketplace cleanup)
+
+The deployed instance ships with a Vercel Cron Job defined in `vercel.json`
+that hits `/api/cron/daily` at 08:00 UTC every day. The endpoint:
+
+- Generates the next job + reminder for any customer whose recurring schedule
+  is due.
+- Marks marketplace leads as `expired` past their `expires_at` window.
+
+Set `CRON_SECRET` (Vercel → Settings → Environment Variables) to any long
+random string. Vercel Cron will include it as `Authorization: Bearer <secret>`
+when calling the endpoint. To trigger manually locally:
+
+```bash
+curl http://localhost:3000/api/cron/daily
+```
 
 ## Notes
 

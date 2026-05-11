@@ -59,6 +59,10 @@ create trigger on_auth_user_created
 -- ============================================================
 -- CUSTOMERS
 -- ============================================================
+do $$ begin
+  create type recurring_frequency as enum ('weekly', 'biweekly', 'monthly', 'quarterly');
+exception when duplicate_object then null; end $$;
+
 create table if not exists public.customers (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -67,10 +71,18 @@ create table if not exists public.customers (
   email text,
   address text,
   notes text,
+  recurring_frequency recurring_frequency,
+  recurring_service   text,
+  recurring_price     numeric(10,2),
+  recurring_next_at   date,
+  recurring_active    boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 create index if not exists customers_user_idx on public.customers(user_id);
+create index if not exists customers_recurring_due_idx
+  on public.customers(recurring_next_at)
+  where recurring_active = true;
 
 -- ============================================================
 -- LEADS
