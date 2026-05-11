@@ -10,16 +10,19 @@ export const runtime = "nodejs";
 // whether to engage in-thread (Reddit's terms prohibit unsolicited DMs).
 
 const DEFAULT_SUBS = [
-  "HomeImprovement",
-  "DIY",
-  "Renovations",
-  "RealEstate",
-  "homeowners",
+  // Generic high-volume subs
+  "HomeImprovement", "DIY", "Renovations", "RealEstate", "homeowners",
+  "HomeMaintenance", "centuryhomes", "FirstTimeHomeBuyer",
+  // Massachusetts-specific
+  "boston", "massachusetts", "cambridgema", "somerville",
+  "WorcesterMA", "metrowestma", "newengland",
 ];
 
 const DEFAULT_KEYWORDS = [
   "contractor", "estimate", "quote", "remodel", "renovation",
-  "kitchen", "bathroom", "deck", "roof", "fence", "cleaning",
+  "kitchen", "bathroom", "deck", "roof", "siding", "fence", "cleaning",
+  "looking for a", "recommend", "anyone know", "trustworthy",
+  "hvac", "plumber", "electrician", "painter", "tile", "flooring",
 ];
 
 interface RedditPost {

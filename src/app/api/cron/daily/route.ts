@@ -266,7 +266,8 @@ async function run() {
   const dispatch   = await dispatchDueDrips();
   const reddit     = await runScraper("/api/scrape/reddit");
   const permits    = await runScraper("/api/scrape/permits");
-  return { ok: true, recurring, expiration, dispatch, reddit, permits, ranAt: new Date().toISOString() };
+  const storms     = await runScraper("/api/scrape/storms?states=MA,NY,RI,NH,CT,VT,ME");
+  return { ok: true, recurring, expiration, dispatch, reddit, permits, storms, ranAt: new Date().toISOString() };
 }
 
 export async function GET(request: Request) {

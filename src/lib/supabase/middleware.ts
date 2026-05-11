@@ -42,6 +42,9 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic =
     PUBLIC_PATHS.includes(path) ||
+    path === "/sitemap.xml" ||
+    path === "/robots.txt" ||
+    path === "/cost-calculator" ||
     path.startsWith("/_next") ||
     path.startsWith("/api/stripe/webhook") ||
     path.startsWith("/api/marketplace/intake") ||
@@ -51,6 +54,8 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/public/") ||
     path.startsWith("/api/cron/") ||
     path.startsWith("/api/scrape/") ||
+    path.startsWith("/api/voice/") ||
+    path.startsWith("/embed/") ||
     path.startsWith("/l/") ||
     path.startsWith("/i/") ||
     path.startsWith("/r/") ||

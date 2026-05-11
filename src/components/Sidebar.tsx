@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   CalendarClock,
   Gift,
   Hammer,
+  Handshake,
   HardHat,
   LayoutDashboard,
   LogOut,
   Megaphone,
   Plug,
   Receipt,
+  Rocket,
+  ShieldCheck,
   ShoppingCart,
   Sparkles,
   TrendingUp,
@@ -22,20 +26,24 @@ import {
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/leads", label: "Leads", icon: Sparkles },
-  { href: "/marketplace", label: "Marketplace", icon: ShoppingCart },
-  { href: "/customers", label: "Customers", icon: Users },
-  { href: "/jobs", label: "Jobs", icon: Hammer },
-  { href: "/invoices", label: "Invoices", icon: Receipt },
-  { href: "/calendar", label: "Calendar", icon: CalendarClock },
-  { href: "/team", label: "Team", icon: HardHat },
-  { href: "/grow", label: "Grow", icon: TrendingUp },
-  { href: "/lead-gen", label: "Lead Gen", icon: Megaphone },
-  { href: "/referrals", label: "Referrals", icon: Gift },
-  { href: "/integrations", label: "Integrations", icon: Plug },
-  { href: "/profile", label: "My Profile", icon: UserCircle },
-  { href: "/billing", label: "Billing", icon: Wallet },
+  { href: "/dashboard",     label: "Dashboard",     icon: LayoutDashboard },
+  { href: "/leads",         label: "Leads",         icon: Sparkles },
+  { href: "/marketplace",   label: "Marketplace",   icon: ShoppingCart },
+  { href: "/opportunities", label: "Opportunities", icon: Activity },
+  { href: "/customers",     label: "Customers",     icon: Users },
+  { href: "/jobs",          label: "Jobs",          icon: Hammer },
+  { href: "/invoices",      label: "Invoices",      icon: Receipt },
+  { href: "/calendar",      label: "Calendar",      icon: CalendarClock },
+  { href: "/team",          label: "Team",          icon: HardHat },
+  { href: "/grow",          label: "Grow",          icon: TrendingUp },
+  { href: "/playbook-200",  label: "200/day",       icon: Rocket },
+  { href: "/partnerships",  label: "Partnerships",  icon: Handshake },
+  { href: "/lsa-setup",     label: "Google LSA",    icon: ShieldCheck },
+  { href: "/lead-gen",      label: "Lead Gen",      icon: Megaphone },
+  { href: "/referrals",     label: "Referrals",     icon: Gift },
+  { href: "/integrations",  label: "Integrations",  icon: Plug },
+  { href: "/profile",       label: "My Profile",    icon: UserCircle },
+  { href: "/billing",       label: "Billing",       icon: Wallet },
 ];
 
 export function Sidebar({ email }: { email: string | null }) {
