@@ -32,7 +32,10 @@ function LoginForm() {
       if (userId) {
         const { data: profile } = await supabase
           .from("profiles").select("account_type").eq("id", userId).single();
-        destination = profile?.account_type === "homeowner" ? "/home" : "/dashboard";
+        destination =
+          profile?.account_type === "homeowner" ? "/home" :
+          profile?.account_type === "employee"  ? "/work" :
+                                                  "/dashboard";
       } else {
         destination = "/dashboard";
       }

@@ -85,6 +85,7 @@ cp .env.example .env.local
    - `2026-05-11_lead_sources.sql` — marketplace source attribution + dedupe
    - `2026-05-11_lead_scoring.sql` — AI lead score + speed-to-lead on contractor leads
    - `2026-05-11_messaging.sql` — outbound message log + auto-dispatch toggle
+   - `2026-05-11_employees.sql` — employee account type, invites, time entries, tasks, job photos
 4. Copy your project URL, anon key, and service role key into `.env.local`.
 
 The schema enables Row Level Security so each user can only see their own

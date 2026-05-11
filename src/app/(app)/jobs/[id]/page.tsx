@@ -3,10 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { Receipt, TrendingUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { JOB_STATUS_LABELS, type Invoice, type Job, type JobStatus } from "@/lib/types";
+import { JOB_STATUS_LABELS, type Invoice, type Job, type JobPhoto, type JobStatus } from "@/lib/types";
 import { JobStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ReviewRequestPanel } from "./ReviewRequestPanel";
+import { JobPhotos } from "./JobPhotos";
 
 export const dynamic = "force-dynamic";
 
@@ -39,15 +40,17 @@ async function remove(id: string) {
 
 export default async function JobDetail({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const [{ data: job }, { data: customers }, { data: { user } }, { data: invoices }] = await Promise.all([
+  const [{ data: job }, { data: customers }, { data: { user } }, { data: invoices }, { data: photos }] = await Promise.all([
     supabase.from("jobs").select("*").eq("id", params.id).single(),
     supabase.from("customers").select("id,name").order("name"),
     supabase.auth.getUser(),
     supabase.from("invoices").select("*").eq("job_id", params.id).order("created_at", { ascending: false }),
+    supabase.from("job_photos").select("*").eq("job_id", params.id).order("taken_at", { ascending: false }),
   ]);
   if (!job) notFound();
   const j = job as Job;
   const invoiceList = (invoices ?? []) as Invoice[];
+  const photoList   = (photos ?? []) as JobPhoto[];
 
   let customerName: string | null = null;
   if (j.customer_id) {
@@ -95,6 +98,8 @@ export default async function JobDetail({ params }: { params: { id: string } }) 
           </div>
         </div>
       )}
+
+      <JobPhotos jobId={j.id} photos={photoList} />
 
       <section className="card p-5">
         <div className="flex items-center justify-between">

@@ -11,6 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { data: profile } = await supabase
     .from("profiles").select("account_type").eq("id", user.id).single();
   if (profile?.account_type === "homeowner") redirect("/home");
+  if (profile?.account_type === "employee")  redirect("/work");
 
   return (
     <div className="min-h-screen flex bg-slate-50">

@@ -36,7 +36,7 @@ export default async function HomeownerHome() {
 
   return (
     <div className="space-y-6">
-      <section className="grid sm:grid-cols-2 gap-3">
+      <section className="grid sm:grid-cols-3 gap-3">
         <Link href="/pros" className="card card-hover p-5 flex items-center gap-3 bg-brand-50 border-brand-100">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow shrink-0">
             <Users className="h-5 w-5" />
@@ -44,19 +44,31 @@ export default async function HomeownerHome() {
           <div className="flex-1 min-w-0">
             <div className="font-semibold">Browse pros</div>
             <div className="text-xs text-slate-600">
-              Vetted contractors with credentials + reviews.
+              Vetted local contractors.
             </div>
           </div>
           <ArrowRight className="h-4 w-4 text-brand-600" />
+        </Link>
+        <Link href="/estimate" className="card card-hover p-5 flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-glow shrink-0">
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold">AI estimator</div>
+            <div className="text-xs text-slate-600">
+              Ballpark a project in 30s.
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-slate-400" />
         </Link>
         <Link href="/portal" className="card card-hover p-5 flex items-center gap-3">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-glow shrink-0">
             <Sparkles className="h-5 w-5" />
           </span>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold">My service portal</div>
+            <div className="font-semibold">My portal</div>
             <div className="text-xs text-slate-600">
-              See your jobs, invoices, and payments.
+              Jobs, invoices, payments.
             </div>
           </div>
           <ArrowRight className="h-4 w-4 text-slate-400" />

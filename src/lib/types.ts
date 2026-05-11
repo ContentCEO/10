@@ -7,7 +7,7 @@ export type SubscriptionStatus =
   | "past_due"
   | "canceled"
   | "incomplete";
-export type AccountType = "contractor" | "homeowner";
+export type AccountType = "contractor" | "homeowner" | "employee";
 
 export interface Profile {
   id: string;
@@ -36,6 +36,74 @@ export interface Profile {
   google_review_url: string | null;
   payment_link_url: string | null;
   auto_dispatch_enabled: boolean;
+  created_at: string;
+}
+
+export type TaskStatus = "pending" | "in_progress" | "done" | "skipped";
+
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  pending: "Pending",
+  in_progress: "In progress",
+  done: "Done",
+  skipped: "Skipped",
+};
+
+export interface EmployeeInvite {
+  id: string;
+  contractor_id: string;
+  code: string;
+  email: string | null;
+  role: string;
+  hourly_rate_cents: number | null;
+  expires_at: string;
+  accepted_at: string | null;
+  accepted_by: string | null;
+  created_at: string;
+}
+
+export interface EmployeeLink {
+  id: string;
+  employee_id: string;
+  contractor_id: string;
+  role: string;
+  hourly_rate_cents: number | null;
+  status: "active" | "invited" | "suspended" | "removed";
+  created_at: string;
+}
+
+export interface TimeEntry {
+  id: string;
+  employee_id: string;
+  contractor_id: string;
+  job_id: string | null;
+  clock_in_at: string;
+  clock_out_at: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface DailyTask {
+  id: string;
+  contractor_id: string;
+  employee_id: string | null;
+  job_id: string | null;
+  title: string;
+  notes: string | null;
+  due_at: string | null;
+  status: TaskStatus;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface JobPhoto {
+  id: string;
+  user_id: string;
+  job_id: string;
+  url: string;
+  caption: string | null;
+  phase: "before" | "during" | "after" | null;
+  taken_at: string;
+  uploaded_by: string | null;
   created_at: string;
 }
 
