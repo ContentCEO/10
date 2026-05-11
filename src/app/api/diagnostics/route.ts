@@ -19,7 +19,10 @@ function isAuthorized(request: Request) {
   const expected = process.env.CRON_SECRET;
   if (!expected) return false;
   if (request.headers.get("authorization") === `Bearer ${expected}`) return true;
-  return request.headers.get("x-cron-secret") === expected;
+  if (request.headers.get("x-cron-secret") === expected) return true;
+  const url = new URL(request.url);
+  if (url.searchParams.get("secret") === expected) return true;
+  return false;
 }
 
 async function tableReachable(admin: ReturnType<typeof createAdminClient>, table: string): Promise<{ ok: boolean; count?: number; error?: string }> {
