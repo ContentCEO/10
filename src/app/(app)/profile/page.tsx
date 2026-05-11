@@ -48,6 +48,10 @@ async function saveProfile(formData: FormData) {
     brand_logo_url:      String(formData.get("brand_logo_url") ?? "").trim() || null,
     brand_custom_domain: String(formData.get("brand_custom_domain") ?? "").trim() || null,
     auto_dispatch_enabled: formData.get("auto_dispatch_enabled") === "on",
+    notify_email:   formData.get("notify_email")   === "on",
+    notify_push:    formData.get("notify_push")    === "on",
+    notify_webhook: formData.get("notify_webhook") === "on",
+    notify_sms:     formData.get("notify_sms")     === "on",
     is_published:    formData.get("is_published") === "on",
   }).eq("id", user.id);
 
@@ -262,13 +266,56 @@ export default async function ProfilePage() {
           </p>
         </div>
         <div>
-          <label className="label" htmlFor="alert_webhook_url">Speed-to-lead alert webhook</label>
+          <label className="label" htmlFor="alert_webhook_url">Slack / Discord webhook</label>
           <input id="alert_webhook_url" name="alert_webhook_url" type="url" className="input"
             placeholder="https://hooks.slack.com/services/… or Discord webhook"
             defaultValue={(p?.alert_webhook_url as string | null) ?? ""} />
           <p className="mt-1 text-xs text-slate-500">
-            Drops a notification in your Slack or Discord the moment a new lead lands. Fast response = ~70% close rate.
+            Drops a notification in your Slack or Discord the moment a new lead lands.
           </p>
+        </div>
+        <div>
+          <label className="label" htmlFor="alert_phone">Your phone (for SMS alerts)</label>
+          <input id="alert_phone" name="alert_phone" type="tel" className="input"
+            placeholder="+15551234567"
+            defaultValue={(p?.alert_phone as string | null) ?? ""} />
+          <p className="mt-1 text-xs text-slate-500">
+            Used for SMS alerts (Twilio must be configured) and to match inbound SMS to your account.
+          </p>
+        </div>
+
+        <div className="pt-2 border-t border-slate-100">
+          <h3 className="font-semibold text-sm">When a new lead comes in, notify me via</h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Each channel sends only to <strong>you</strong>. Other contractors only get their own notifications.
+          </p>
+          <div className="mt-3 space-y-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="notify_email"
+                defaultChecked={(p?.notify_email as boolean | undefined) ?? true} />
+              <span>
+                <strong>Email</strong> to your signup address
+                {p?.email ? ` (${p.email as string})` : ""} — requires Resend env vars
+              </span>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="notify_push"
+                defaultChecked={(p?.notify_push as boolean | undefined) ?? true} />
+              <span>
+                <strong>Push notification</strong> to your enrolled browsers + phones — requires VAPID env vars
+              </span>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="notify_webhook"
+                defaultChecked={(p?.notify_webhook as boolean | undefined) ?? true} />
+              <span><strong>Slack / Discord webhook</strong> (above)</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="notify_sms"
+                defaultChecked={(p?.notify_sms as boolean | undefined) ?? false} />
+              <span><strong>SMS</strong> to your phone — requires Twilio env vars</span>
+            </label>
+          </div>
         </div>
 
         <label className="flex items-center gap-2 pt-2 border-t border-slate-100">

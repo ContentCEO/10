@@ -8,6 +8,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendPush, type PushSubscriptionRow } from "@/lib/push";
+import { sendEmail, sendSms } from "@/lib/messaging";
 
 interface AlertPayload {
   title: string;
@@ -75,25 +76,68 @@ export async function alertContractorOnLead(
 ): Promise<void> {
   const { data } = await admin
     .from("profiles")
-    .select("alert_webhook_url,alert_phone")
+    .select("alert_webhook_url,alert_phone,email,business_name,notify_email,notify_sms,notify_push,notify_webhook")
     .eq("id", contractorId)
     .single();
-  const url = (data as { alert_webhook_url: string | null } | null)?.alert_webhook_url;
-  if (url) await sendLeadAlert(url, payload);
+  const profile = data as {
+    alert_webhook_url: string | null;
+    alert_phone: string | null;
+    email: string | null;
+    business_name: string | null;
+    notify_email: boolean | null;
+    notify_sms: boolean | null;
+    notify_push: boolean | null;
+    notify_webhook: boolean | null;
+  } | null;
+  if (!profile) return;
 
-  // Push notifications to every registered device for this contractor.
-  const { data: subs } = await admin
-    .from("push_subscriptions").select("endpoint,p256dh,auth,id")
-    .eq("user_id", contractorId);
-  for (const s of ((subs ?? []) as (PushSubscriptionRow & { id: string })[])) {
-    const result = await sendPush(s, {
-      title: `🔔 New lead: ${payload.title}`,
-      body: payload.body,
-      url: payload.link ?? "/leads",
-    });
-    if (result.expired) {
-      // Subscription dead — remove so we don't keep retrying it.
-      await admin.from("push_subscriptions").delete().eq("id", s.id);
+  // Default to ON when the column is null — keeps existing behavior.
+  const wantWebhook = profile.notify_webhook ?? true;
+  const wantPush    = profile.notify_push    ?? true;
+  const wantEmail   = profile.notify_email   ?? true;
+  const wantSms     = profile.notify_sms     ?? false;
+
+  // 1. Slack/Discord/generic webhook
+  if (wantWebhook && profile.alert_webhook_url) {
+    await sendLeadAlert(profile.alert_webhook_url, payload);
+  }
+
+  // 2. Browser push to every registered device for this contractor
+  if (wantPush) {
+    const { data: subs } = await admin
+      .from("push_subscriptions").select("endpoint,p256dh,auth,id")
+      .eq("user_id", contractorId);
+    for (const s of ((subs ?? []) as (PushSubscriptionRow & { id: string })[])) {
+      const result = await sendPush(s, {
+        title: `🔔 New lead: ${payload.title}`,
+        body: payload.body,
+        url: payload.link ?? "/leads",
+      });
+      if (result.expired) {
+        await admin.from("push_subscriptions").delete().eq("id", s.id);
+      }
     }
+  }
+
+  // 3. Email — sent to the contractor's signup email via Resend
+  if (wantEmail && profile.email) {
+    const business = profile.business_name ?? "ContractorFlow";
+    const subject = `🔔 New lead: ${payload.title}`;
+    const linkLine = payload.link ? `\n\nOpen it: ${payload.link}\n` : "";
+    const body =
+`A new lead just hit your pipeline.
+
+${payload.title}
+${payload.body}
+${payload.service ? `Service: ${payload.service}\n` : ""}${payload.city ? `City: ${payload.city}\n` : ""}${payload.source ? `Source: ${payload.source}\n` : ""}${linkLine}
+Reply to this lead within 5 minutes for best close rate.
+
+— ${business} via ContractorFlow`;
+    await sendEmail(profile.email, subject, body, business);
+  }
+
+  // 4. SMS to the contractor's alert_phone (via Twilio if configured)
+  if (wantSms && profile.alert_phone) {
+    await sendSms(profile.alert_phone, `New lead: ${payload.title} — ${payload.body}${payload.link ? `\n${payload.link}` : ""}`);
   }
 }
