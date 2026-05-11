@@ -259,14 +259,17 @@ async function run() {
   const expiration = await expireStaleMarketplaceLeads();
   const dispatch   = await dispatchDueDrips();
   const reddit       = await runScraper("/api/scrape/reddit");
+  const craigslist   = await runScraper("/api/scrape/craigslist");
   const permits      = await runScraper("/api/scrape/permits");
   const maMunicipal  = await runScraper("/api/scrape/ma-municipal");
+  const massGovBids  = await runScraper("/api/scrape/mass-gov-bids");
+  const rss          = await runScraper("/api/scrape/rss");
   const storms       = await runScraper("/api/scrape/storms?states=MA,NY,RI,NH,CT,VT,ME");
   const autoBid      = await runScraper("/api/marketplace/auto-bid");
   return {
     ok: true,
     recurring, expiration, dispatch,
-    reddit, permits, maMunicipal, storms, autoBid,
+    reddit, craigslist, permits, maMunicipal, massGovBids, rss, storms, autoBid,
     ranAt: new Date().toISOString(),
   };
 }

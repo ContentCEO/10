@@ -17,14 +17,22 @@ interface ScraperRun {
 }
 
 const SOURCE_LABELS: Record<string, string> = {
-  reddit:              "Reddit (multi-sub)",
+  reddit:              "Reddit (RSS)",
+  craigslist:          "Craigslist (RSS)",
   noaa_storms:         "NOAA Storm Events",
   boston_permits:      "Boston permits",
   cambridge_permits:   "Cambridge permits",
   somerville_permits:  "Somerville permits",
+  lowell_permits:      "Lowell permits",
   nyc_permits:         "NYC permits",
   chicago_permits:     "Chicago permits",
   deeds:               "MA Registry of Deeds",
+  mass_gov_bids:       "Mass.gov public bids",
+  rss_universal:       "Custom RSS feeds",
+  newton_permits:      "Newton permits",
+  framingham_permits:  "Framingham permits",
+  brookline_permits:   "Brookline permits",
+  arlington_permits:   "Arlington permits",
 };
 
 const KNOWN_SOURCES = Object.keys(SOURCE_LABELS);
