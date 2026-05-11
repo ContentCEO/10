@@ -8,13 +8,7 @@ export const runtime = "nodejs";
 // Each town that publishes permits as JSON gets added here. We try the
 // known feed shapes; town-by-town schemas vary.
 
-function isAuthorized(request: Request) {
-  const expected = process.env.CRON_SECRET ?? process.env.WEBHOOK_SECRET;
-  if (!expected) return true;
-  const got = request.headers.get("authorization");
-  if (got === `Bearer ${expected}`) return true;
-  return request.headers.get("x-cron-secret") === expected;
-}
+import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
 
 function classifyBudget(value: number | null): BudgetTier {
   if (value == null) return "unsure";

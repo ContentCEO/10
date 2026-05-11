@@ -11,13 +11,7 @@ export const runtime = "nodejs";
 // "X event hit your service area on Y, contact owners". Contractors then
 // use ad targeting + direct mail to that zip.
 
-function isAuthorized(request: Request) {
-  const expected = process.env.CRON_SECRET ?? process.env.WEBHOOK_SECRET;
-  if (!expected) return true;
-  const got = request.headers.get("authorization");
-  if (got === `Bearer ${expected}`) return true;
-  return request.headers.get("x-cron-secret") === expected;
-}
+import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
 
 // NWS active alerts API — public, no auth, no rate limit issues.
 // https://www.weather.gov/documentation/services-web-api

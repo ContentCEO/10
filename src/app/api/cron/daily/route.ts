@@ -237,13 +237,7 @@ Business name: ${business}`,
   return { sent, failed, skipped };
 }
 
-function isAuthorized(request: Request) {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) return true;
-  const got = request.headers.get("authorization");
-  if (got === `Bearer ${expected}`) return true;
-  return request.headers.get("x-cron-secret") === expected;
-}
+import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
 
 async function runScraper(path: string): Promise<{ ok: boolean; data?: unknown; error?: string }> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";

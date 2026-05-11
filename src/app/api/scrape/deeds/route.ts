@@ -20,13 +20,7 @@ export const runtime = "nodejs";
 // ToS — which limits automated access. The accepted path is licensing
 // property-records data from a vendor and feeding it here.
 
-function isAuthorized(request: Request) {
-  const expected = process.env.CRON_SECRET ?? process.env.WEBHOOK_SECRET;
-  if (!expected) return true;
-  const got = request.headers.get("authorization");
-  if (got === `Bearer ${expected}`) return true;
-  return request.headers.get("x-cron-secret") === expected;
-}
+import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
 
 interface DeedRow {
   county?: string;

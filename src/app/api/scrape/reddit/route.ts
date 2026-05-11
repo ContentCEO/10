@@ -66,13 +66,7 @@ interface RedditListing {
   data: { children: RedditPost[] };
 }
 
-function isAuthorized(request: Request) {
-  const expected = process.env.CRON_SECRET ?? process.env.WEBHOOK_SECRET;
-  if (!expected) return true;
-  const got = request.headers.get("authorization");
-  if (got === `Bearer ${expected}`) return true;
-  return request.headers.get("x-cron-secret") === expected;
-}
+import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
 
 async function pull(subreddit: string): Promise<RedditPost[]> {
   // /new.json with a generous limit (100 max). Reddit rate-limits ~60 req/min

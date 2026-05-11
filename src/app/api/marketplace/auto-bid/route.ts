@@ -9,13 +9,7 @@ export const runtime = "nodejs";
 // the rule qualifies for and atomically claim them up to the per-day budget.
 // Runs nightly via cron; also exposed as an on-demand endpoint.
 
-function isAuthorized(request: Request) {
-  const expected = process.env.CRON_SECRET ?? process.env.WEBHOOK_SECRET;
-  if (!expected) return true;
-  const got = request.headers.get("authorization");
-  if (got === `Bearer ${expected}`) return true;
-  return request.headers.get("x-cron-secret") === expected;
-}
+import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
 
 interface Rule {
   id: string;
