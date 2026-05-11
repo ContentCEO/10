@@ -56,11 +56,11 @@ export default async function DashboardPage() {
       </header>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total leads" value={String(leadCount ?? 0)} icon={Sparkles} />
-        <StatCard label="Active jobs" value={String(activeJobCount ?? 0)} icon={Hammer} />
-        <StatCard label="Revenue" value={formatCurrency(revenue)} icon={CircleDollarSign}
+        <StatCard tone="indigo"  label="Total leads" value={String(leadCount ?? 0)} icon={Sparkles} />
+        <StatCard tone="violet"  label="Active jobs" value={String(activeJobCount ?? 0)} icon={Hammer} />
+        <StatCard tone="emerald" label="Revenue" value={formatCurrency(revenue)} icon={CircleDollarSign}
           hint="From completed jobs" />
-        <StatCard label="Follow-ups due today" value={String(dueFollowUps?.length ?? 0)}
+        <StatCard tone="amber"   label="Follow-ups due today" value={String(dueFollowUps?.length ?? 0)}
           icon={CalendarClock} />
       </section>
 

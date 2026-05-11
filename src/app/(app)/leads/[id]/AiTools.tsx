@@ -42,10 +42,14 @@ export function AiTools({ lead }: { lead: Lead }) {
   }
 
   return (
-    <div className="card p-5 space-y-4">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-brand-600" />
+    <div className="card p-5 space-y-4 relative overflow-hidden">
+      <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-brand-gradient opacity-10 blur-2xl" />
+      <div className="relative flex items-center gap-2">
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gradient text-white shadow-glow">
+          <Sparkles className="h-4 w-4" />
+        </span>
         <h2 className="font-semibold">AI assistant</h2>
+        <span className="badge bg-brand-50 text-brand-700 ring-brand-200 ml-auto">Claude</span>
       </div>
 
       <div className="flex flex-wrap gap-2">

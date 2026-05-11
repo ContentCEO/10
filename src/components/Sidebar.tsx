@@ -28,10 +28,10 @@ export function Sidebar({ email }: { email: string | null }) {
     <aside className="hidden md:flex md:flex-col md:w-60 border-r border-slate-200 bg-white">
       <div className="px-5 py-4 border-b border-slate-200">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow">
             CF
           </span>
-          ContractorFlow
+          <span className="gradient-text">ContractorFlow</span>
         </Link>
       </div>
       <nav className="flex-1 px-2 py-4 space-y-1">
