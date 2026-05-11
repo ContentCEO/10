@@ -16,7 +16,10 @@ export default function FindProPage() {
           </span>
           ContractorFlow
         </Link>
-        <Link href="/login" className="btn-secondary">Contractor login</Link>
+        <div className="flex items-center gap-2">
+          <Link href="/pros" className="btn-secondary">Browse pros</Link>
+          <Link href="/login" className="btn-secondary">Contractor login</Link>
+        </div>
       </header>
 
       <section className="mx-auto max-w-6xl px-6 py-10 grid lg:grid-cols-2 gap-10 items-start">

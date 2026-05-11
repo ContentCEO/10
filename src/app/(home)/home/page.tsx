@@ -1,4 +1,5 @@
-import { CheckCircle2, Clock, Sparkles, UserCheck } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, Clock, Sparkles, Users, UserCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BUDGET_LABELS, TIMELINE_LABELS, type MarketplaceLead } from "@/lib/marketplace";
@@ -35,6 +36,23 @@ export default async function HomeownerHome() {
 
   return (
     <div className="space-y-6">
+      <section className="card p-5 flex flex-wrap items-center justify-between gap-3 bg-brand-50 border-brand-100">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow shrink-0">
+            <Users className="h-5 w-5" />
+          </span>
+          <div>
+            <div className="font-semibold">Want to compare pros yourself?</div>
+            <div className="text-xs text-slate-600">
+              Browse vetted contractors near you with verified credentials and reviews.
+            </div>
+          </div>
+        </div>
+        <Link href="/pros" className="btn-primary">
+          Browse pros <ArrowRight className="h-4 w-4" />
+        </Link>
+      </section>
+
       <section className="card p-6 sm:p-8">
         <div className="flex items-start gap-3">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow">

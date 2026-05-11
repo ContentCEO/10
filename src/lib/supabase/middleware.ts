@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/marketplace/intake") ||
     path.startsWith("/api/public/") ||
     path.startsWith("/l/") ||
+    path.startsWith("/pros") ||
     path.startsWith("/find-pro");
 
   if (!user && !isPublic) {

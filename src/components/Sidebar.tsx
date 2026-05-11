@@ -10,6 +10,7 @@ import {
   Megaphone,
   ShoppingCart,
   Sparkles,
+  UserCircle,
   Users,
   Wallet,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const nav = [
   { href: "/jobs", label: "Jobs", icon: Hammer },
   { href: "/calendar", label: "Calendar", icon: CalendarClock },
   { href: "/lead-gen", label: "Lead Gen", icon: Megaphone },
+  { href: "/profile", label: "My Profile", icon: UserCircle },
   { href: "/billing", label: "Billing", icon: Wallet },
 ];
 
