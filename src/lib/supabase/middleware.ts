@@ -63,6 +63,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/cron/") ||
     path.startsWith("/api/scrape/") ||
     path.startsWith("/api/voice/") ||
+    path.startsWith("/api/diagnostics") ||
     path.startsWith("/embed/") ||
     path.startsWith("/l/") ||
     path.startsWith("/i/") ||
