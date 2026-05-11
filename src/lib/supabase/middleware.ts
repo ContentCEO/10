@@ -45,6 +45,9 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/_next") ||
     path.startsWith("/api/stripe/webhook") ||
     path.startsWith("/api/marketplace/intake") ||
+    path.startsWith("/api/marketplace/webhook") ||
+    path.startsWith("/api/marketplace/google-ads") ||
+    path.startsWith("/api/marketplace/meta") ||
     path.startsWith("/api/public/") ||
     path.startsWith("/api/cron/") ||
     path.startsWith("/l/") ||

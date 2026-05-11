@@ -13,6 +13,16 @@ export type TimelineTier =
 
 export type MarketplaceStatus = "available" | "sold" | "expired";
 
+export type SourceChannel =
+  | "google_ads"
+  | "meta_facebook"
+  | "meta_instagram"
+  | "website_form"
+  | "marketplace_form"
+  | "webhook"
+  | "manual"
+  | "scraped";
+
 export interface MarketplaceLead {
   id: string;
   name: string;
@@ -29,6 +39,8 @@ export interface MarketplaceLead {
   price_cents: number;
   exclusivity: "shared" | "exclusive";
   status: MarketplaceStatus;
+  source_channel: SourceChannel;
+  external_id: string | null;
   buyer_id: string | null;
   bought_at: string | null;
   created_at: string;

@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
   Megaphone,
+  Plug,
   Receipt,
   ShoppingCart,
   Sparkles,
@@ -26,6 +27,7 @@ const nav = [
   { href: "/invoices", label: "Invoices", icon: Receipt },
   { href: "/calendar", label: "Calendar", icon: CalendarClock },
   { href: "/lead-gen", label: "Lead Gen", icon: Megaphone },
+  { href: "/integrations", label: "Integrations", icon: Plug },
   { href: "/profile", label: "My Profile", icon: UserCircle },
   { href: "/billing", label: "Billing", icon: Wallet },
 ];
