@@ -79,6 +79,7 @@ cp .env.example .env.local
    - `2026-05-11_wallet.sql` — wallet credit + atomic debit RPC
    - `2026-05-11_account_type.sql` — homeowner / contractor account types
    - `2026-05-11_contractor_directory.sql` — public profile fields, credentials, photos, reviews
+   - `2026-05-11_revenue.sql` — job cost tracking + review request fields
 4. Copy your project URL, anon key, and service role key into `.env.local`.
 
 The schema enables Row Level Security so each user can only see their own

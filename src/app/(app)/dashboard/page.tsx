@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/StatCard";
 import { LeadStatusBadge } from "@/components/StatusBadge";
 import { SourceRoi } from "@/components/SourceRoi";
+import { ProfitInsights } from "@/components/ProfitInsights";
+import { WeeklyDigest } from "@/components/WeeklyDigest";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { FollowUp, Lead } from "@/lib/types";
 
@@ -64,6 +66,10 @@ export default async function DashboardPage() {
         <StatCard tone="amber"   label="Follow-ups due today" value={String(dueFollowUps?.length ?? 0)}
           icon={CalendarClock} />
       </section>
+
+      <WeeklyDigest />
+
+      <ProfitInsights />
 
       <SourceRoi />
 

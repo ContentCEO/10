@@ -39,6 +39,7 @@ async function saveProfile(formData: FormData) {
     website:         String(formData.get("website") ?? "").trim() || null,
     logo_url:        String(formData.get("logo_url") ?? "").trim() || null,
     hero_image_url:  String(formData.get("hero_image_url") ?? "").trim() || null,
+    google_review_url: String(formData.get("google_review_url") ?? "").trim() || null,
     is_published:    formData.get("is_published") === "on",
   }).eq("id", user.id);
 
@@ -232,6 +233,15 @@ export default async function ProfilePage() {
             <input id="hero_image_url" name="hero_image_url" type="url" className="input"
               defaultValue={(p?.hero_image_url as string | null) ?? ""} />
           </div>
+        </div>
+        <div>
+          <label className="label" htmlFor="google_review_url">Google review link</label>
+          <input id="google_review_url" name="google_review_url" type="url" className="input"
+            placeholder="https://g.page/r/your-business-id/review"
+            defaultValue={(p?.google_review_url as string | null) ?? ""} />
+          <p className="mt-1 text-xs text-slate-500">
+            Used in AI-drafted review request messages on completed jobs.
+          </p>
         </div>
 
         <label className="flex items-center gap-2 pt-2 border-t border-slate-100">

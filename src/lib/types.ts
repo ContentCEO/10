@@ -61,6 +61,9 @@ export interface Job {
   end_date: string | null;
   status: JobStatus;
   price: number | null;
+  cost_estimate_cents: number | null;
+  cost_actual_cents: number | null;
+  review_requested_at: string | null;
   created_at: string;
   updated_at: string;
 }

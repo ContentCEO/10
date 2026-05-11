@@ -107,6 +107,9 @@ create table if not exists public.jobs (
   end_date date,
   status job_status not null default 'scheduled',
   price numeric(10,2),
+  cost_estimate_cents int,
+  cost_actual_cents   int,
+  review_requested_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
