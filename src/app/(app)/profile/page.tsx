@@ -40,6 +40,7 @@ async function saveProfile(formData: FormData) {
     logo_url:        String(formData.get("logo_url") ?? "").trim() || null,
     hero_image_url:  String(formData.get("hero_image_url") ?? "").trim() || null,
     google_review_url: String(formData.get("google_review_url") ?? "").trim() || null,
+    payment_link_url:  String(formData.get("payment_link_url") ?? "").trim() || null,
     is_published:    formData.get("is_published") === "on",
   }).eq("id", user.id);
 
@@ -241,6 +242,16 @@ export default async function ProfilePage() {
             defaultValue={(p?.google_review_url as string | null) ?? ""} />
           <p className="mt-1 text-xs text-slate-500">
             Used in AI-drafted review request messages on completed jobs.
+          </p>
+        </div>
+        <div>
+          <label className="label" htmlFor="payment_link_url">Stripe payment link (optional)</label>
+          <input id="payment_link_url" name="payment_link_url" type="url" className="input"
+            placeholder="https://buy.stripe.com/your-link"
+            defaultValue={(p?.payment_link_url as string | null) ?? ""} />
+          <p className="mt-1 text-xs text-slate-500">
+            Surfaces as a "Pay now" button on every public invoice page.
+            Create a payment link in your Stripe dashboard and paste it here.
           </p>
         </div>
 

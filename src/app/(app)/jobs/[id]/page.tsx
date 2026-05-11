@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { TrendingUp } from "lucide-react";
+import { Receipt, TrendingUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { JOB_STATUS_LABELS, type Job, type JobStatus } from "@/lib/types";
-import { JobStatusBadge } from "@/components/StatusBadge";
+import { JOB_STATUS_LABELS, type Invoice, type Job, type JobStatus } from "@/lib/types";
+import { JobStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ReviewRequestPanel } from "./ReviewRequestPanel";
 
@@ -39,13 +39,15 @@ async function remove(id: string) {
 
 export default async function JobDetail({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const [{ data: job }, { data: customers }, { data: { user } }] = await Promise.all([
+  const [{ data: job }, { data: customers }, { data: { user } }, { data: invoices }] = await Promise.all([
     supabase.from("jobs").select("*").eq("id", params.id).single(),
     supabase.from("customers").select("id,name").order("name"),
     supabase.auth.getUser(),
+    supabase.from("invoices").select("*").eq("job_id", params.id).order("created_at", { ascending: false }),
   ]);
   if (!job) notFound();
   const j = job as Job;
+  const invoiceList = (invoices ?? []) as Invoice[];
 
   let customerName: string | null = null;
   if (j.customer_id) {
@@ -93,6 +95,36 @@ export default async function JobDetail({ params }: { params: { id: string } }) 
           </div>
         </div>
       )}
+
+      <section className="card p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Receipt className="h-4 w-4 text-brand-600" /> Invoices
+          </h2>
+          <Link href={`/invoices/new?job=${j.id}`} className="btn-primary !py-1 text-xs">
+            <Receipt className="h-3.5 w-3.5" /> Create invoice
+          </Link>
+        </div>
+        {invoiceList.length > 0 ? (
+          <ul className="mt-3 divide-y divide-slate-100">
+            {invoiceList.map((i) => (
+              <li key={i.id} className="py-2 flex items-center justify-between">
+                <Link href={`/invoices/${i.id}`} className="font-medium text-brand-700">
+                  {i.number ?? `INV-${i.id.slice(0, 6).toUpperCase()}`}
+                </Link>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="font-medium">{formatCurrency((i.amount_cents + i.tax_cents) / 100)}</span>
+                  <InvoiceStatusBadge status={i.status} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-sm text-slate-500">
+            No invoices for this job yet. Generate one with the price pre-filled.
+          </p>
+        )}
+      </section>
 
       {j.status === "completed" && (
         <ReviewRequestPanel

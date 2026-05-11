@@ -1,5 +1,6 @@
 export type LeadStatus = "new" | "contacted" | "estimate_sent" | "won" | "lost";
 export type JobStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
+export type InvoiceStatus = "draft" | "sent" | "paid" | "void";
 export type SubscriptionStatus =
   | "trialing"
   | "active"
@@ -109,3 +110,28 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   completed: "Completed",
   cancelled: "Cancelled",
 };
+
+export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
+  draft: "Draft",
+  sent:  "Sent",
+  paid:  "Paid",
+  void:  "Void",
+};
+
+export interface Invoice {
+  id: string;
+  user_id: string;
+  customer_id: string | null;
+  job_id: string | null;
+  number: string | null;
+  amount_cents: number;
+  tax_cents: number;
+  notes: string | null;
+  status: InvoiceStatus;
+  issued_at: string;
+  due_at: string | null;
+  sent_at: string | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+}

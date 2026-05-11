@@ -1,7 +1,9 @@
 import { cn } from "@/lib/utils";
 import {
+  INVOICE_STATUS_LABELS,
   JOB_STATUS_LABELS,
   LEAD_STATUS_LABELS,
+  type InvoiceStatus,
   type JobStatus,
   type LeadStatus,
 } from "@/lib/types";
@@ -27,4 +29,15 @@ export function LeadStatusBadge({ status }: { status: LeadStatus }) {
 
 export function JobStatusBadge({ status }: { status: JobStatus }) {
   return <span className={cn("badge", jobColors[status])}>{JOB_STATUS_LABELS[status]}</span>;
+}
+
+const invoiceColors: Record<InvoiceStatus, string> = {
+  draft: "bg-slate-100 text-slate-700 ring-slate-200",
+  sent:  "bg-blue-100 text-blue-700 ring-blue-200",
+  paid:  "bg-emerald-100 text-emerald-800 ring-emerald-200",
+  void:  "bg-slate-100 text-slate-400 ring-slate-200",
+};
+
+export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
+  return <span className={cn("badge", invoiceColors[status])}>{INVOICE_STATUS_LABELS[status]}</span>;
 }
