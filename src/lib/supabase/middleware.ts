@@ -59,6 +59,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/marketplace/webhook") ||
     path.startsWith("/api/marketplace/google-ads") ||
     path.startsWith("/api/marketplace/meta") ||
+    path.startsWith("/api/marketplace/auto-bid") ||
     path.startsWith("/api/public/") ||
     path.startsWith("/api/cron/") ||
     path.startsWith("/api/scrape/") ||
