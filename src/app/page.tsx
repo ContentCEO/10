@@ -87,6 +87,9 @@ export default function Landing() {
           <Link href="/find-pro" className="text-sm font-medium text-ink-600 hover:text-ink-900 px-3 py-2 hidden sm:inline rounded-lg hover:bg-white/60">
             For homeowners
           </Link>
+          <Link href="/download" className="text-sm font-medium text-ink-600 hover:text-ink-900 px-3 py-2 hidden sm:inline rounded-lg hover:bg-white/60">
+            Download
+          </Link>
           <Link href="/login" className="btn-secondary">Log in</Link>
           <Link href="/signup" className="btn-primary">
             Start free trial <ArrowRight className="h-4 w-4" />

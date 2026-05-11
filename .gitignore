@@ -9,3 +9,8 @@ out
 .turbo
 next-env.d.ts
 *.tsbuildinfo
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+src-tauri/Cargo.lock

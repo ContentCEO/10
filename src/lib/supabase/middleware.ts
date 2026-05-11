@@ -46,8 +46,14 @@ export async function updateSession(request: NextRequest) {
     path === "/robots.txt" ||
     path === "/manifest.webmanifest" ||
     path === "/icon.svg" ||
+    path === "/icon-192.png" ||
+    path === "/icon-512.png" ||
+    path === "/icon-maskable.png" ||
     path === "/sw.js" ||
+    path === "/offline" ||
+    path === "/download" ||
     path === "/cost-calculator" ||
+    path.startsWith("/api/desktop/") ||
     (path.startsWith("/google") && path.endsWith(".html")) ||
     path.startsWith("/permits/") ||
     path.startsWith("/book/") ||
