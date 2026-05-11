@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "ContractorFlow — AI CRM for contractors",
   description:
     "ContractorFlow is an AI-powered CRM built for contractors and home service businesses. Track leads, manage jobs, and follow up faster.",
+  verification: {
+    google: "bQYnyEGm3PSVkOb3fRb6Iw4SvqSeVT1ITd8FLPxYpwk",
+  },
 };
 
 export const viewport: Viewport = {
