@@ -111,7 +111,7 @@ export default function Landing() {
             <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
             <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-            <span className="ml-3 text-xs text-slate-500">contractorflow.app/dashboard</span>
+            <span className="ml-3 text-xs text-slate-500">contractorflow.com/dashboard</span>
           </div>
           <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
