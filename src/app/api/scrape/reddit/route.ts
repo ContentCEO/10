@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
 
-// Reddit public-JSON harvester. Reads /new.json from each sub (no auth, no
-// scraping, no ToS violation), filters posts by keyword, and writes a
-// `scraped` marketplace lead per matching thread. Contractors decide whether
-// to engage in-thread (Reddit ToS prohibits unsolicited DMs).
+// Reddit RSS feed reader. JSON endpoint (/r/X/new.json) is rate-limited
+// to ~zero from cloud datacenter IPs as of 2023; the .rss equivalent is
+// explicitly intended for syndication and still works fine.
+//
+// Each feed entry → marketplace lead tagged `scraped`. Contractors choose
+// whether to engage in-thread (Reddit ToS prohibits unsolicited DMs).
 
 const DEFAULT_SUBS = [
   // National high-volume
@@ -14,25 +17,23 @@ const DEFAULT_SUBS = [
   "HomeMaintenance", "centuryhomes", "FirstTimeHomeBuyer",
   "Plumbing", "Roofing", "Electricians", "Construction", "Flooring",
   "Hvacadvice", "Landscaping", "Carpentry", "Painting", "Drywall",
-  "Decks", "RoofingTrade", "tile", "Concrete", "MyHomeImproved",
-  "Appliances", "askanelectrician",
+  "Decks", "tile", "Concrete", "MyHomeImproved", "Appliances",
+  "askanelectrician",
   // Massachusetts metro
   "boston", "massachusetts", "cambridgema", "somerville",
   "WorcesterMA", "metrowestma", "newengland",
   "Springfield", "lowell", "lawrence",
   "ProvidenceRI", "RhodeIsland", "Connecticut", "NewHampshire",
-  // Major US metros — easy to flip on/off
+  // Major US metros
   "nyc", "AskNYC", "chicago", "LosAngeles", "sandiego", "Seattle",
   "denver", "Atlanta", "Houston", "Dallas", "philadelphia", "Phoenix",
   "Portland", "PortlandOR", "Minneapolis", "PugetSound", "bayarea",
 ];
 
 const DEFAULT_KEYWORDS = [
-  // Direct intent
   "contractor", "estimate", "quote", "looking for a", "recommend",
   "anyone know", "anyone have", "trustworthy", "reputable",
   "hire", "hired", "need help with", "advice on",
-  // Services
   "remodel", "renovation", "renovate", "rebuild", "replace",
   "kitchen", "bathroom", "bath remodel", "deck", "fence", "roof",
   "siding", "windows", "flooring", "hardwood", "tile", "carpet",
@@ -40,72 +41,110 @@ const DEFAULT_KEYWORDS = [
   "plumber", "plumbing", "leak", "electrician", "electrical",
   "wiring", "outlet", "panel", "rewire",
   "cleaning", "deep clean", "house clean",
-  "landscaping", "lawn", "tree", "fence", "driveway", "concrete",
+  "landscaping", "lawn", "tree", "driveway", "concrete",
   "basement", "garage", "addition", "attic", "insulation",
   "gutter", "chimney", "patio", "pool", "shed", "stair",
   "water damage", "mold", "asbestos", "lead paint",
-  "general contractor", "GC", "handyman",
+  "general contractor", "handyman",
 ];
 
-interface RedditPost {
-  data: {
-    id: string;
-    title: string;
-    selftext: string;
-    url: string;
-    permalink: string;
-    created_utc: number;
-    subreddit: string;
-    author: string;
-    score: number;
-    num_comments: number;
-  };
+interface ParsedEntry {
+  id: string;
+  title: string;
+  contentHtml: string;
+  contentText: string;
+  url: string;
+  author: string;
+  updated: string;
 }
 
-interface RedditListing {
-  data: { children: RedditPost[] };
+// Naive but reliable Atom XML parser — pulls each <entry>'s id, title,
+// content, link, author, updated. Reddit's RSS schema is stable.
+function parseAtom(xml: string): ParsedEntry[] {
+  const entries: ParsedEntry[] = [];
+  const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+  let m: RegExpExecArray | null;
+  while ((m = entryRegex.exec(xml)) !== null) {
+    const block = m[1];
+    const id = match1(block, /<id>([^<]+)<\/id>/);
+    const title = decodeHtml(match1(block, /<title[^>]*>([\s\S]*?)<\/title>/) ?? "");
+    const link = match1(block, /<link[^>]*href="([^"]+)"/);
+    const author = match1(block, /<author>[\s\S]*?<name>([^<]+)<\/name>[\s\S]*?<\/author>/);
+    const updated = match1(block, /<updated>([^<]+)<\/updated>/);
+    // Content is wrapped in <content type="html">CDATA or escaped HTML</content>.
+    const contentRaw = match1(block, /<content[^>]*>([\s\S]*?)<\/content>/) ?? "";
+    const cdata = match1(contentRaw, /<!\[CDATA\[([\s\S]*?)\]\]>/);
+    const html = cdata ?? contentRaw;
+    const text = stripHtml(decodeHtml(html));
+    if (!id || !title || !link) continue;
+    entries.push({
+      id: id.replace(/^tag:reddit\.com,\d+:/, ""), // -> "t3_abc"
+      title,
+      contentHtml: html,
+      contentText: text,
+      url: link,
+      author: author ?? "unknown",
+      updated: updated ?? new Date().toISOString(),
+    });
+  }
+  return entries;
 }
 
-import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
+function match1(s: string, re: RegExp): string | null {
+  const m = s.match(re);
+  return m ? m[1] : null;
+}
 
-async function pull(subreddit: string): Promise<RedditPost[]> {
-  // /new.json with a generous limit (100 max). Reddit rate-limits ~60 req/min
-  // for unauthenticated traffic, well within our usage.
+function decodeHtml(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'");
+}
+
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+async function pullSub(subreddit: string): Promise<{ entries: ParsedEntry[]; error: string | null }> {
+  const url = `https://www.reddit.com/r/${subreddit}/new/.rss?limit=100`;
   try {
-    const res = await fetch(
-      `https://www.reddit.com/r/${subreddit}/new.json?limit=100`,
-      {
-        headers: { "User-Agent": "ContractorFlow/2.0 (lead-opportunity-feed)" },
-        // Reddit blocks responses cached by Vercel's edge — force fresh.
-        cache: "no-store",
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "ContractorFlow/3.0 (RSS reader; partner outreach assist)",
+        Accept: "application/atom+xml, application/xml, text/xml",
       },
-    );
-    if (!res.ok) return [];
-    const data = (await res.json()) as RedditListing;
-    return data.data?.children ?? [];
-  } catch {
-    return [];
+      cache: "no-store",
+    });
+    if (!res.ok) return { entries: [], error: `HTTP ${res.status}` };
+    const text = await res.text();
+    if (text.length < 100) return { entries: [], error: "empty body" };
+    return { entries: parseAtom(text), error: null };
+  } catch (e) {
+    return { entries: [], error: e instanceof Error ? e.message : "fetch failed" };
   }
 }
 
-function matchesKeywords(post: RedditPost, keywords: string[]): { hit: boolean; matched: string | null } {
-  const text = `${post.data.title}\n${post.data.selftext}`.toLowerCase();
+function keywordMatch(e: ParsedEntry, keywords: string[]): string | null {
+  const haystack = `${e.title}\n${e.contentText}`.toLowerCase();
   for (const k of keywords) {
-    if (text.includes(k.toLowerCase())) return { hit: true, matched: k };
+    if (haystack.includes(k.toLowerCase())) return k;
   }
-  return { hit: false, matched: null };
+  return null;
 }
 
-function scoreFromMetadata(post: RedditPost): number {
-  // Higher base score for posts with more engagement signal — comments
-  // imply real interest from the community.
-  let score = 30;
-  if (post.data.num_comments >= 5) score += 10;
-  if (post.data.num_comments >= 20) score += 10;
-  if (post.data.score >= 5) score += 5;
-  // Penalize very old posts (since /new gives recent, this rarely triggers).
-  const ageDays = (Date.now() / 1000 - post.data.created_utc) / 86400;
+function scoreFor(e: ParsedEntry): number {
+  // RSS doesn't give us comment/score counts. Score by recency + content length.
+  let score = 35;
+  const len = e.contentText.length;
+  if (len >= 200) score += 10;
+  if (len >= 500) score += 10;
+  const ageDays = (Date.now() - new Date(e.updated).getTime()) / 86_400_000;
   if (ageDays > 7) score -= 10;
+  if (ageDays > 30) score -= 10;
   return Math.max(0, Math.min(100, score));
 }
 
@@ -118,14 +157,18 @@ async function runOnce(opts: { subs?: string[]; keywords?: string[]; limit?: num
   let fetched = 0;
   let inserted = 0;
   let duplicates = 0;
+  let errors: Record<string, string> = {};
 
   for (const sub of subs) {
-    const posts = (await pull(sub)).slice(0, maxPerSub);
-    fetched += posts.length;
-    for (const p of posts) {
-      const { hit, matched } = matchesKeywords(p, keywords);
-      if (!hit) continue;
-      const externalId = `reddit:${p.data.id}`;
+    const { entries, error } = await pullSub(sub);
+    if (error) errors[sub] = error;
+    const slice = entries.slice(0, maxPerSub);
+    fetched += slice.length;
+
+    for (const e of slice) {
+      const matched = keywordMatch(e, keywords);
+      if (!matched) continue;
+      const externalId = `reddit:${e.id}`;
 
       const { data: existing } = await admin
         .from("marketplace_leads").select("id")
@@ -133,43 +176,46 @@ async function runOnce(opts: { subs?: string[]; keywords?: string[]; limit?: num
         .maybeSingle();
       if (existing) { duplicates++; continue; }
 
-      const title = p.data.title.slice(0, 200);
-      const notes =
-`From r/${p.data.subreddit} · u/${p.data.author} · matched keyword: ${matched}
-
-${p.data.selftext.slice(0, 800)}
-
-Thread: https://www.reddit.com${p.data.permalink}
-Score: ${p.data.score} · Comments: ${p.data.num_comments}`;
-
-      const aiScore = scoreFromMetadata(p);
-      // Reddit leads are signals, not contact-ready leads, so price them low.
+      const aiScore = scoreFor(e);
       const priceCents = Math.max(300, Math.round(500 + aiScore * 10));
+      const subName = sub;
 
-      const { error } = await admin.from("marketplace_leads").insert({
-        name: `r/${p.data.subreddit} · u/${p.data.author}`,
-        service_type: title,
+      const notes =
+`From r/${subName} · u/${e.author} · matched keyword: ${matched}
+
+${e.contentText.slice(0, 800)}
+
+Thread: ${e.url}`;
+
+      const { error: insertErr } = await admin.from("marketplace_leads").insert({
+        name: `r/${subName} · u/${e.author}`,
+        service_type: e.title.slice(0, 200),
         budget: "unsure",
         timeline: "flexible",
         notes,
         ai_score: aiScore,
-        ai_summary: title,
+        ai_summary: e.title.slice(0, 200),
         price_cents: priceCents,
         source_channel: "scraped",
         external_id: externalId,
-        raw_payload: p.data as unknown as Record<string, unknown>,
+        raw_payload: {
+          id: e.id, title: e.title, url: e.url, author: e.author, updated: e.updated,
+        } as unknown as Record<string, unknown>,
       });
-      if (!error) inserted++;
+      if (!insertErr) inserted++;
     }
   }
 
   await admin.from("scraper_runs").insert({
     source: "reddit",
-    region: subs.slice(0, 5).join(",") + (subs.length > 5 ? `,+${subs.length - 5}` : ""),
+    region: `${subs.length} subs`,
     fetched, inserted, duplicates,
+    error: Object.keys(errors).length > 0
+      ? `errors on: ${Object.entries(errors).slice(0, 5).map(([s, e]) => `${s}=${e}`).join(", ")}`
+      : null,
   });
 
-  return { fetched, inserted, duplicates, sub_count: subs.length };
+  return { fetched, inserted, duplicates, sub_count: subs.length, errors };
 }
 
 export async function GET(request: Request) {
