@@ -12,6 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { data: profile } = await supabase
     .from("profiles")
     .select("account_type,is_admin,business_name,services")
+    // is_admin selected so we can show admin-only sidebar items
     .eq("id", user.id)
     .single();
   if (profile?.account_type === "homeowner") redirect("/home");
@@ -24,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen flex bg-ink-50">
-      <Sidebar email={user.email ?? null} />
+      <Sidebar email={user.email ?? null} isAdmin={Boolean(profile?.is_admin)} />
       <div className="flex-1 flex flex-col min-w-0">
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
           {children}

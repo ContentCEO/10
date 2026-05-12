@@ -35,6 +35,7 @@ import {
   UserCircle,
   Users,
   Wallet,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +48,7 @@ interface NavItem {
 interface NavSection {
   label: string | null;        // null = always-visible solo item
   items: NavItem[];
+  adminOnly?: boolean;
 }
 
 const SECTIONS: NavSection[] = [
@@ -116,9 +118,16 @@ const SECTIONS: NavSection[] = [
       { href: "/billing",       label: "Billing",       icon: Wallet },
     ],
   },
+  {
+    label: "Admin",
+    adminOnly: true,
+    items: [
+      { href: "/admin/lead-paste", label: "Lead paste", icon: Wrench },
+    ],
+  },
 ];
 
-export function Sidebar({ email }: { email: string | null }) {
+export function Sidebar({ email, isAdmin }: { email: string | null; isAdmin?: boolean }) {
   const path = usePathname();
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 border-r border-ink-200/70 bg-white/80 backdrop-blur overflow-y-auto scrollbar-thin">
@@ -131,7 +140,7 @@ export function Sidebar({ email }: { email: string | null }) {
         </Link>
       </div>
       <nav className="flex-1 px-2.5 py-4 space-y-5">
-        {SECTIONS.map((section, idx) => (
+        {SECTIONS.filter((s) => !s.adminOnly || isAdmin).map((section, idx) => (
           <div key={section.label ?? `solo-${idx}`}>
             {section.label && (
               <div className="px-3 mb-2 text-[10px] uppercase tracking-[0.14em] text-ink-400 font-semibold">
