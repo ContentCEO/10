@@ -65,29 +65,8 @@ export async function updateSession(request: NextRequest) {
   // Skip Supabase entirely for public paths (perf + works without env vars).
   if (isPublic) return response;
 
-  // Desktop-only gate: the in-app screens are not reachable from a regular
-  // browser. The Tauri shell identifies itself with "Tauri Desktop" in the
-  // User-Agent string (see src-tauri/tauri.conf.json `userAgent`). Anything
-  // else gets bounced to /download with a notice. This is a UX gate, not a
-  // hard security boundary — protected routes still enforce Supabase auth
-  // below for any client that does slip through.
-  const ua = request.headers.get("user-agent") ?? "";
-  const isDesktop =
-    ua.includes("Tauri") ||
-    ua.includes("ContractorFlow") ||
-    request.headers.get("x-contractorflow-desktop") === "1";
-
-  if (!isDesktop) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/download";
-    url.searchParams.set("from", "web");
-    url.searchParams.set("path", path);
-    return NextResponse.redirect(url);
-  }
-
   // Graceful degrade for local dev without Supabase env: let protected
-  // routes through. Real production envs will always have these set; this
-  // only triggers when someone previews the app without configuring secrets.
+  // routes through. Real production envs will always have these set.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) return response;
@@ -116,6 +95,28 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/login";
     url.searchParams.set("next", path);
     return NextResponse.redirect(url);
+  }
+
+  // Desktop-only gate, with admin override:
+  //   - Admins can access in-app routes from a browser (for management).
+  //   - Non-admin users (regular contractor customers) get bounced to
+  //     /download unless they're inside the Tauri desktop app.
+  const ua = request.headers.get("user-agent") ?? "";
+  const isDesktop =
+    ua.includes("Tauri") ||
+    ua.includes("ContractorFlow") ||
+    request.headers.get("x-contractorflow-desktop") === "1";
+
+  if (!isDesktop) {
+    const { data: profile } = await supabase
+      .from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
+    if (!profile?.is_admin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/download";
+      url.searchParams.set("from", "web");
+      url.searchParams.set("path", path);
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
