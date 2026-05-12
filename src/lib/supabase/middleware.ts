@@ -71,6 +71,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/scrape/") ||
     path.startsWith("/api/scrape/trigger-if-stale") ||
     path.startsWith("/api/voice/") ||
+    path === "/api/voice/twilio-recording" ||
     path.startsWith("/api/diagnostics") ||
     path.startsWith("/embed/") ||
     path.startsWith("/l/") ||
