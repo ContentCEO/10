@@ -254,10 +254,21 @@ async function runScraper(path: string): Promise<{ ok: boolean; data?: unknown; 
   }
 }
 
+async function dispatchReviewRequests() {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+  if (!baseUrl) return { error: "NEXT_PUBLIC_APP_URL not set" };
+  const secret = process.env.CRON_SECRET;
+  const res = await fetch(`${baseUrl}/api/cron/review-requests`, {
+    headers: secret ? { Authorization: `Bearer ${secret}` } : {},
+  });
+  return await res.json().catch(() => ({ ok: false }));
+}
+
 async function run() {
   const recurring  = await generateDueRecurringJobs();
   const expiration = await expireStaleMarketplaceLeads();
   const dispatch   = await dispatchDueDrips();
+  const reviewReqs = await dispatchReviewRequests();
   const reddit       = await runScraper("/api/scrape/reddit");
   const craigslist   = await runScraper("/api/scrape/craigslist");
   const permits      = await runScraper("/api/scrape/permits");
@@ -273,7 +284,7 @@ async function run() {
   const autoBid      = await runScraper("/api/marketplace/auto-bid");
   return {
     ok: true,
-    recurring, expiration, dispatch,
+    recurring, expiration, dispatch, reviewReqs,
     reddit, craigslist, permits, maMunicipal, massGovBids, rss,
     storms, samGov, serpapi, yelp, stateRfps, autoBid,
     ranAt: new Date().toISOString(),

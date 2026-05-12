@@ -25,6 +25,7 @@ import {
   Receipt,
   Rocket,
   Voicemail,
+  Workflow,
   ShieldCheck,
   ShoppingCart,
   Sparkles,
@@ -81,6 +82,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/inbox",         label: "SMS inbox",     icon: MessageSquare },
       { href: "/voicemails",    label: "Voicemails",    icon: Voicemail },
+      { href: "/sequences",     label: "Sequences",     icon: Workflow },
       { href: "/calendar",      label: "Follow-ups",    icon: CalendarClock },
       { href: "/booking",       label: "Booking",       icon: Calendar },
       { href: "/customers",     label: "Customers",     icon: Users },
