@@ -52,7 +52,7 @@ export default async function CurationPage({
   if (searchParams.min_score) q = q.gte("ai_score", Number(searchParams.min_score));
 
   const { data: pending } = await q;
-  let rows = (pending ?? []) as (MarketplaceLead & { source_channel?: string; raw_payload?: Record<string, unknown> })[];
+  let rows = (pending ?? []) as (MarketplaceLead & { raw_payload?: Record<string, unknown> })[];
 
   if (searchParams.state) {
     const state = searchParams.state.toUpperCase();

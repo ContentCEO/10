@@ -75,7 +75,7 @@ export function MarketplaceCard({
   balanceCents: number;
 }) {
   const affordable = balanceCents >= lead.price_cents;
-  const source = (lead as MarketplaceLead & { source_channel?: LeadSourceChannel }).source_channel ?? "marketplace_form";
+  const source: LeadSourceChannel = (lead.source_channel as LeadSourceChannel | undefined) ?? "marketplace_form";
   const hot = lead.ai_score >= 80;
 
   return (

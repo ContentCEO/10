@@ -12,10 +12,9 @@ import {
 import { computeLeadPrice, formatSuggested } from "@/lib/lead-pricing";
 import { formatDate } from "@/lib/utils";
 
-interface Lead extends MarketplaceLead {
-  source_channel?: string;
+type Lead = MarketplaceLead & {
   raw_payload?: Record<string, unknown> | null;
-}
+};
 
 function scoreTone(score: number) {
   if (score >= 75) return "bg-emerald-500";
