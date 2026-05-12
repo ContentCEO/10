@@ -267,11 +267,12 @@ async function run() {
   // Storms with no states param → all 50 states + DC + PR by default
   const storms       = await runScraper("/api/scrape/storms");
   const samGov       = await runScraper("/api/scrape/sam-gov");
+  const serpapi      = await runScraper("/api/scrape/serpapi");
   const autoBid      = await runScraper("/api/marketplace/auto-bid");
   return {
     ok: true,
     recurring, expiration, dispatch,
-    reddit, craigslist, permits, maMunicipal, massGovBids, rss, storms, samGov, autoBid,
+    reddit, craigslist, permits, maMunicipal, massGovBids, rss, storms, samGov, serpapi, autoBid,
     ranAt: new Date().toISOString(),
   };
 }

@@ -9,6 +9,7 @@ import {
   type TimelineTier,
   type MarketplaceLead,
 } from "@/lib/marketplace";
+import { computeLeadPrice, formatSuggested } from "@/lib/lead-pricing";
 import { formatDate } from "@/lib/utils";
 
 interface Lead extends MarketplaceLead {
@@ -109,8 +110,29 @@ export function CurationRow({ lead, sourceLabel }: { lead: Lead; sourceLabel?: s
 
         <div className="lg:w-64 shrink-0 flex flex-col gap-3 border-t lg:border-t-0 lg:border-l border-ink-100 lg:pl-5 pt-3 lg:pt-0">
           <div>
-            <label className="label text-xs">Marketplace price</label>
-            <div className="flex items-center gap-1">
+            <div className="flex items-baseline justify-between">
+              <label className="label text-xs mb-0">Marketplace price</label>
+              {(() => {
+                const suggested = computeLeadPrice({
+                  ai_score: score,
+                  budget: lead.budget,
+                  external_id: lead.external_id ?? null,
+                });
+                if (suggested !== price) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setPrice(suggested)}
+                      className="text-[10px] text-brand-600 font-medium hover:underline"
+                    >
+                      Suggest: {formatSuggested(suggested)}
+                    </button>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+            <div className="flex items-center gap-1 mt-1">
               <span className="text-ink-500 text-sm">$</span>
               <input
                 type="number"
