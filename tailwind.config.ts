@@ -89,6 +89,19 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0)" },
           "50%":      { transform: "translateY(-4px)" },
         },
+        marquee: {
+          "0%":   { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+        "blob-drift": {
+          "0%, 100%": { transform: "translate(0,0) scale(1)" },
+          "33%":      { transform: "translate(30px,-20px) scale(1.05)" },
+          "66%":      { transform: "translate(-20px,15px) scale(0.97)" },
+        },
+        "tick-up": {
+          "0%":   { opacity: "0", transform: "translateY(6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "fade-up":      "fade-up 0.5s ease-out both",
@@ -96,6 +109,9 @@ const config: Config = {
         shimmer:        "shimmer 2.5s ease-in-out infinite",
         "pulse-soft":   "pulse-soft 2s ease-in-out infinite",
         float:          "float 6s ease-in-out infinite",
+        marquee:        "marquee 40s linear infinite",
+        "blob-drift":   "blob-drift 14s ease-in-out infinite",
+        "tick-up":      "tick-up 0.6s ease-out both",
       },
     },
   },

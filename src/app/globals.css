@@ -110,6 +110,27 @@ html, body {
   .ring-divider {
     @apply ring-1 ring-inset ring-ink-200/70;
   }
+
+  .live-dot {
+    @apply relative inline-flex h-2 w-2 rounded-full bg-emerald-500;
+  }
+  .live-dot::before {
+    content: "";
+    @apply absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-75;
+  }
+
+  .marquee {
+    @apply flex gap-10 animate-marquee whitespace-nowrap will-change-transform;
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-pretty  { text-wrap: pretty; }
+  .mask-fade-x {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
 }
 
 @layer utilities {
