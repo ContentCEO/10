@@ -60,55 +60,60 @@ const SECTIONS: NavSection[] = [
   {
     label: "Leads",
     items: [
-      { href: "/leads",         label: "Pipeline",      icon: Sparkles },
+      { href: "/leads",         label: "Pipeline",      icon: Briefcase },
       { href: "/marketplace",   label: "Marketplace",   icon: ShoppingCart },
-      { href: "/opportunities", label: "Opportunities", icon: Activity },
+      { href: "/opportunities", label: "Lead sources",  icon: Activity },
       { href: "/auto-bid",      label: "AI auto-bid",   icon: Bot },
-      { href: "/distribution",  label: "Routes",        icon: Compass },
-      { href: "/lead-gen",      label: "Capture form",  icon: Megaphone },
-    ],
-  },
-  {
-    label: "Marketing",
-    items: [
-      { href: "/marketing-hub",      label: "Marketing hub",  icon: Megaphone },
-      { href: "/content-studio",     label: "Content studio", icon: PenLine },
-      { href: "/neighbor-outreach",  label: "Neighbor outreach", icon: Compass },
-      { href: "/grow",               label: "Grow hub",       icon: TrendingUp },
-      { href: "/playbook-200",  label: "200/day playbook", icon: Rocket },
-      { href: "/integrations",  label: "Ads + webhooks",icon: Plug },
-      { href: "/widget",        label: "Embed widgets", icon: Code },
-      { href: "/referrals",     label: "Referrals",     icon: Gift },
     ],
   },
   {
     label: "Sales",
     items: [
-      { href: "/inbox",         label: "SMS inbox",     icon: MessageSquare },
+      { href: "/inbox",         label: "Inbox",         icon: MessageSquare },
       { href: "/voicemails",    label: "Voicemails",    icon: Voicemail },
-      { href: "/sequences",     label: "Sequences",     icon: Workflow },
       { href: "/proposals",     label: "Proposals",     icon: FileText },
+      { href: "/sequences",     label: "Sequences",     icon: Workflow },
       { href: "/calendar",      label: "Follow-ups",    icon: CalendarClock },
-      { href: "/booking",       label: "Booking",       icon: Calendar },
       { href: "/customers",     label: "Customers",     icon: Users },
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      { href: "/marketing-hub",     label: "Marketing hub",   icon: Megaphone },
+      { href: "/content-studio",    label: "Content studio",  icon: PenLine },
+      { href: "/neighbor-outreach", label: "Neighborhood",    icon: Compass },
+      { href: "/referrals",         label: "Referrals",       icon: Gift },
     ],
   },
   {
     label: "Operations",
     items: [
-      { href: "/jobs",          label: "Jobs",          icon: Hammer },
-      { href: "/invoices",      label: "Invoices",      icon: Receipt },
-      { href: "/team",          label: "Team",          icon: HardHat },
+      { href: "/jobs",     label: "Jobs",     icon: Hammer },
+      { href: "/booking",  label: "Booking",  icon: Calendar },
+      { href: "/invoices", label: "Invoices", icon: Receipt },
+      { href: "/team",     label: "Team",     icon: HardHat },
+    ],
+  },
+  {
+    label: "Growth",
+    items: [
+      { href: "/grow",         label: "Grow hub",     icon: TrendingUp },
+      { href: "/playbook-200", label: "200/day plan", icon: Rocket },
+      { href: "/partnerships", label: "Partnerships", icon: Handshake },
+      { href: "/lsa-setup",    label: "Google LSAs",  icon: ShieldCheck },
+      { href: "/integrations", label: "Integrations", icon: Plug },
     ],
   },
   {
     label: "Settings",
     items: [
-      { href: "/profile",        label: "My profile",     icon: UserCircle },
-      { href: "/partnerships",   label: "Partnerships",   icon: Handshake },
-      { href: "/lsa-setup",      label: "Google LSA",     icon: ShieldCheck },
-      { href: "/custom-domain",  label: "Custom domain",  icon: Globe },
-      { href: "/billing",        label: "Billing",        icon: Wallet },
+      { href: "/profile",       label: "Profile",       icon: UserCircle },
+      { href: "/lead-gen",      label: "Capture form",  icon: Megaphone },
+      { href: "/widget",        label: "Embed widgets", icon: Code },
+      { href: "/distribution",  label: "Routes",        icon: Compass },
+      { href: "/custom-domain", label: "Custom domain", icon: Globe },
+      { href: "/billing",       label: "Billing",       icon: Wallet },
     ],
   },
 ];
@@ -140,14 +145,14 @@ export function Sidebar({ email }: { email: string | null }) {
                   <Link
                     key={href} href={href}
                     className={cn(
-                      "group relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150",
+                      "group relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-150",
                       active
-                        ? "bg-gradient-to-r from-brand-50 to-brand-100/40 text-brand-700 shadow-soft ring-1 ring-inset ring-brand-200/60"
+                        ? "bg-brand-50/60 text-brand-700"
                         : "text-ink-700 hover:bg-ink-50 hover:text-ink-900",
                     )}
                   >
                     {active && (
-                      <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r-full bg-brand-gradient" />
+                      <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-brand-500" />
                     )}
                     <Icon className={cn(
                       "h-4 w-4 transition-colors shrink-0",
