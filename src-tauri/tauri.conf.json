@@ -61,7 +61,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "untrusted comment: minisign public key: B6BE3AC54A8A4D4A\nRWRKTYpKxTq+tuBQHNsmcK/IgsIKkAXdeTZbdiU1VNn8XLK7Y1zZTuJq",
+      "pubkey": "untrusted comment: minisign public key: 7422ED4E49BA56C0\nRWTAVrpJTu0idIm37QfBSIS1BzEMQpwiHuiqG3C2nYxYq43AuIirSsUm",
       "endpoints": [
         "https://github.com/ContentCEO/10/releases/latest/download/latest.json"
       ]
