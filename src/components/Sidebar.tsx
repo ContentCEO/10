@@ -122,7 +122,11 @@ const SECTIONS: NavSection[] = [
     label: "Admin",
     adminOnly: true,
     items: [
-      { href: "/admin/lead-paste", label: "Lead paste", icon: Wrench },
+      { href: "/admin",             label: "Admin overview",   icon: ShieldCheck },
+      { href: "/admin/marketplace", label: "All leads (firehose)", icon: ShoppingCart },
+      { href: "/admin/curation",    label: "Curation queue",   icon: Sparkles },
+      { href: "/admin/users",       label: "Users",            icon: Users },
+      { href: "/admin/lead-paste",  label: "Manual paste",     icon: Wrench },
     ],
   },
 ];
