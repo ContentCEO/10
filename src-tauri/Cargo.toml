@@ -1,6 +1,6 @@
 [package]
 name = "contractorflow"
-version = "0.1.3"
+version = "0.1.4"
 description = "ContractorFlow desktop app"
 authors = ["ContractorFlow"]
 edition = "2021"
