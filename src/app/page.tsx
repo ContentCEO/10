@@ -118,7 +118,7 @@ const plans = [
   {
     id: "starter",
     name: "Starter",
-    price: "$29",
+    price: "$99",
     tagline: "Solo operator getting organized.",
     features: [
       "Lead pipeline + CRM",
@@ -134,7 +134,7 @@ const plans = [
   {
     id: "growth",
     name: "Growth",
-    price: "$79",
+    price: "$249",
     tagline: "2–3 person crew scaling up.",
     features: [
       "Everything in Starter",
@@ -151,7 +151,7 @@ const plans = [
   {
     id: "pro",
     name: "Pro",
-    price: "$149",
+    price: "$549",
     tagline: "Growing crew going full-speed.",
     features: [
       "Everything in Growth",

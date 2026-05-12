@@ -103,6 +103,29 @@ const config: Config = {
           "0%":   { opacity: "0", transform: "translateY(6px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        aurora: {
+          "0%, 100%": { transform: "translate(0,0) rotate(0deg)",   opacity: "0.55" },
+          "25%":      { transform: "translate(40px,-30px) rotate(60deg)",  opacity: "0.75" },
+          "50%":      { transform: "translate(-30px,40px) rotate(120deg)", opacity: "0.6" },
+          "75%":      { transform: "translate(20px,20px) rotate(180deg)",  opacity: "0.8" },
+        },
+        "spin-slow": {
+          "0%":   { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        twinkle: {
+          "0%, 100%": { opacity: "0.2", transform: "scale(1)" },
+          "50%":      { opacity: "1",   transform: "scale(1.25)" },
+        },
+        "gradient-cycle": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "33%":      { backgroundPosition: "100% 30%" },
+          "66%":      { backgroundPosition: "50% 100%" },
+        },
+        "border-spin": {
+          "0%":   { "--angle": "0deg" },
+          "100%": { "--angle": "360deg" },
+        },
       },
       animation: {
         "fade-up":      "fade-up 0.5s ease-out both",
@@ -113,6 +136,10 @@ const config: Config = {
         marquee:        "marquee 40s linear infinite",
         "blob-drift":   "blob-drift 14s ease-in-out infinite",
         "tick-up":      "tick-up 0.6s ease-out both",
+        aurora:         "aurora 18s ease-in-out infinite",
+        "spin-slow":    "spin-slow 24s linear infinite",
+        twinkle:        "twinkle 3s ease-in-out infinite",
+        "gradient-cycle": "gradient-cycle 10s ease infinite",
       },
     },
   },

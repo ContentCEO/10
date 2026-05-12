@@ -22,7 +22,7 @@ export const PLANS: Plan[] = [
   {
     id: "starter",
     name: "Starter",
-    monthlyCents: 2900,
+    monthlyCents: 9900,
     envKey: "STRIPE_PRICE_STARTER",
     features: [
       "Lead pipeline + CRM",
@@ -41,7 +41,7 @@ export const PLANS: Plan[] = [
   {
     id: "growth",
     name: "Growth",
-    monthlyCents: 7900,
+    monthlyCents: 24900,
     envKey: "STRIPE_PRICE_GROWTH",
     highlight: "Most popular",
     features: [
@@ -63,7 +63,7 @@ export const PLANS: Plan[] = [
   {
     id: "pro",
     name: "Pro",
-    monthlyCents: 14900,
+    monthlyCents: 54900,
     envKey: "STRIPE_PRICE_PRO",
     features: [
       "Everything in Growth",

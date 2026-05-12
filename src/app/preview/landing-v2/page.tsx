@@ -125,7 +125,7 @@ const plans = [
   {
     id: "starter",
     name: "Starter",
-    price: "$29",
+    price: "$99",
     tagline: "Solo operator getting organized.",
     features: ["Lead pipeline + CRM", "AI quick-add + follow-up", "50 leads / month", "100 AI calls / month"],
     highlight: false,
@@ -133,7 +133,7 @@ const plans = [
   {
     id: "growth",
     name: "Growth",
-    price: "$79",
+    price: "$249",
     tagline: "Crew of 2–3 scaling up.",
     features: ["Everything in Starter", "Marketplace claims + wallet", "Google Ads + Meta + Zapier intake", "250 leads / 500 AI calls"],
     highlight: true,
@@ -141,7 +141,7 @@ const plans = [
   {
     id: "pro",
     name: "Pro",
-    price: "$149",
+    price: "$549",
     tagline: "Going full speed.",
     features: ["Everything in Growth", "Unlimited leads + AI", "Auto SMS + email dispatch", "10 seats · priority support"],
     highlight: false,
@@ -200,6 +200,24 @@ export default function LandingV2Preview() {
       />
       <div className="pointer-events-none absolute -z-10 left-1/4 top-32 h-[420px] w-[420px] rounded-full bg-brand-500/30 blur-3xl animate-blob-drift" />
       <div className="pointer-events-none absolute -z-10 right-[8%] top-[120vh] h-[480px] w-[480px] rounded-full bg-fuchsia-500/20 blur-3xl animate-blob-drift" style={{ animationDelay: "-7s" }} />
+      {/* Aurora ribbon over hero */}
+      <div className="pointer-events-none absolute -z-10 top-0 left-1/2 -translate-x-1/2 h-[600px] w-[1100px] rounded-full opacity-60 blur-3xl animate-aurora"
+           style={{
+             background:
+               "conic-gradient(from 90deg at 50% 50%, rgba(99,102,241,0.55), rgba(6,182,212,0.45), rgba(217,70,239,0.55), rgba(99,102,241,0.55))",
+           }}
+      />
+      {/* Twinkling sparkles */}
+      {[
+        { l: "10%", t: "18%", d: "0s" },
+        { l: "82%", t: "22%", d: "1.2s" },
+        { l: "30%", t: "34%", d: "2.4s" },
+        { l: "70%", t: "8%",  d: "0.6s" },
+        { l: "55%", t: "42%", d: "1.8s" },
+        { l: "18%", t: "8%",  d: "2.8s" },
+      ].map((s, i) => (
+        <span key={i} className="sparkle animate-twinkle pointer-events-none -z-10" style={{ left: s.l, top: s.t, animationDelay: s.d }} />
+      ))}
 
       {/* ── Nav ─────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-ink-950/40 border-b border-white/5">
@@ -270,7 +288,7 @@ export default function LandingV2Preview() {
             {/* Glow behind the window */}
             <div className="absolute -inset-x-10 -top-10 bottom-0 -z-10 bg-gradient-to-b from-brand-500/30 via-fuchsia-500/20 to-transparent blur-3xl rounded-3xl" />
 
-            <div className="rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-[0_60px_120px_-30px_rgba(99,102,241,0.6)] bg-ink-900/80 backdrop-blur">
+            <div className="rounded-2xl overflow-hidden glow-ring bg-ink-900/80 backdrop-blur">
               {/* macOS-style title bar */}
               <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
                 <span className="h-3 w-3 rounded-full bg-rose-400" />
@@ -438,7 +456,7 @@ export default function LandingV2Preview() {
           {features.map(({ icon: Icon, title, body, color }, i) => (
             <div
               key={title}
-              className="group rounded-2xl bg-white/[0.04] ring-1 ring-white/10 backdrop-blur p-6 hover:bg-white/[0.07] hover:ring-white/20 transition-all animate-fade-up"
+              className="group rounded-2xl bg-white/[0.04] ring-1 ring-white/10 backdrop-blur p-6 hover:bg-white/[0.08] hover:ring-white/30 hover-lift animate-fade-up"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <div className={`inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${color} text-white shadow-glow group-hover:scale-105 transition-transform`}>
@@ -522,7 +540,7 @@ export default function LandingV2Preview() {
               )}
               <h3 className="text-lg font-semibold tracking-tight">{p.name}</h3>
               <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-5xl font-bold bg-gradient-to-r from-indigo-300 via-violet-300 to-cyan-300 bg-clip-text text-transparent">{p.price}</span>
+                <span className="text-6xl font-bold price-shimmer">{p.price}</span>
                 <span className="text-sm text-white/50">/month</span>
               </div>
               <p className="mt-2 text-sm text-white/70">{p.tagline}</p>
