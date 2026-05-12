@@ -67,6 +67,7 @@ const SECTIONS: NavSection[] = [
   {
     label: "Marketing",
     items: [
+      { href: "/marketing-hub", label: "Marketing hub", icon: Megaphone },
       { href: "/grow",          label: "Grow hub",      icon: TrendingUp },
       { href: "/playbook-200",  label: "200/day playbook", icon: Rocket },
       { href: "/integrations",  label: "Ads + webhooks",icon: Plug },
