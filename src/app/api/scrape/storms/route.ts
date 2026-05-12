@@ -118,11 +118,21 @@ Source: NWS / NOAA`,
   return { fetched: alerts.length, inserted, duplicates, skipped };
 }
 
+const ALL_STATES = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
+  "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
+  "VA","WA","WV","WI","WY","DC","PR",
+];
+
 export async function GET(request: Request) {
   if (!isAuthorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const url = new URL(request.url);
-  const states = (url.searchParams.get("states") ?? "MA,NY,RI,NH,CT,VT,ME")
-    .split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
+  const statesParam = url.searchParams.get("states");
+  // Default: all 50 states + DC + PR (was MA + neighbors). National coverage.
+  const states = statesParam
+    ? statesParam.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean)
+    : ALL_STATES;
   const result = await runOnce(states);
   return NextResponse.json({ ok: true, source: "noaa_storms", states, ...result });
 }

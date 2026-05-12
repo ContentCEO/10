@@ -1,10 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/daily",        "schedule": "0 * * * *" },
-    { "path": "/api/scrape/reddit",     "schedule": "15 * * * *" },
-    { "path": "/api/scrape/craigslist", "schedule": "30 * * * *" },
-    { "path": "/api/scrape/permits",    "schedule": "45 * * * *" },
-    { "path": "/api/scrape/rss",        "schedule": "10 * * * *" }
+    { "path": "/api/cron/daily",         "schedule": "0 * * * *" },
+    { "path": "/api/scrape/reddit",      "schedule": "*/15 * * * *" },
+    { "path": "/api/scrape/craigslist",  "schedule": "5-59/15 * * * *" },
+    { "path": "/api/scrape/permits",     "schedule": "10-59/15 * * * *" },
+    { "path": "/api/scrape/storms",      "schedule": "8-59/15 * * * *" },
+    { "path": "/api/scrape/rss",         "schedule": "3-59/15 * * * *" },
+    { "path": "/api/scrape/ma-municipal","schedule": "0 */6 * * *" },
+    { "path": "/api/scrape/mass-gov-bids","schedule": "0 6 * * *" }
   ]
 }

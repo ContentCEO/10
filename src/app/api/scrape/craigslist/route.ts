@@ -13,17 +13,74 @@ export const runtime = "nodejs";
 // "real estate services" (rea) RSS feeds.
 
 const CL_SITES = [
-  "boston", "capecod", "western", "newhampshire", "vermont",
-  "rhodeisland", "newhaven", "newlondon", "hartford", "providence",
-  "newyork", "longisland", "westchester", "albany", "portland",  // Portland ME
+  // Massachusetts + immediate neighbors
+  "boston", "capecod", "western", "worcester",
+  "newhampshire", "vermont", "rhodeisland", "providence",
+  "hartford", "newhaven", "newlondon", "easternct",
+
+  // NY metro + state
+  "newyork", "brooklyn", "manhattan", "queens", "bronx",
+  "longisland", "westchester", "hudsonvalley", "catskills",
+  "albany", "syracuse", "rochester", "buffalo", "binghamton",
+  "ithaca", "utica", "fingerlakes", "plattsburgh",
+
+  // Mid-Atlantic
+  "philadelphia", "southjersey", "centraljersey", "northjersey", "jerseyshore",
+  "pittsburgh", "allentown", "harrisburg", "lancaster", "scranton", "statecollege",
+  "baltimore", "annapolis", "delaware", "easternshore",
+  "washingtondc", "fredericksburg", "richmond", "hampton roads", "norfolk",
+  "charlottesville", "lynchburg", "roanoke", "harrisonburg",
+
+  // South Atlantic
+  "raleigh", "charlotte", "greensboro", "asheville", "wilmington", "fayetteville",
+  "charleston", "columbia", "greenville", "myrtlebeach", "hiltonhead",
+  "atlanta", "savannah", "augusta", "athensga", "columbusga", "macon",
+  "jacksonville", "orlando", "miami", "tampa", "fortmyers", "tallahassee",
+  "sarasota", "spacecoast", "gainesville", "lakeland", "ocala",
+
+  // Gulf + South Central
+  "neworleans", "batonrouge", "lafayette", "shreveport",
+  "jacksonms", "memphis", "nashville", "knoxville", "chattanooga",
+  "birmingham", "huntsville", "mobile", "montgomery",
+  "littlerock", "fayetteville-ar",
+
+  // Midwest
+  "chicago", "milwaukee", "madison", "greenbay", "appleton",
+  "detroit", "grandrapids", "lansing", "annarbor", "kalamazoo",
+  "cleveland", "columbus", "cincinnati", "dayton", "toledo",
+  "indianapolis", "fortwayne", "evansville", "southbend",
+  "stlouis", "kansascity", "springfieldmo", "columbiamo",
+  "minneapolis", "duluth", "rochestermn", "stcloud",
+  "desmoines", "iowacity", "cedarrapids",
+  "omaha", "lincoln",
+
+  // Texas
+  "houston", "dallas", "austin", "sanantonio", "fortworth",
+  "elpaso", "corpuschristi", "lubbock", "amarillo", "waco",
+  "collegestation", "killeen", "laredo", "tyler",
+
+  // Mountain
+  "denver", "coloradosprings", "fortcollins", "boulder",
+  "saltlakecity", "boise", "billings", "phoenix", "tucson", "flagstaff",
+  "albuquerque", "santafe", "lasvegas", "reno",
+
+  // Pacific
+  "losangeles", "sandiego", "orangecounty", "inlandempire", "ventura",
+  "bakersfield", "fresno", "modesto", "sacramento", "stockton", "visalia",
+  "sfbay", "monterey", "santabarbara",
+  "portland", "salem", "eugene", "bend",
+  "seattle", "tacoma", "spokane", "olympia", "bellingham",
+  "anchorage", "honolulu",
+
+  // Oklahoma/Kansas
+  "oklahomacity", "tulsa", "wichita", "topeka",
 ];
 
 const CL_CATEGORIES = [
-  "sso",  // services wanted
-  "hsh",  // household services
-  "lbs",  // labor / move
-  "skl",  // skilled trade services
-  "lws",  // legal services (sometimes construction-disputes)
+  "sso",  // services wanted (homeowners posting "need a pro")
+  "lab",  // labor gigs (one-time jobs)
+  "dmg",  // domestic gigs (cleaning, handyman)
+  "ggg",  // all gigs fallback
 ];
 
 interface ParsedEntry {
@@ -35,13 +92,38 @@ interface ParsedEntry {
 }
 
 const KEYWORDS = [
-  "contractor", "remodel", "renovation", "kitchen", "bathroom",
-  "deck", "roof", "siding", "fence", "concrete", "driveway",
-  "flooring", "tile", "drywall", "painter", "painting",
-  "plumber", "plumbing", "electrician", "hvac", "ac install",
-  "landscaping", "lawn", "tree", "gutter", "chimney",
-  "looking for", "need help with", "anyone", "recommendation",
-  "estimate", "quote", "trustworthy", "honest",
+  // Trade services
+  "contractor", "remodel", "renovation", "renovate", "addition", "build",
+  "kitchen", "bathroom", "basement", "attic", "garage",
+  "deck", "porch", "patio", "pergola", "shed",
+  "roof", "roofer", "shingles", "metal roof", "leak",
+  "siding", "vinyl siding", "stucco", "exterior",
+  "fence", "fencing", "gate", "railing",
+  "concrete", "masonry", "brick", "stone", "foundation",
+  "driveway", "asphalt", "paving", "sealcoat",
+  "flooring", "hardwood", "tile", "carpet", "laminate", "vinyl plank",
+  "drywall", "sheetrock", "plaster", "ceiling",
+  "painter", "painting", "interior paint", "exterior paint", "trim",
+  "plumber", "plumbing", "water heater", "leak", "clog", "drain", "toilet",
+  "electrician", "electrical", "panel", "outlet", "wiring", "rewire",
+  "hvac", "heating", "cooling", "ac install", "boiler", "furnace", "mini split",
+  "landscaping", "landscaper", "lawn", "mowing", "mulch", "sod",
+  "tree", "tree removal", "stump",
+  "gutter", "gutter cleaning", "chimney", "chimney sweep",
+  "pool", "spa", "hot tub",
+  "window", "windows", "replacement window",
+  "door", "garage door",
+  "handyman", "handywoman", "fix it",
+  "demolition", "demo", "junk removal", "haul",
+  "snow removal", "plow",
+  "pressure wash", "powerwash", "soft wash",
+  "insulation", "spray foam",
+  "solar", "solar panels",
+  "septic", "sewer",
+  "moving", "movers",
+  "cleaning", "deep clean", "move out clean",
+  "estimate", "quote", "bid", "looking for", "need help", "anyone know",
+  "recommend", "recommendation", "trustworthy", "honest", "licensed",
 ];
 
 function match1(s: string, re: RegExp): string | null {
