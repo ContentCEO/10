@@ -65,6 +65,26 @@ export async function updateSession(request: NextRequest) {
   // Skip Supabase entirely for public paths (perf + works without env vars).
   if (isPublic) return response;
 
+  // Desktop-only gate: the in-app screens are not reachable from a regular
+  // browser. The Tauri shell identifies itself with "Tauri Desktop" in the
+  // User-Agent string (see src-tauri/tauri.conf.json `userAgent`). Anything
+  // else gets bounced to /download with a notice. This is a UX gate, not a
+  // hard security boundary — protected routes still enforce Supabase auth
+  // below for any client that does slip through.
+  const ua = request.headers.get("user-agent") ?? "";
+  const isDesktop =
+    ua.includes("Tauri") ||
+    ua.includes("ContractorFlow") ||
+    request.headers.get("x-contractorflow-desktop") === "1";
+
+  if (!isDesktop) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/download";
+    url.searchParams.set("from", "web");
+    url.searchParams.set("path", path);
+    return NextResponse.redirect(url);
+  }
+
   // Graceful degrade for local dev without Supabase env: let protected
   // routes through. Real production envs will always have these set; this
   // only triggers when someone previews the app without configuring secrets.

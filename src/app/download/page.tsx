@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Apple, ArrowRight, CheckCircle2, Download, Monitor, Smartphone, Terminal } from "lucide-react";
+import { Apple, ArrowRight, CheckCircle2, Download, Info, Monitor, Smartphone, Terminal } from "lucide-react";
 import { DownloadButtons } from "./buttons";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 const REPO = process.env.GITHUB_RELEASES_REPO ?? "contentceo/10";
 
@@ -28,7 +28,13 @@ function pickAsset(rel: GhRelease, match: (n: string) => boolean) {
   return rel.assets.find((a) => match(a.name)) ?? null;
 }
 
-export default async function DownloadPage() {
+export default async function DownloadPage({
+  searchParams,
+}: {
+  searchParams?: { from?: string; path?: string };
+}) {
+  const redirectedFromApp = searchParams?.from === "web";
+  const attemptedPath = searchParams?.path;
   const rel = await fetchLatest();
   const version = rel?.tag_name?.replace(/^v/, "") ?? null;
   const downloads = rel ? {
@@ -58,6 +64,26 @@ export default async function DownloadPage() {
       </header>
 
       <section className="mx-auto max-w-4xl px-6 pt-16 pb-12 text-center animate-fade-up">
+        {redirectedFromApp && (
+          <div className="mb-8 inline-flex items-start gap-3 rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4 text-left max-w-2xl shadow-soft">
+            <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <div className="font-semibold text-amber-900 text-sm">
+                ContractorFlow is a desktop app.
+              </div>
+              <p className="mt-1 text-sm text-amber-800/90 leading-relaxed">
+                {attemptedPath ? (
+                  <>
+                    <code className="font-mono text-xs bg-amber-100 px-1.5 py-0.5 rounded">{attemptedPath}</code> is only
+                    reachable inside the desktop app. Download below and sign in there to continue.
+                  </>
+                ) : (
+                  <>The full app runs as a native installer for macOS, Windows, and Linux. Download below.</>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
         <span className="badge bg-white/80 text-brand-700 ring-brand-200 backdrop-blur shadow-soft">
           <Download className="h-3.5 w-3.5 mr-1" />
           {version ? `ContractorFlow Desktop · v${version}` : "ContractorFlow Desktop"}
