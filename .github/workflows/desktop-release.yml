@@ -75,6 +75,18 @@ jobs:
       - name: Generate Tauri icons
         run: npm run tauri:icon
 
+      - name: Debug signing secret shape (no secret leak)
+        if: matrix.target == 'aarch64-apple-darwin'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          echo "key length:      ${#TAURI_SIGNING_PRIVATE_KEY} (expect 348)"
+          echo "password length: ${#TAURI_SIGNING_PRIVATE_KEY_PASSWORD} (expect 13)"
+          echo "key first 12:    ${TAURI_SIGNING_PRIVATE_KEY:0:12} (expect dW50cnVzdGVk)"
+          echo "pw hash prefix:  $(printf %s "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" | shasum -a 256 | cut -c1-16)"
+          echo "expected prefix: $(printf %s "cf-update-2026" | shasum -a 256 | cut -c1-16)"
+
       - name: Build desktop app
         uses: tauri-apps/tauri-action@v0
         env:
