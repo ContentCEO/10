@@ -8,6 +8,7 @@
     { "path": "/api/scrape/storms",      "schedule": "8-59/15 * * * *" },
     { "path": "/api/scrape/rss",         "schedule": "3-59/15 * * * *" },
     { "path": "/api/scrape/ma-municipal","schedule": "0 */6 * * *" },
-    { "path": "/api/scrape/mass-gov-bids","schedule": "0 6 * * *" }
+    { "path": "/api/scrape/mass-gov-bids","schedule": "0 6 * * *" },
+    { "path": "/api/scrape/sam-gov",     "schedule": "0 */4 * * *" }
   ]
 }

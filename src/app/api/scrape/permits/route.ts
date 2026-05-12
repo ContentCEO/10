@@ -233,16 +233,259 @@ async function fetchLowell(limit: number): Promise<PermitLead[]> {
   }));
 }
 
-// ---------- Quincy / Brockton / Springfield ----------
-// These cities don't yet publish standardized Socrata feeds, but they post
-// permit logs as PDFs / town-clerk pages. Adding placeholder fetchers that
-// return [] so they show up in the registry — wire them when those cities
-// expose an API or via a CSV upload endpoint similar to /api/scrape/deeds.
+// ---------- Los Angeles ----------
+interface LARow {
+  pcis_permit_no: string;
+  permit_type: string | null;
+  permit_sub_type: string | null;
+  work_description: string | null;
+  valuation: string | null;
+  address_start: string | null;
+  street_name: string | null;
+  zip_code: string | null;
+  applicant_first_name: string | null;
+  applicant_last_name: string | null;
+}
+async function fetchLA(limit: number): Promise<PermitLead[]> {
+  const rows = await fetchSocrata<LARow>(
+    `https://data.lacity.org/resource/nbyu-2ha9.json?$limit=${limit}&$order=issue_date DESC`,
+  );
+  return rows.map((r) => {
+    const owner = [r.applicant_first_name, r.applicant_last_name].filter(Boolean).join(" ").trim();
+    const addr = [r.address_start, r.street_name].filter(Boolean).join(" ").trim();
+    const cost = r.valuation ? Number(r.valuation.replace(/[^0-9.]/g, "")) : null;
+    return {
+      externalId: `la:${r.pcis_permit_no}`,
+      name: owner || "LA permit holder",
+      address: addr || null,
+      zip: r.zip_code || null,
+      city: "Los Angeles",
+      service_type: r.permit_sub_type || r.permit_type || r.work_description?.slice(0, 60) || "Permit",
+      estimated_cost: Number.isFinite(cost) ? cost : null,
+      notes: r.work_description ?? "",
+      raw: r as unknown as Record<string, unknown>,
+    };
+  });
+}
+
+// ---------- San Francisco ----------
+interface SFRow {
+  permit_number: string;
+  permit_type_definition: string | null;
+  description: string | null;
+  estimated_cost: string | null;
+  street_number: string | null;
+  street_name: string | null;
+  zipcode: string | null;
+}
+async function fetchSF(limit: number): Promise<PermitLead[]> {
+  const rows = await fetchSocrata<SFRow>(
+    `https://data.sfgov.org/resource/i98e-djp9.json?$limit=${limit}&$order=filed_date DESC`,
+  );
+  return rows.map((r) => {
+    const addr = [r.street_number, r.street_name].filter(Boolean).join(" ").trim();
+    const cost = r.estimated_cost ? Number(r.estimated_cost.replace(/[^0-9.]/g, "")) : null;
+    return {
+      externalId: `sf:${r.permit_number}`,
+      name: "SF permit holder",
+      address: addr || null,
+      zip: r.zipcode || null,
+      city: "San Francisco",
+      service_type: r.permit_type_definition || r.description?.slice(0, 60) || "Permit",
+      estimated_cost: Number.isFinite(cost) ? cost : null,
+      notes: r.description ?? "",
+      raw: r as unknown as Record<string, unknown>,
+    };
+  });
+}
+
+// ---------- Seattle ----------
+interface SeattleRow {
+  permit_number: string;
+  permit_type: string | null;
+  description: string | null;
+  estimated_project_cost: string | null;
+  address: string | null;
+  original_zip: string | null;
+  applicant_name: string | null;
+}
+async function fetchSeattle(limit: number): Promise<PermitLead[]> {
+  const rows = await fetchSocrata<SeattleRow>(
+    `https://data.seattle.gov/resource/76t5-zqzr.json?$limit=${limit}&$order=application_date DESC`,
+  );
+  return rows.map((r) => {
+    const cost = r.estimated_project_cost ? Number(r.estimated_project_cost.replace(/[^0-9.]/g, "")) : null;
+    return {
+      externalId: `seattle:${r.permit_number}`,
+      name: r.applicant_name || "Seattle permit holder",
+      address: r.address || null,
+      zip: r.original_zip || null,
+      city: "Seattle",
+      service_type: r.permit_type || r.description?.slice(0, 60) || "Permit",
+      estimated_cost: Number.isFinite(cost) ? cost : null,
+      notes: r.description ?? "",
+      raw: r as unknown as Record<string, unknown>,
+    };
+  });
+}
+
+// ---------- Austin ----------
+interface AustinRow {
+  permit_num: string;
+  permit_type_desc: string | null;
+  description: string | null;
+  total_valuation_remodel: string | null;
+  original_address1: string | null;
+  original_zip: string | null;
+  applicant_full_name: string | null;
+}
+async function fetchAustin(limit: number): Promise<PermitLead[]> {
+  const rows = await fetchSocrata<AustinRow>(
+    `https://data.austintexas.gov/resource/3syk-w9eu.json?$limit=${limit}&$order=applied_date DESC`,
+  );
+  return rows.map((r) => {
+    const cost = r.total_valuation_remodel ? Number(r.total_valuation_remodel.replace(/[^0-9.]/g, "")) : null;
+    return {
+      externalId: `austin:${r.permit_num}`,
+      name: r.applicant_full_name || "Austin permit holder",
+      address: r.original_address1 || null,
+      zip: r.original_zip || null,
+      city: "Austin",
+      service_type: r.permit_type_desc || r.description?.slice(0, 60) || "Permit",
+      estimated_cost: Number.isFinite(cost) ? cost : null,
+      notes: r.description ?? "",
+      raw: r as unknown as Record<string, unknown>,
+    };
+  });
+}
+
+// ---------- Dallas ----------
+interface DallasRow {
+  permit_number: string;
+  type_description: string | null;
+  work_description: string | null;
+  estimated_value: string | null;
+  address: string | null;
+  zip: string | null;
+  contact_name: string | null;
+}
+async function fetchDallas(limit: number): Promise<PermitLead[]> {
+  const rows = await fetchSocrata<DallasRow>(
+    `https://www.dallasopendata.com/resource/e7gq-4sah.json?$limit=${limit}&$order=issued_date DESC`,
+  );
+  return rows.map((r) => {
+    const cost = r.estimated_value ? Number(r.estimated_value.replace(/[^0-9.]/g, "")) : null;
+    return {
+      externalId: `dallas:${r.permit_number}`,
+      name: r.contact_name || "Dallas permit holder",
+      address: r.address || null,
+      zip: r.zip || null,
+      city: "Dallas",
+      service_type: r.type_description || r.work_description?.slice(0, 60) || "Permit",
+      estimated_cost: Number.isFinite(cost) ? cost : null,
+      notes: r.work_description ?? "",
+      raw: r as unknown as Record<string, unknown>,
+    };
+  });
+}
+
+// ---------- Washington DC ----------
+interface DCRow {
+  permit_number: string;
+  permit_type: string | null;
+  description_of_work: string | null;
+  fees_paid: string | null;
+  full_address: string | null;
+  zipcode: string | null;
+}
+async function fetchDC(limit: number): Promise<PermitLead[]> {
+  const rows = await fetchSocrata<DCRow>(
+    `https://opendata.dc.gov/api/feed/dataset/construction-permits-issued-in-dc-7.geojson?$limit=${limit}`,
+  );
+  return rows.map((r) => ({
+    externalId: `dc:${r.permit_number}`,
+    name: "DC permit holder",
+    address: r.full_address || null,
+    zip: r.zipcode || null,
+    city: "Washington",
+    service_type: r.permit_type || r.description_of_work?.slice(0, 60) || "Permit",
+    estimated_cost: null,
+    notes: r.description_of_work ?? "",
+    raw: r as unknown as Record<string, unknown>,
+  }));
+}
+
+// ---------- Detroit ----------
+interface DetroitRow {
+  permit_no: string;
+  permit_type: string | null;
+  description: string | null;
+  estimated_cost: string | null;
+  site_address: string | null;
+  parcel_zip_code: string | null;
+}
+async function fetchDetroit(limit: number): Promise<PermitLead[]> {
+  const rows = await fetchSocrata<DetroitRow>(
+    `https://data.detroitmi.gov/resource/but4-ky7y.json?$limit=${limit}&$order=permit_issued DESC`,
+  );
+  return rows.map((r) => {
+    const cost = r.estimated_cost ? Number(r.estimated_cost.replace(/[^0-9.]/g, "")) : null;
+    return {
+      externalId: `detroit:${r.permit_no}`,
+      name: "Detroit permit holder",
+      address: r.site_address || null,
+      zip: r.parcel_zip_code || null,
+      city: "Detroit",
+      service_type: r.permit_type || r.description?.slice(0, 60) || "Permit",
+      estimated_cost: Number.isFinite(cost) ? cost : null,
+      notes: r.description ?? "",
+      raw: r as unknown as Record<string, unknown>,
+    };
+  });
+}
+
+// ---------- Generic Socrata fetcher (for cities we add without typed schemas) ----------
+async function fetchGenericPermits(
+  city: string,
+  url: string,
+  fieldMap: { id: string; type?: string; desc?: string; cost?: string; addr?: string; zip?: string; owner?: string },
+): Promise<PermitLead[]> {
+  try {
+    const res = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Record<string, unknown>[];
+    return rows.map((r) => {
+      const idVal = String(r[fieldMap.id] ?? "");
+      const cost = r[fieldMap.cost ?? ""]
+        ? Number(String(r[fieldMap.cost ?? ""]).replace(/[^0-9.]/g, ""))
+        : null;
+      return {
+        externalId: `${city.toLowerCase().replace(/\s+/g, "_")}:${idVal}`,
+        name: String(r[fieldMap.owner ?? ""] ?? `${city} permit holder`),
+        address: r[fieldMap.addr ?? ""] ? String(r[fieldMap.addr ?? ""]) : null,
+        zip: r[fieldMap.zip ?? ""] ? String(r[fieldMap.zip ?? ""]) : null,
+        city,
+        service_type: String(
+          r[fieldMap.type ?? ""] ??
+          (r[fieldMap.desc ?? ""] ? String(r[fieldMap.desc ?? ""]).slice(0, 60) : "Building permit"),
+        ),
+        estimated_cost: Number.isFinite(cost) ? cost : null,
+        notes: String(r[fieldMap.desc ?? ""] ?? ""),
+        raw: r,
+      };
+    }).filter((r) => r.externalId !== `${city.toLowerCase().replace(/\s+/g, "_")}:`);
+  } catch {
+    return [];
+  }
+}
+
+// Placeholder for cities without a discovered public API yet.
 async function fetchEmpty(_: number): Promise<PermitLead[]> {
   return [];
 }
 
 const SOURCES: CitySource[] = [
+  // Massachusetts
   { key: "boston_permits",     city: "Boston",     fetch: fetchBoston },
   { key: "cambridge_permits",  city: "Cambridge",  fetch: fetchCambridge },
   { key: "somerville_permits", city: "Somerville", fetch: fetchSomerville },
@@ -251,8 +494,67 @@ const SOURCES: CitySource[] = [
   { key: "brockton_permits",   city: "Brockton",   fetch: fetchEmpty },
   { key: "springfield_permits",city: "Springfield",fetch: fetchEmpty },
   { key: "worcester_permits",  city: "Worcester",  fetch: fetchEmpty },
-  { key: "nyc_permits",        city: "New York",   fetch: fetchNyc },
-  { key: "chicago_permits",    city: "Chicago",    fetch: fetchChicago },
+
+  // National — typed fetchers
+  { key: "nyc_permits",         city: "New York",      fetch: fetchNyc },
+  { key: "chicago_permits",     city: "Chicago",       fetch: fetchChicago },
+  { key: "la_permits",          city: "Los Angeles",   fetch: fetchLA },
+  { key: "sf_permits",          city: "San Francisco", fetch: fetchSF },
+  { key: "seattle_permits",     city: "Seattle",       fetch: fetchSeattle },
+  { key: "austin_permits",      city: "Austin",        fetch: fetchAustin },
+  { key: "dallas_permits",      city: "Dallas",        fetch: fetchDallas },
+  { key: "dc_permits",          city: "Washington",    fetch: fetchDC },
+  { key: "detroit_permits",     city: "Detroit",       fetch: fetchDetroit },
+
+  // National — generic Socrata fetchers
+  { key: "philadelphia_permits", city: "Philadelphia",
+    fetch: (limit) => fetchGenericPermits("Philadelphia",
+      `https://phl.carto.com/api/v2/sql?q=SELECT+*+FROM+permits+ORDER+BY+permitissuedate+DESC+LIMIT+${limit}`,
+      { id: "permitnumber", type: "permittype", desc: "approvedscopeofwork", cost: "totaltax_assesment", addr: "address", zip: "zip" }) },
+  { key: "san_diego_permits", city: "San Diego",
+    fetch: (limit) => fetchGenericPermits("San Diego",
+      `https://data.sandiego.gov/api/3/action/datastore_search?resource_id=permits&limit=${limit}`,
+      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
+  { key: "denver_permits", city: "Denver",
+    fetch: (limit) => fetchGenericPermits("Denver",
+      `https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-permits.json?$limit=${limit}`,
+      { id: "permit_id", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
+  { key: "phoenix_permits", city: "Phoenix",
+    fetch: (limit) => fetchGenericPermits("Phoenix",
+      `https://www.phoenixopendata.com/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
+      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
+  { key: "san_jose_permits", city: "San Jose",
+    fetch: (limit) => fetchGenericPermits("San Jose",
+      `https://data.sanjoseca.gov/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
+      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
+  { key: "miami_dade_permits", city: "Miami",
+    fetch: (limit) => fetchGenericPermits("Miami",
+      `https://gis-mdc.opendata.arcgis.com/datasets/Permits/FeatureServer/0/query?where=1=1&outFields=*&f=json&resultRecordCount=${limit}`,
+      { id: "PermitNumber", type: "PermitType", desc: "Description", cost: "Valuation", addr: "Address", zip: "Zip" }) },
+  { key: "minneapolis_permits", city: "Minneapolis",
+    fetch: (limit) => fetchGenericPermits("Minneapolis",
+      `https://opendata.minneapolismn.gov/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
+      { id: "permit_number", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
+  { key: "indianapolis_permits", city: "Indianapolis",
+    fetch: (limit) => fetchGenericPermits("Indianapolis",
+      `https://data.indy.gov/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
+      { id: "permit_number", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
+  { key: "charlotte_permits", city: "Charlotte",
+    fetch: (limit) => fetchGenericPermits("Charlotte",
+      `https://data.charlottenc.gov/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
+      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
+  { key: "baltimore_permits", city: "Baltimore",
+    fetch: (limit) => fetchGenericPermits("Baltimore",
+      `https://data.baltimorecity.gov/resource/building-permits.json?$limit=${limit}`,
+      { id: "permit_number", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
+  { key: "las_vegas_permits", city: "Las Vegas",
+    fetch: (limit) => fetchGenericPermits("Las Vegas",
+      `https://opendata.lasvegasnevada.gov/resource/building-permits.json?$limit=${limit}`,
+      { id: "permit_number", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
+  { key: "honolulu_permits", city: "Honolulu",
+    fetch: (limit) => fetchGenericPermits("Honolulu",
+      `https://data.honolulu.gov/resource/building-permits.json?$limit=${limit}`,
+      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
 ];
 
 async function runOnce(opts: { source?: string; limit?: number; min_cost?: number }) {

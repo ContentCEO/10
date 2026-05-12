@@ -264,12 +264,14 @@ async function run() {
   const maMunicipal  = await runScraper("/api/scrape/ma-municipal");
   const massGovBids  = await runScraper("/api/scrape/mass-gov-bids");
   const rss          = await runScraper("/api/scrape/rss");
-  const storms       = await runScraper("/api/scrape/storms?states=MA,NY,RI,NH,CT,VT,ME");
+  // Storms with no states param → all 50 states + DC + PR by default
+  const storms       = await runScraper("/api/scrape/storms");
+  const samGov       = await runScraper("/api/scrape/sam-gov");
   const autoBid      = await runScraper("/api/marketplace/auto-bid");
   return {
     ok: true,
     recurring, expiration, dispatch,
-    reddit, craigslist, permits, maMunicipal, massGovBids, rss, storms, autoBid,
+    reddit, craigslist, permits, maMunicipal, massGovBids, rss, storms, samGov, autoBid,
     ranAt: new Date().toISOString(),
   };
 }
