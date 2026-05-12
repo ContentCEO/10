@@ -59,7 +59,8 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/yard/") ||
     path.startsWith("/local/") ||
     path.startsWith("/pros") ||
-    path.startsWith("/find-pro");
+    path.startsWith("/find-pro") ||
+    path.startsWith("/preview/");
 
   // Skip Supabase entirely for public paths (perf + works without env vars).
   if (isPublic) return response;
