@@ -13,10 +13,10 @@ export const runtime = "nodejs";
 // "real estate services" (rea) RSS feeds.
 
 const CL_SITES = [
-  // Massachusetts + immediate neighbors
-  "boston", "capecod", "western", "worcester",
+  // Massachusetts + immediate neighbors — full Northeast saturation
+  "boston", "capecod", "western", "worcester", "southcoast",
   "newhampshire", "vermont", "rhodeisland", "providence",
-  "hartford", "newhaven", "newlondon", "easternct",
+  "hartford", "newhaven", "newlondon", "easternct", "nwct",
 
   // NY metro + state
   "newyork", "brooklyn", "manhattan", "queens", "bronx",

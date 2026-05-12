@@ -19,11 +19,26 @@ const DEFAULT_SUBS = [
   "Hvacadvice", "Landscaping", "Carpentry", "Painting", "Drywall",
   "Decks", "tile", "Concrete", "MyHomeImproved", "Appliances",
   "askanelectrician",
-  // Massachusetts metro
+  // Massachusetts — full statewide coverage
   "boston", "massachusetts", "cambridgema", "somerville",
   "WorcesterMA", "metrowestma", "newengland",
   "Springfield", "lowell", "lawrence",
+  // MA cities + towns (small subs, low volume each but high signal)
+  "Brookline", "newton", "quincy", "MAPolitics",
+  "Acton", "Andover", "Arlington_MA", "Brockton", "Burlington",
+  "Chelmsford", "Chelsea", "Dorchester", "Everett", "FallRiver",
+  "Framingham", "Gloucester", "Holyoke", "Hyannis", "Lynn",
+  "Malden", "Medford", "Methuen", "MiltonMA", "NewBedford",
+  "Northampton", "NorthShore", "PeabodyMA", "Pittsfield",
+  "Plymouth_MA", "Randolph", "Revere", "Salem",
+  "SaugusMA", "SouthShore", "Stoneham", "Taunton",
+  "Waltham", "Watertown", "Wellesley", "Westford",
+  "WestRoxbury", "Weymouth", "Winchester", "Winthrop",
+  "Woburn", "Yarmouth", "Capecod", "BerkshireCo",
+  "MAFreeForAll", "boston_apartments", "Massachusettshelp",
+  // Neighbors (jobs spill across state lines)
   "ProvidenceRI", "RhodeIsland", "Connecticut", "NewHampshire",
+  "VTContractors", "ManchesterNH", "NashuaNH", "RochesterNH",
   // Major US metros
   "nyc", "AskNYC", "chicago", "LosAngeles", "sandiego", "Seattle",
   "denver", "Atlanta", "Houston", "Dallas", "philadelphia", "Phoenix",
@@ -31,21 +46,54 @@ const DEFAULT_SUBS = [
 ];
 
 const DEFAULT_KEYWORDS = [
+  // Intent words
   "contractor", "estimate", "quote", "looking for a", "recommend",
-  "anyone know", "anyone have", "trustworthy", "reputable",
-  "hire", "hired", "need help with", "advice on",
-  "remodel", "renovation", "renovate", "rebuild", "replace",
-  "kitchen", "bathroom", "bath remodel", "deck", "fence", "roof",
-  "siding", "windows", "flooring", "hardwood", "tile", "carpet",
-  "drywall", "painting", "paint", "hvac", "ac unit", "furnace",
-  "plumber", "plumbing", "leak", "electrician", "electrical",
-  "wiring", "outlet", "panel", "rewire",
-  "cleaning", "deep clean", "house clean",
-  "landscaping", "lawn", "tree", "driveway", "concrete",
-  "basement", "garage", "addition", "attic", "insulation",
-  "gutter", "chimney", "patio", "pool", "shed", "stair",
-  "water damage", "mold", "asbestos", "lead paint",
-  "general contractor", "handyman",
+  "anyone know", "anyone have", "trustworthy", "reputable", "vetted",
+  "hire", "hired", "need help with", "advice on", "any idea",
+  "ballpark", "price range", "how much", "cost to", "diy or hire",
+  "license", "licensed", "insured",
+  // Remodel / construction
+  "remodel", "renovation", "renovate", "rebuild", "replace", "update",
+  "kitchen", "kitchen remodel", "kitchen renovation", "cabinets",
+  "bathroom", "bath remodel", "shower remodel", "tub", "vanity",
+  "basement", "basement finishing", "basement remodel",
+  "garage", "garage conversion", "addition", "attic", "dormer", "in-law",
+  "deck", "deck builder", "deck repair", "fence", "fence install",
+  "porch", "patio", "pergola", "screen porch",
+  // Exterior
+  "roof", "roofer", "roof replacement", "roof leak", "shingles", "metal roof",
+  "siding", "vinyl siding", "stucco", "exterior paint", "house paint",
+  "windows", "window replacement", "energy efficient windows",
+  "gutter", "gutter cleaning", "gutter guard", "chimney", "chimney sweep",
+  // Floors / interior
+  "flooring", "hardwood", "refinish floor", "tile", "carpet",
+  "luxury vinyl", "lvp", "lvt", "laminate",
+  "drywall", "sheetrock", "plaster", "popcorn ceiling",
+  "painting", "paint", "interior paint", "trim work", "wallpaper",
+  // Trades — electrical
+  "electrician", "electrical", "wiring", "outlet", "panel", "rewire",
+  "panel upgrade", "200 amp", "knob and tube", "ev charger", "level 2 charger",
+  "gfci", "afci", "ceiling fan", "recessed light", "smoke detector",
+  // Trades — plumbing
+  "plumber", "plumbing", "leak", "water heater", "tankless",
+  "drain", "drain cleaning", "clog", "toilet", "faucet",
+  "sewer line", "sump pump", "garbage disposal", "sewer backup",
+  // Trades — HVAC
+  "hvac", "ac unit", "central air", "ductless", "mini split",
+  "furnace", "boiler", "heat pump", "duct cleaning", "ductwork",
+  // Outdoor / site
+  "cleaning", "deep clean", "house clean", "move out clean",
+  "landscaping", "landscaper", "lawn", "lawn care", "sod", "mulch",
+  "tree", "tree removal", "tree service", "stump grinding",
+  "driveway", "asphalt", "concrete", "paver", "walkway",
+  "snow removal", "plowing",
+  "pool", "pool install", "hot tub",
+  // Damage / specialty
+  "water damage", "flood damage", "mold", "mold remediation",
+  "asbestos", "lead paint", "lead abatement",
+  "general contractor", "handyman", "junk removal", "demolition",
+  "insulation", "spray foam", "blown in",
+  "solar", "solar panels", "battery backup",
 ];
 
 interface ParsedEntry {
