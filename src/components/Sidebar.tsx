@@ -11,6 +11,7 @@ import {
   CircleDollarSign,
   Code,
   FileText,
+  PenLine,
   Compass,
   Gift,
   Globe,
@@ -71,6 +72,7 @@ const SECTIONS: NavSection[] = [
     label: "Marketing",
     items: [
       { href: "/marketing-hub",      label: "Marketing hub",  icon: Megaphone },
+      { href: "/content-studio",     label: "Content studio", icon: PenLine },
       { href: "/neighbor-outreach",  label: "Neighbor outreach", icon: Compass },
       { href: "/grow",               label: "Grow hub",       icon: TrendingUp },
       { href: "/playbook-200",  label: "200/day playbook", icon: Rocket },
