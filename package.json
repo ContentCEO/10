@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "tauri": "tauri",
     "tauri:icon": "node scripts/gen-tauri-icon.mjs && tauri icon src-tauri/icons/icon.png -o src-tauri/icons",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
