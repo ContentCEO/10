@@ -29,31 +29,71 @@ interface SerpResponse {
 }
 
 // Buyer-intent query templates. We rotate through these per city per run.
+// Bias toward forum/community phrasing — those return Reddit/Quora/Nextdoor
+// results where homeowners actually post intent.
 const QUERY_TEMPLATES = [
   "looking for {service} contractor in {city}",
   "need {service} estimate {city}",
   "best {service} near {city}",
   "{service} reviews {city}",
   "how much does {service} cost {city}",
+  "any {service} recommendations {city}",
+  "who is good for {service} in {city}",
+  "is anyone hiring a {service} in {city}",
+  "{service} ballpark price {city}",
+  "anyone know a good {service} {city}",
 ];
 
+// Service intents — covers every major trade + specific sub-services for
+// electrical, plumbing, HVAC, kitchen, bathroom that the owner prioritized.
 const SERVICES = [
-  "roofing", "kitchen remodel", "bathroom remodel",
-  "fence install", "deck builder", "painting contractor",
-  "plumber", "electrician", "hvac installer",
-  "landscaping", "siding", "concrete contractor",
+  // Big-ticket remodels
+  "kitchen remodel", "kitchen cabinet install",
+  "bathroom remodel", "shower install", "tub to shower conversion",
+  "basement finishing", "home addition", "deck builder", "deck replacement",
+  // Exterior
+  "roof replacement", "roof repair", "siding replacement",
+  "window replacement", "fence install", "exterior painting",
+  // Electrical
+  "electrician", "electrical panel upgrade", "200 amp service",
+  "ev charger install", "level 2 charger install", "knob and tube rewire",
+  "ceiling fan install", "recessed lighting install",
+  // Plumbing
+  "plumber", "water heater install", "tankless water heater install",
+  "drain cleaning", "sewer line repair", "sump pump install",
+  "toilet install", "garbage disposal install",
+  // HVAC
+  "hvac installer", "mini split install", "heat pump install",
+  "furnace install", "central air install", "boiler repair",
+  // Site / outdoor
+  "landscaping", "concrete contractor", "asphalt driveway",
+  "tree removal", "stump grinding", "pool install",
+  // Specialty
+  "interior painting", "drywall repair", "flooring install",
+  "hardwood refinish", "tile install", "insulation install",
+  "chimney sweep", "gutter install", "garage door install",
 ];
 
-// Major US cities — keep small, expensive queries. Owner can extend via env.
+// MA-saturated city list. Owner mandate: 100% Massachusetts coverage.
+// Cost model: 30 cities × 2 queries × 2 runs/day = 120/day ≈ 3,600/mo
+// (well under SerpAPI's $50/mo 5,000-query plan).
 const CITIES = [
-  "Boston MA", "Worcester MA", "Springfield MA",
-  "New York NY", "Brooklyn NY", "Long Island NY",
-  "Philadelphia PA", "Pittsburgh PA",
-  "Chicago IL", "Detroit MI",
-  "Atlanta GA", "Miami FL", "Tampa FL",
-  "Houston TX", "Dallas TX", "Austin TX",
-  "Los Angeles CA", "San Francisco CA", "San Diego CA",
-  "Seattle WA", "Portland OR", "Denver CO", "Phoenix AZ",
+  // Metro Boston + immediate
+  "Boston MA", "Cambridge MA", "Somerville MA", "Brookline MA",
+  "Newton MA", "Quincy MA", "Medford MA", "Malden MA",
+  "Arlington MA", "Watertown MA", "Belmont MA", "Waltham MA",
+  "Revere MA", "Chelsea MA",
+  // Major MA cities
+  "Worcester MA", "Springfield MA", "Lowell MA", "Lawrence MA",
+  "Brockton MA", "New Bedford MA", "Fall River MA", "Lynn MA",
+  "Framingham MA", "Haverhill MA", "Taunton MA",
+  // Suburbs + secondary
+  "Plymouth MA", "Salem MA", "Peabody MA", "Methuen MA", "Andover MA",
+  "Weymouth MA", "Braintree MA", "Hingham MA", "Dedham MA", "Milton MA",
+  // Cape + South Coast + Western MA
+  "Barnstable MA", "Hyannis MA", "Falmouth MA",
+  "Pittsfield MA", "Northampton MA", "Holyoke MA", "Chicopee MA",
+  "Amherst MA", "Attleboro MA",
 ];
 
 async function fetchSerp(query: string): Promise<{ entries: SerpResult[]; error: string | null }> {
