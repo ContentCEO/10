@@ -56,6 +56,15 @@
     "macOS": {
       "minimumSystemVersion": "10.15",
       "signingIdentity": "-"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "untrusted comment: minisign public key: 9947DFDA5CDE8995\nRWSVid5c2t9HmZO3CMQ2P79Qo1q79na9TMgCFLp0RUsIqMefIzTg3XAB",
+      "endpoints": [
+        "https://github.com/ContentCEO/10/releases/latest/download/latest.json"
+      ]
     }
   }
 }
