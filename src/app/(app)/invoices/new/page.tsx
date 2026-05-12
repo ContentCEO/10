@@ -74,7 +74,7 @@ export default async function NewInvoicePage({
             <select id="customer_id" name="customer_id" className="input"
               defaultValue={(job?.customer_id as string | undefined) ?? ""}>
               <option value="">— None —</option>
-              {customers?.map((c) => (
+              {customers?.map((c: { id: string; name: string }) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
@@ -84,7 +84,7 @@ export default async function NewInvoicePage({
             <select id="job_id" name="job_id" className="input"
               defaultValue={searchParams.job ?? ""}>
               <option value="">— None —</option>
-              {jobs?.map((j) => (
+              {jobs?.map((j: { id: string; title: string }) => (
                 <option key={j.id} value={j.id}>{j.title}</option>
               ))}
             </select>
