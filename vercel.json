@@ -8,12 +8,12 @@
     { "path": "/api/scrape/permits",     "schedule": "10-59/15 * * * *" },
     { "path": "/api/scrape/storms",      "schedule": "8-59/15 * * * *" },
     { "path": "/api/scrape/rss",         "schedule": "3-59/15 * * * *" },
-    { "path": "/api/scrape/ma-municipal","schedule": "0 */6 * * *" },
-    { "path": "/api/scrape/mass-gov-bids","schedule": "0 6 * * *" },
-    { "path": "/api/scrape/sam-gov",     "schedule": "0 */4 * * *" },
+    { "path": "/api/scrape/ma-municipal","schedule": "0 */2 * * *" },
+    { "path": "/api/scrape/mass-gov-bids","schedule": "0 */6 * * *" },
+    { "path": "/api/scrape/sam-gov",     "schedule": "0 */2 * * *" },
     { "path": "/api/scrape/serpapi",     "schedule": "0 */12 * * *" },
-    { "path": "/api/scrape/yelp",        "schedule": "30 */6 * * *" },
-    { "path": "/api/scrape/state-rfps",  "schedule": "0 */8 * * *" },
-    { "path": "/api/scrape/boston-inspections", "schedule": "20 */4 * * *" }
+    { "path": "/api/scrape/yelp",        "schedule": "30 */4 * * *" },
+    { "path": "/api/scrape/state-rfps",  "schedule": "0 */4 * * *" },
+    { "path": "/api/scrape/boston-inspections", "schedule": "20 */2 * * *" }
   ]
 }

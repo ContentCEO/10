@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Activity, Building2, ClipboardCheck, LogOut, ShieldCheck, Users } from "lucide-react";
+import { Activity, Building2, ClipboardCheck, LogOut, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -25,6 +25,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <nav className="flex items-center gap-3 text-sm">
             <Link href="/dashboard" className="text-slate-300 hover:text-white flex items-center gap-1 mr-2 pr-3 border-r border-white/15">
               ← Back to app
+            </Link>
+            <Link href="/owner" className="hover:text-slate-300 flex items-center gap-1 font-semibold text-brand-300">
+              <Sparkles className="h-4 w-4" /> Overseer
             </Link>
             <Link href="/admin" className="hover:text-slate-300 flex items-center gap-1">
               <Activity className="h-4 w-4" /> Overview

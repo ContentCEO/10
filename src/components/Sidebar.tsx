@@ -119,9 +119,10 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: "Admin",
+    label: "Admin · Overseer",
     adminOnly: true,
     items: [
+      { href: "/owner",             label: "Overseer (live)",  icon: Activity },
       { href: "/admin",             label: "Admin overview",   icon: ShieldCheck },
       { href: "/admin/marketplace", label: "All leads (firehose)", icon: ShoppingCart },
       { href: "/admin/curation",    label: "Curation queue",   icon: Sparkles },
