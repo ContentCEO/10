@@ -66,7 +66,7 @@
         "https://contractorflow-dsjrok47g-dac3.vercel.app/api/desktop/update?platform={{target}}-{{arch}}&current_version={{current_version}}"
       ],
       "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDExQUQ5RDk5MkU3OTY2QTYKUldTbVpua3VtWjJ0RWI0ZFJrMmFLMW9KeVNKcWxmbmZVOGMzcVFXZmc0NUZYb2M1NHg3N3RiUFYK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMwNjRENEUxQ0VGNEZDM0UKUldRKy9QVE80ZFJrd0duY20zSVYxUUcyZHJQVnUyUVBkTisxSTAxQm01alBmV0xkaGpDcE45cUEK"
     }
   }
 }
