@@ -268,11 +268,14 @@ async function run() {
   const storms       = await runScraper("/api/scrape/storms");
   const samGov       = await runScraper("/api/scrape/sam-gov");
   const serpapi      = await runScraper("/api/scrape/serpapi");
+  const yelp         = await runScraper("/api/scrape/yelp");
+  const stateRfps    = await runScraper("/api/scrape/state-rfps");
   const autoBid      = await runScraper("/api/marketplace/auto-bid");
   return {
     ok: true,
     recurring, expiration, dispatch,
-    reddit, craigslist, permits, maMunicipal, massGovBids, rss, storms, samGov, serpapi, autoBid,
+    reddit, craigslist, permits, maMunicipal, massGovBids, rss,
+    storms, samGov, serpapi, yelp, stateRfps, autoBid,
     ranAt: new Date().toISOString(),
   };
 }

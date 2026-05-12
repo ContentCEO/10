@@ -10,6 +10,8 @@
     { "path": "/api/scrape/ma-municipal","schedule": "0 */6 * * *" },
     { "path": "/api/scrape/mass-gov-bids","schedule": "0 6 * * *" },
     { "path": "/api/scrape/sam-gov",     "schedule": "0 */4 * * *" },
-    { "path": "/api/scrape/serpapi",     "schedule": "0 */12 * * *" }
+    { "path": "/api/scrape/serpapi",     "schedule": "0 */12 * * *" },
+    { "path": "/api/scrape/yelp",        "schedule": "30 */6 * * *" },
+    { "path": "/api/scrape/state-rfps",  "schedule": "0 */8 * * *" }
   ]
 }
