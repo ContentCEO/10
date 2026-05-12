@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "ContractorFlow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "com.contractorflow.app",
   "build": {
     "beforeDevCommand": "",
@@ -56,6 +56,17 @@
     "macOS": {
       "minimumSystemVersion": "10.15",
       "signingIdentity": "-"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://contractorflow-dsjrok47g-dac3.vercel.app/api/desktop/update?platform={{target}}-{{arch}}&current_version={{current_version}}"
+      ],
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVFQzk1NTZFMEIwRDRDOTAKUldTUVRBMExibFhKWHMvc0QwN3libUp2cFcyTjVOVElZSnVmcWtTTG5MTjZtR2xMOU5ZR1pKS0YK"
     }
   }
 }
