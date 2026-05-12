@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Activity, Building2, LogOut, ShieldCheck, Users } from "lucide-react";
+import { Activity, Building2, ClipboardCheck, LogOut, ShieldCheck, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -31,6 +31,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </Link>
             <Link href="/admin/marketplace" className="hover:text-slate-300 flex items-center gap-1">
               <Building2 className="h-4 w-4" /> Marketplace
+            </Link>
+            <Link href="/admin/curation" className="hover:text-slate-300 flex items-center gap-1">
+              <ClipboardCheck className="h-4 w-4" /> Curation
             </Link>
             <form action="/auth/signout" method="post">
               <button className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg">

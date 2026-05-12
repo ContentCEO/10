@@ -26,6 +26,7 @@ export default async function MarketplacePage({
     .from("marketplace_leads")
     .select("*")
     .eq("status", "available")
+    .or("requires_curation.is.null,requires_curation.eq.false")
     .order("ai_score", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(50);
