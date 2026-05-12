@@ -79,6 +79,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/r/") ||
     path.startsWith("/p/") ||
     path.startsWith("/api/proposals/sign") ||
+    path.startsWith("/yard/") ||
     path.startsWith("/local/") ||
     path.startsWith("/pros") ||
     path.startsWith("/find-pro");
