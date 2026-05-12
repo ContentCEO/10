@@ -21,7 +21,7 @@
         "fullscreen": false,
         "decorations": true,
         "transparent": false,
-        "url": "https://contractorflow-dsjrok47g-dac3.vercel.app/",
+        "url": "https://contractorflow.vercel.app/",
         "userAgent": "ContractorFlow/0.1.0 (Tauri Desktop)"
       }
     ],
