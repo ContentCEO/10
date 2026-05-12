@@ -65,7 +65,8 @@ function parseRss(xml: string): RssItem[] {
   while ((m = itemRegex.exec(xml)) !== null) {
     const block = m[1];
     const url = match1(block, /<link>([^<]+)<\/link>/) ?? "";
-    const id = url || match1(block, /<guid[^>]*>([^<]+)<\/guid>/) ?? `${Math.random()}`;
+    const guid = match1(block, /<guid[^>]*>([^<]+)<\/guid>/) ?? `${Math.random()}`;
+    const id = url || guid;
     const title = decodeHtml(stripHtml(match1(block, /<title>([\s\S]*?)<\/title>/) ?? ""));
     const desc = decodeHtml(stripHtml(match1(block, /<description>([\s\S]*?)<\/description>/) ?? ""));
     const date = match1(block, /<pubDate>([^<]+)<\/pubDate>/) ?? "";
