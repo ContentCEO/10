@@ -1,7 +1,6 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const contentType = "image/png";
 
 // Maskable icon — safe zone inside 80% of frame so OSes can crop to circle/squircle.
 export async function GET() {
