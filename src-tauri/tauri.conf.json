@@ -55,17 +55,6 @@
     },
     "macOS": {
       "minimumSystemVersion": "10.15"
-    },
-    "createUpdaterArtifacts": true
-  },
-  "plugins": {
-    "updater": {
-      "active": true,
-      "endpoints": [
-        "https://contractorflow.app/api/desktop/update?platform={{target}}&arch={{arch}}&current_version={{current_version}}"
-      ],
-      "dialog": true,
-      "pubkey": ""
     }
   }
 }
