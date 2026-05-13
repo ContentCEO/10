@@ -215,7 +215,21 @@ export function MissionControl({ ownerEmail, ownerName }: { ownerEmail: string; 
                 <div className="text-xs font-mono uppercase tracking-[0.18em] text-amber-300 flex items-center gap-2">
                   <AlertTriangle className="h-3.5 w-3.5" /> Pending approval · {data.pending_approval.length}
                 </div>
-                <span className="text-xs text-white/40 font-mono">Owner approval needed</span>
+                <button
+                  onClick={() => {
+                    if (!confirm(`Approve all ${data.pending_approval.length} pending actions?`)) return;
+                    startTransition(async () => {
+                      try {
+                        await fetch("/api/owner/agents/approve-all", { method: "POST" });
+                        await fetchData();
+                      } catch { /* */ }
+                    });
+                  }}
+                  disabled={pending}
+                  className="btn bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30 hover:bg-emerald-500/30 text-xs px-3 py-1"
+                >
+                  <ThumbsUp className="h-3.5 w-3.5" /> Approve all
+                </button>
               </div>
               <ul className="space-y-2">
                 {data.pending_approval.map((a) => (

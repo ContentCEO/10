@@ -96,6 +96,16 @@ export default async function DashboardPage({
   const earnedToday = (todayCompletedJobs ?? []).reduce(
     (sum, j: { price: number | null }) => sum + (j.price ?? 0), 0);
 
+  // Plan 1 / E-16 — Sales pipeline forecasting (weighted by stage probability).
+  // Pipeline rows already fetched above. Apply stage weights → expected $.
+  const STAGE_PROB: Record<string, number> = {
+    new: 0.10, contacted: 0.25, estimate: 0.40, estimate_sent: 0.40, won: 1.00, lost: 0,
+  };
+  const forecast = (pipelineLeads ?? [])
+    .filter((l: { status: string; price: number | null }) => l.status !== "won" && l.status !== "lost" && l.price)
+    .reduce((sum: number, l: { status: string; price: number | null }) =>
+      sum + (l.price ?? 0) * (STAGE_PROB[l.status ?? "new"] ?? 0.10), 0);
+
   // Plan 1 / A-5 — Daily morning brief (data-driven, no AI cost).
   const newLeads24h = leadsLast24h ?? 0;
   const dueCount = (dueFollowUps as FollowUp[] | null)?.length ?? 0;
@@ -255,13 +265,14 @@ export default async function DashboardPage({
         </section>
 
         {/* ── KPI tiles ───────────────────────────────────────────── */}
-        <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <section className="grid grid-cols-2 lg:grid-cols-6 gap-3">
           {[
-            { label: "Total leads",   value: String(leadCount ?? 0),         tone: "from-indigo-500 to-violet-500",   icon: Sparkles },
-            { label: "Active jobs",   value: String(activeJobCount ?? 0),    tone: "from-violet-500 to-fuchsia-500",  icon: Hammer },
-            { label: "Earned today",  value: `$${earnedToday.toLocaleString()}`, tone: "from-cyan-500 to-blue-500", icon: CircleDollarSign },
-            { label: "Revenue · all", value: `$${revenue.toLocaleString()}`, tone: "from-emerald-500 to-teal-500",    icon: CircleDollarSign },
-            { label: "Due today",     value: String(followUps.length),       tone: "from-amber-500 to-orange-500",    icon: CalendarClock },
+            { label: "Total leads",     value: String(leadCount ?? 0),         tone: "from-indigo-500 to-violet-500",   icon: Sparkles },
+            { label: "Pipeline · est",  value: `$${Math.round(forecast).toLocaleString()}`, tone: "from-fuchsia-500 to-pink-500", icon: TrendingUp },
+            { label: "Active jobs",     value: String(activeJobCount ?? 0),    tone: "from-violet-500 to-fuchsia-500",  icon: Hammer },
+            { label: "Earned today",    value: `$${earnedToday.toLocaleString()}`, tone: "from-cyan-500 to-blue-500", icon: CircleDollarSign },
+            { label: "Revenue · all",   value: `$${revenue.toLocaleString()}`, tone: "from-emerald-500 to-teal-500",    icon: CircleDollarSign },
+            { label: "Due today",       value: String(followUps.length),       tone: "from-amber-500 to-orange-500",    icon: CalendarClock },
           ].map(({ label, value, tone, icon: Icon }, i) => (
             <div key={label} className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${tone} p-4 text-white shadow-glow`}>
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider opacity-90 font-semibold">
