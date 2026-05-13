@@ -56,9 +56,9 @@ const config: Config = {
       },
       backgroundImage: {
         "brand-gradient":
-          "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)",
+          "linear-gradient(135deg, #2563eb 0%, #6366f1 50%, #8b5cf6 100%)",
         "brand-radial":
-          "radial-gradient(1200px 600px at 50% -10%, rgba(99,102,241,0.18), transparent 60%)",
+          "radial-gradient(1200px 600px at 50% -10%, rgba(37,99,235,0.18), transparent 60%)",
         "mesh-1":
           "radial-gradient(at 27% 37%, hsla(215, 98%, 61%, 0.10) 0px, transparent 50%), radial-gradient(at 97% 21%, hsla(256, 96%, 67%, 0.12) 0px, transparent 50%), radial-gradient(at 52% 99%, hsla(177, 88%, 56%, 0.08) 0px, transparent 50%), radial-gradient(at 10% 29%, hsla(312, 96%, 67%, 0.06) 0px, transparent 50%)",
         "grid-fade":

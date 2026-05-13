@@ -23,12 +23,13 @@ html, body {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium tracking-tight transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
   }
   .btn-primary {
-    @apply btn text-white shadow-glow;
-    background-image: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+    @apply btn text-white shadow-soft;
+    background-image: linear-gradient(135deg, #2563eb 0%, #6366f1 50%, #8b5cf6 100%);
     background-size: 200% 200%;
     animation: gradient-pan 6s ease infinite;
+    box-shadow: 0 10px 22px -8px rgba(37,99,235,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
   }
-  .btn-primary:hover { @apply shadow-lg -translate-y-px; }
+  .btn-primary:hover { @apply -translate-y-px; box-shadow: 0 14px 28px -10px rgba(37,99,235,0.7), inset 0 1px 0 rgba(255,255,255,0.35); }
   .btn-primary:active { @apply translate-y-0; }
 
   .btn-secondary {
@@ -48,9 +49,11 @@ html, body {
   .label { @apply block text-sm font-medium text-ink-700 mb-1.5; }
 
   .card {
-    @apply rounded-2xl border border-ink-200/70 bg-white/90 backdrop-blur shadow-soft transition-all duration-200;
+    @apply rounded-2xl border border-ink-200/70 bg-white transition-all duration-200;
+    box-shadow: 0 8px 24px -12px rgba(15,23,42,0.08);
   }
-  .card-hover { @apply hover:shadow-soft-lg hover:border-ink-300/70 hover:-translate-y-0.5; }
+  .card-hover { @apply hover:border-ink-300/70 hover:-translate-y-0.5; }
+  .card-hover:hover { box-shadow: 0 16px 40px -16px rgba(15,23,42,0.16); }
 
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset;
@@ -92,14 +95,21 @@ html, body {
     @apply text-xl font-semibold tracking-tight text-ink-900;
   }
   .section-eyebrow {
-    @apply inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600;
+    @apply inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-600;
   }
   .display-h1 {
-    @apply text-5xl sm:text-6xl font-bold tracking-tight text-ink-900;
+    @apply font-serif text-5xl sm:text-6xl tracking-tight text-ink-900;
+    font-weight: 400;
+    letter-spacing: -0.025em;
   }
   .display-h2 {
-    @apply text-3xl sm:text-4xl font-bold tracking-tight text-ink-900;
+    @apply font-serif text-3xl sm:text-4xl tracking-tight text-ink-900;
+    font-weight: 400;
+    letter-spacing: -0.02em;
   }
+  /* Italic accent inside a display headline, e.g.
+     <h1 class="display-h2">Good <em>afternoon</em>, Davi</h1> */
+  .display-h1 em, .display-h2 em { font-style: italic; }
   .lede {
     @apply text-base sm:text-lg text-ink-600 leading-relaxed;
   }
