@@ -100,6 +100,7 @@ const SECTIONS: NavSection[] = [
       { href: "/jobs",     label: "Jobs",     icon: Hammer },
       { href: "/booking",  label: "Booking",  icon: Calendar },
       { href: "/invoices", label: "Invoices", icon: Receipt },
+      { href: "/tools/deposit-link", label: "Deposit link", icon: CircleDollarSign },
       { href: "/team",     label: "Team",     icon: HardHat },
     ],
   },

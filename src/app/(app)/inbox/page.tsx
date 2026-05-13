@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/utils";
+import { ThreadReply } from "./ThreadReply";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,7 @@ export default async function InboxPage() {
                   </li>
                 ))}
               </ul>
+              <ThreadReply to={phone} />
             </li>
           ))}
         </ul>
