@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { Repeat } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PortalLinkCard } from "./PortalLinkCard";
+import { HealthCard } from "./HealthCard";
 import {
   RECURRING_FREQUENCY_LABELS,
   type Customer,
@@ -71,7 +72,10 @@ export default async function CustomerDetail({ params }: { params: { id: string 
         <div className="text-sm text-slate-500">Added {formatDate(c.created_at)}</div>
       </header>
 
-      <PortalLinkCard token={(c as Customer & { portal_token?: string | null }).portal_token ?? null} />
+      <div className="grid sm:grid-cols-2 gap-4">
+        <HealthCard customerId={c.id} />
+        <PortalLinkCard token={(c as Customer & { portal_token?: string | null }).portal_token ?? null} />
+      </div>
 
       <form action={update.bind(null, c.id)} className="card p-5 space-y-4">
         <div>

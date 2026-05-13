@@ -78,6 +78,24 @@ export function RoutePlanClient() {
     price: null,
   }));
 
+  // K-1: Build a Google Maps URL with HQ as origin and the optimized
+  // sequence as waypoints. Tapping this on mobile opens turn-by-turn
+  // directions in the Maps app.
+  const directionsUrl = (() => {
+    const stops = plan.ordered.map((j) => `${j.lat},${j.lng}`);
+    if (stops.length === 0) return null;
+    const origin = plan.hq ? `${plan.hq.lat},${plan.hq.lng}` : stops[0];
+    const destination = stops[stops.length - 1];
+    const waypoints = stops.slice(0, -1).join("|");
+    const u = new URL("https://www.google.com/maps/dir/");
+    u.searchParams.set("api", "1");
+    u.searchParams.set("origin", origin);
+    u.searchParams.set("destination", destination);
+    if (waypoints) u.searchParams.set("waypoints", waypoints);
+    u.searchParams.set("travelmode", "driving");
+    return u.toString();
+  })();
+
   return (
     <>
       <section className="grid grid-cols-3 gap-3">
@@ -88,6 +106,13 @@ export function RoutePlanClient() {
             ? `${Math.floor(plan.estimated_drive_minutes / 60)}h ${plan.estimated_drive_minutes % 60}m`
             : `${plan.estimated_drive_minutes}m`} />
       </section>
+
+      {directionsUrl && (
+        <a href={directionsUrl} target="_blank" rel="noreferrer"
+          className="btn-primary inline-flex w-full sm:w-auto">
+          <Navigation className="h-4 w-4" /> Open turn-by-turn in Google Maps
+        </a>
+      )}
 
       <section className="card overflow-hidden">
         <div className="px-4 py-3 flex items-center justify-between border-b border-ink-200/70">
