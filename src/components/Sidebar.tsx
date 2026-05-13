@@ -8,6 +8,7 @@ import {
   Briefcase,
   Calendar,
   CalendarClock,
+  Camera,
   CircleDollarSign,
   Code,
   FileText,
@@ -102,7 +103,9 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/jobs",     label: "Jobs",     icon: Hammer },
       { href: "/booking",  label: "Booking",  icon: Calendar },
+      { href: "/portfolio",label: "Photo portfolio", icon: Camera },
       { href: "/invoices", label: "Invoices", icon: Receipt },
+      { href: "/expenses", label: "Expenses", icon: Receipt },
       { href: "/tools/deposit-link",   label: "Deposit link",   icon: CircleDollarSign },
       { href: "/tools/pricing-engine", label: "Pricing engine", icon: TrendingUp },
       { href: "/tools/lien-waiver",        label: "Lien waiver",        icon: FileText },
