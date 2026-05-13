@@ -169,6 +169,19 @@ html, body {
   }
 }
 
+/* Plan 1 / A-20 — print-friendly views.
+ * Strip chrome and use ink-friendly colors when printing any page. */
+@media print {
+  aside, nav, header.sticky, footer, [data-print-hide],
+  .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger {
+    display: none !important;
+  }
+  body, html { background: white !important; color: black !important; }
+  .card, .card-hover { box-shadow: none !important; border-color: #cbd5e1 !important; }
+  main, [data-print-area] { padding: 0 !important; margin: 0 !important; }
+  a[href] { color: black !important; text-decoration: none !important; }
+}
+
 @layer utilities {
   .bg-grid {
     background-image:

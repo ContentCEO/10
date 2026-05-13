@@ -10,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isOwnerEmail } from "@/lib/owner";
 import { ActivityStrip } from "./ActivityStrip";
 import { PipelineBoard } from "./PipelineBoard";
+import { StuckLeadAlert } from "./StuckLeadAlert";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { SourceRoi } from "@/components/SourceRoi";
 import { SourceChannelRoi } from "@/components/SourceChannelRoi";
@@ -167,6 +168,9 @@ export default async function DashboardPage({
           <Sparkles className="h-4 w-4 text-brand-300 shrink-0" />
           <span>{brief}</span>
         </div>
+
+        {/* ── Stuck-lead alert (only renders if stale leads exist) ── */}
+        <StuckLeadAlert />
 
         {/* ── Recently viewed (client) ────────────────────────────── */}
         <RecentlyViewed />
