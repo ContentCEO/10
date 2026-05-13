@@ -98,7 +98,7 @@ export default async function DashboardPage({
   // "Today's mission" — concrete 1-2-3 list
   const mission: Array<{ kind: "followup" | "lead"; title: string; href: string; action: string }> = [];
   for (const f of followUps.slice(0, 2)) {
-    mission.push({ kind: "followup", title: f.title, href: f.related_lead_id ? `/leads/${f.related_lead_id}` : "/calendar", action: "Open" });
+    mission.push({ kind: "followup", title: f.title, href: f.lead_id ? `/leads/${f.lead_id}` : "/calendar", action: "Open" });
   }
   for (const l of leads.filter((x) => (x.status ?? "new") === "new").slice(0, 3 - mission.length)) {
     mission.push({ kind: "lead", title: `Reach out to ${l.name}${l.service_type ? ` · ${l.service_type}` : ""}`, href: `/leads/${l.id}`, action: "Call" });
