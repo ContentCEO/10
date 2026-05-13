@@ -32,6 +32,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin" className="hover:text-slate-300 flex items-center gap-1">
               <Activity className="h-4 w-4" /> Overview
             </Link>
+            <Link href="/admin/insights" className="hover:text-slate-300 flex items-center gap-1">
+              <Activity className="h-4 w-4" /> Insights
+            </Link>
             <Link href="/admin/users" className="hover:text-slate-300 flex items-center gap-1">
               <Users className="h-4 w-4" /> Users
             </Link>
