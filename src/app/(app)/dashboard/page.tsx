@@ -12,6 +12,7 @@ import { ActivityStrip } from "./ActivityStrip";
 import { PipelineBoard } from "./PipelineBoard";
 import { StuckLeadAlert } from "./StuckLeadAlert";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
+import { WeatherWidget } from "@/components/WeatherWidget";
 import { SourceRoi } from "@/components/SourceRoi";
 import { SourceChannelRoi } from "@/components/SourceChannelRoi";
 import { YearOverYear } from "@/components/YearOverYear";
@@ -349,6 +350,9 @@ export default async function DashboardPage({
 
           <ActivityStrip />
         </div>
+
+        {/* ── Weather widget (3-day forecast for the contractor's area) ─ */}
+        <WeatherWidget />
 
         {/* ── Collapsible insights (legacy components) ────────────── */}
         <details className="rounded-2xl bg-white/[0.03] ring-1 ring-white/10 p-5 group [&_summary::-webkit-details-marker]:hidden">
