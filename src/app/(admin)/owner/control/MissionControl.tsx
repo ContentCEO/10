@@ -144,6 +144,9 @@ export function MissionControl({ ownerEmail, ownerName }: { ownerEmail: string; 
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/owner/control/board" className="btn bg-white text-ink-900 hover:bg-white/90 shadow-glow">
+              <Bot className="h-4 w-4" /> Agent board
+            </Link>
             <Link href="/owner" className="btn bg-white/10 text-white border border-white/15 hover:bg-white/20">
               <Activity className="h-4 w-4" /> Raw overseer
             </Link>
