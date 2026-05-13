@@ -169,6 +169,19 @@ html, body {
   }
 }
 
+/* Plan 1 / F-13 — Larger mobile touch targets.
+ * On coarse-pointer devices (touch), bump buttons/inputs to >=44px tall.
+ * Doesn't affect mouse/trackpad, which keep the denser layout. */
+@media (pointer: coarse) {
+  .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger {
+    min-height: 44px;
+  }
+  input, select, textarea {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS auto-zoom on focus */
+  }
+}
+
 /* Plan 1 / F-11 — Reduce-motion respect.
  * Honor the user's OS-level "prefer reduced motion" setting. */
 @media (prefers-reduced-motion: reduce) {

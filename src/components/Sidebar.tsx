@@ -103,6 +103,7 @@ const SECTIONS: NavSection[] = [
       { href: "/invoices", label: "Invoices", icon: Receipt },
       { href: "/tools/deposit-link",   label: "Deposit link",   icon: CircleDollarSign },
       { href: "/tools/pricing-engine", label: "Pricing engine", icon: TrendingUp },
+      { href: "/tools/lien-waiver",    label: "Lien waiver",    icon: FileText },
       { href: "/team",     label: "Team",     icon: HardHat },
     ],
   },
