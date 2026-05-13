@@ -2,7 +2,7 @@
 -- Adds 60+ high-yield RSS sources covering top US metros.
 -- The universal RSS scraper at /api/scrape/rss reads these on a 5-min cadence.
 
-insert into public.rss_sources (name, url, keywords, city, ai_score, price_cents, active)
+insert into public.rss_sources (name, url, keywords, city, ai_score, price_cents, is_active)
 values
   -- ============================================================
   -- Craigslist "labor gigs" (lab) + "skilled trades" (sks) by metro.
@@ -76,6 +76,6 @@ on conflict (url) do nothing;
 do $$
 declare cnt int;
 begin
-  select count(*) into cnt from public.rss_sources where active = true;
+  select count(*) into cnt from public.rss_sources where is_active = true;
   raise notice 'rss_sources active count: %', cnt;
 end $$;
