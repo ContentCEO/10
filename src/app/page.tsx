@@ -28,9 +28,9 @@ const P = {
   violet:    "#A78BFA",
   pink:      "#F472B6",
 };
-const SERIF = '"Instrument Serif", "Times New Roman", serif';
-const SANS  = 'Geist, -apple-system, BlinkMacSystemFont, sans-serif';
-const MONO  = '"Geist Mono", "SF Mono", ui-monospace, monospace';
+const SERIF = 'var(--font-instrument-serif), "Times New Roman", serif';
+const SANS  = 'var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO  = 'var(--font-geist-mono), "SF Mono", ui-monospace, monospace';
 
 /* ================================================================== */
 /*  HOOKS                                                             */
@@ -1104,14 +1104,8 @@ function FinalCTA() {
 /*  PAGE                                                              */
 /* ================================================================== */
 export default function LandingV3() {
-  useEffect(() => {
-    if (document.getElementById("cf-fonts-v3")) return;
-    const link = document.createElement("link");
-    link.id = "cf-fonts-v3";
-    link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap";
-    document.head.appendChild(link);
-  }, []);
+  // Fonts (Geist + Instrument Serif + Geist Mono) are loaded at the root
+  // layout level via next/font/google — no runtime injection needed.
 
   return (
     <>

@@ -1,13 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { PWAInstall } from "@/components/PWAInstall";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
-const inter = Inter({
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  style: ["normal", "italic"],
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-instrument-serif",
 });
 
 export const metadata: Metadata = {
@@ -45,7 +49,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${instrumentSerif.variable}`}>
       <body className="font-sans">
         {children}
         <PWAInstall />

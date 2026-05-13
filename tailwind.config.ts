@@ -37,7 +37,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto"],
+        sans:  ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto"],
+        mono:  ["var(--font-geist-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+        serif: ["var(--font-instrument-serif)", "ui-serif", "Georgia", "serif"],
       },
       fontSize: {
         // Tighter type scale for SaaS dashboards
