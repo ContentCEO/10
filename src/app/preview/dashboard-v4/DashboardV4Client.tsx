@@ -14,15 +14,9 @@ import {
 import type { FollowUp, Lead } from "@/lib/types";
 import { PipelineBoard } from "@/app/(app)/dashboard/PipelineBoard";
 import { ActivityStrip } from "@/app/(app)/dashboard/ActivityStrip";
-import { StuckLeadAlert } from "@/app/(app)/dashboard/StuckLeadAlert";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { WeeklyDigest } from "@/components/WeeklyDigest";
-import { YearOverYear } from "@/components/YearOverYear";
-import { ARAging } from "@/components/ARAging";
-import { ProfitInsights } from "@/components/ProfitInsights";
-import { SourceChannelRoi } from "@/components/SourceChannelRoi";
-import { SourceRoi } from "@/components/SourceRoi";
 import type { MapMarker } from "./LeafletMap";
 
 const LeafletMap = dynamic(() => import("./LeafletMap"), { ssr: false });
@@ -1219,6 +1213,9 @@ interface Props {
   mapMarkers: MapMarker[];
   hqLat: number | null;
   hqLng: number | null;
+  /** Server-rendered slots (can't be imported into a client component). */
+  stuckAlertSlot: ReactNode;
+  insightsSlot: ReactNode;
 }
 
 export default function DashboardV4Client(props: Props) {
@@ -1262,8 +1259,8 @@ export default function DashboardV4Client(props: Props) {
           <main className="flex-1 min-w-0 py-6 space-y-5">
             <Greeting businessName={props.businessName} brief={props.brief} />
 
-            {/* Stuck-lead alert (auto-hides if none) */}
-            <StuckLeadAlert />
+            {/* Stuck-lead alert (auto-hides if none) — server-rendered slot */}
+            {props.stuckAlertSlot}
 
             {/* Recently viewed chip strip */}
             <RecentlyViewed />
@@ -1400,11 +1397,7 @@ export default function DashboardV4Client(props: Props) {
                 </summary>
                 <div className="mt-4 space-y-3">
                   <WeeklyDigest />
-                  <YearOverYear />
-                  <ARAging />
-                  <ProfitInsights />
-                  <SourceChannelRoi />
-                  <SourceRoi />
+                  {props.insightsSlot}
                 </div>
               </details>
             </Reveal>

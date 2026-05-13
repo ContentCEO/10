@@ -4,6 +4,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { FollowUp, Lead } from "@/lib/types";
 import DashboardV4Client from "./DashboardV4Client";
 import type { MapMarker } from "./LeafletMap";
+import { StuckLeadAlert } from "@/app/(app)/dashboard/StuckLeadAlert";
+import { YearOverYear } from "@/components/YearOverYear";
+import { ARAging } from "@/components/ARAging";
+import { ProfitInsights } from "@/components/ProfitInsights";
+import { SourceChannelRoi } from "@/components/SourceChannelRoi";
+import { SourceRoi } from "@/components/SourceRoi";
 
 export const dynamic = "force-dynamic";
 
@@ -150,6 +156,16 @@ export default async function DashboardV4Page() {
       mapMarkers={markers}
       hqLat={null}
       hqLng={null}
+      stuckAlertSlot={<StuckLeadAlert />}
+      insightsSlot={
+        <>
+          <YearOverYear />
+          <ARAging />
+          <ProfitInsights />
+          <SourceChannelRoi />
+          <SourceRoi />
+        </>
+      }
     />
   );
 }
