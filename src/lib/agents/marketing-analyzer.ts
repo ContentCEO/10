@@ -94,7 +94,7 @@ export async function runMarketingAnalyzer(config: Config): Promise<AgentActionL
           target_table: "marketplace_leads",
           target_id: s.source,
           summary: `${s.source} · ${s.leads} leads / ${s.jobs} jobs · ${(s.conversion * 100).toFixed(1)}% conversion`,
-          details: { source: s.source, ...s },
+          details: { ...s },
           requires_approval: true,
         });
       }
