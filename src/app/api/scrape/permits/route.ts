@@ -558,7 +558,10 @@ const SOURCES: CitySource[] = [
 ];
 
 async function runOnce(opts: { source?: string; limit?: number; min_cost?: number }) {
-  const limit = opts.limit ?? 100;
+  // Default 250/city/run × 29 cities × 5-min cadence is enough to catch
+  // every new permit in major-metro datasets multiple times before they
+  // age out. Bump higher if you see dupe ratios approaching 100%.
+  const limit = opts.limit ?? 250;
   const minCost = opts.min_cost ?? 5000;
   const admin = createAdminClient();
   const results: Record<string, { fetched: number; inserted: number; duplicates: number; skipped_low_value: number }> = {};
