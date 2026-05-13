@@ -5,6 +5,7 @@ import { LeadStatusBadge } from "@/components/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Lead } from "@/lib/types";
 import { QuickAdd } from "./QuickAdd";
+import { SavedFilters } from "./SavedFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -41,17 +42,37 @@ function ScoreChip({ score }: { score: number | null }) {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: { sort?: string };
+  searchParams: { sort?: string; status?: string; stale?: string };
 }) {
   const supabase = createClient();
   const sortByScore = searchParams.sort === "score";
-  const base = supabase.from("leads").select("*");
+
+  let query = supabase.from("leads").select("*");
+
+  // Status filter: "open" = anything not won/lost.
+  if (searchParams.status === "open") {
+    query = query.not("status", "in", "(won,lost)");
+  } else if (searchParams.status === "won") {
+    query = query.eq("status", "won");
+  } else if (searchParams.status === "lost") {
+    query = query.eq("status", "lost");
+  } else if (searchParams.status === "new") {
+    query = query.eq("status", "new");
+  }
+
+  // Stale filter: only leads not updated in >= N days.
+  const staleDays = searchParams.stale ? Number(searchParams.stale) : null;
+  if (staleDays && Number.isFinite(staleDays) && staleDays > 0) {
+    const cutoff = new Date(Date.now() - staleDays * 86_400_000).toISOString();
+    query = query.lte("updated_at", cutoff).not("status", "in", "(won,lost)");
+  }
+
   const { data: leads } = await (
     sortByScore
-      ? base
+      ? query
           .order("ai_score", { ascending: false, nullsFirst: false })
           .order("created_at", { ascending: false })
-      : base.order("created_at", { ascending: false })
+      : query.order("created_at", { ascending: false })
   );
   const rows = (leads ?? []) as Lead[];
 
@@ -101,6 +122,8 @@ export default async function LeadsPage({
           </div>
         </div>
       </header>
+
+      <SavedFilters />
 
       <QuickAdd />
 
