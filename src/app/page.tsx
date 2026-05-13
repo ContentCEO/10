@@ -1,639 +1,1164 @@
-/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
 import {
-  Apple,
-  ArrowRight,
-  Bot,
-  CheckCircle2,
-  ChevronDown,
-  Download,
-  Hammer,
-  HelpCircle,
-  Laptop,
-  LineChart,
-  Monitor,
-  Sparkles,
-  Star,
-  Terminal,
-  Trophy,
-  Wallet,
-  Zap,
+  Sparkles, ArrowRight, Download, Play, Zap, DollarSign, Inbox,
+  Briefcase, Calendar, Users, ShoppingBag, Phone,
+  type LucideIcon,
 } from "lucide-react";
 
-/*
- * Public marketing landing.
- *
- * Desktop-first: hero is a macOS-style window mockup, download is the
- * primary CTA, reviews replace abstract trust signals, motion throughout.
- */
+/* ================================================================== */
+/*  PALETTE & FONTS                                                   */
+/* ================================================================== */
+const P = {
+  bg:        "#06060A",
+  bg2:       "#11111A",
+  bg3:       "#1B1B26",
+  border:    "rgba(255,255,255,0.07)",
+  borderHi:  "rgba(255,255,255,0.14)",
+  text:      "#FAFAFA",
+  muted:     "#A1A1AA",
+  subtle:    "#71717A",
+  indigo:    "#6366f1",
+  indigoHi:  "#818cf8",
+  indigoDim: "#4F46E5",
+  green:     "#22c55e",
+  amber:     "#F59E0B",
+  violet:    "#A78BFA",
+  pink:      "#F472B6",
+};
+const SERIF = '"Instrument Serif", "Times New Roman", serif';
+const SANS  = 'Geist, -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO  = '"Geist Mono", "SF Mono", ui-monospace, monospace';
 
-const reviews = [
-  {
-    quote:
-      "Closed two jobs in week one from leads I would have lost to the void. The desktop app feels like a real native tool — not a browser tab.",
-    name: "Marco R.",
-    trade: "Reliable Roofing",
-    city: "Worcester, MA",
-    rating: 5,
-    avatar: "from-indigo-500 via-violet-500 to-fuchsia-500",
-  },
-  {
-    quote:
-      "I run my whole crew off this. AI follow-ups, scheduling, customer history — all in one window I leave open all day.",
-    name: "Tasha K.",
-    trade: "K's Plumbing",
-    city: "Providence, RI",
-    rating: 5,
-    avatar: "from-cyan-500 via-sky-500 to-blue-500",
-  },
-  {
-    quote:
-      "Worth every penny. I refunded one bad lead in 24 hours, no fight. Felt like a real platform, not a fly-by-night.",
-    name: "Diego P.",
-    trade: "Diego Paints It",
-    city: "Cambridge, MA",
-    rating: 5,
-    avatar: "from-fuchsia-500 via-pink-500 to-rose-500",
-  },
-  {
-    quote:
-      "Fence install business doubled because I stopped letting leads sit in a notepad. This is what I needed five years ago.",
-    name: "Hassan A.",
-    trade: "Apex Fencing",
-    city: "Boston, MA",
-    rating: 5,
-    avatar: "from-emerald-500 via-teal-500 to-cyan-500",
-  },
-  {
-    quote:
-      "Built for actual contractors, not enterprise SaaS people. Simple. Fast. Native. Doesn't try to be everything.",
-    name: "Marisol H.",
-    trade: "Bright Tile & Bath",
-    city: "Lowell, MA",
-    rating: 5,
-    avatar: "from-amber-500 via-orange-500 to-rose-500",
-  },
-  {
-    quote:
-      "Installed on a Saturday, won my first job by Monday. AI proposal saved me probably 3 hours.",
-    name: "Eli W.",
-    trade: "Wagner HVAC",
-    city: "Manchester, NH",
-    rating: 5,
-    avatar: "from-violet-500 via-purple-500 to-indigo-500",
-  },
-];
+/* ================================================================== */
+/*  HOOKS                                                             */
+/* ================================================================== */
+const isTouchDevice = () =>
+  typeof window !== "undefined" && matchMedia("(hover: none)").matches;
 
-const downloadFor = [
-  { os: "macOS",  ext: "Apple Silicon · Intel · .dmg", icon: Apple,    href: "/download#mac" },
-  { os: "Windows", ext: "10 / 11 · .exe installer",     icon: Monitor,  href: "/download#windows" },
-  { os: "Linux",   ext: ".AppImage / .deb",              icon: Terminal, href: "/download#linux" },
-];
+function useMagnetic<T extends HTMLElement>(strength = 0.28) {
+  const ref = useRef<T | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || isTouchDevice()) return;
+    el.style.transition = "transform 380ms cubic-bezier(.2,.7,.2,1)";
+    el.style.willChange = "transform";
+    const onMove = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width / 2)) * strength;
+      const dy = (e.clientY - (r.top + r.height / 2)) * strength;
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    };
+    const onLeave = () => { el.style.transform = "translate(0,0)"; };
+    el.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      el.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+    };
+  }, [strength]);
+  return ref;
+}
 
-const features = [
-  {
-    icon: Bot,
-    title: "AI that closes for you",
-    body: "Drafts proposals, sends follow-ups, scores incoming leads. You approve, it sends. Wins jobs while you sleep.",
-    color: "from-indigo-500 to-violet-500",
-  },
-  {
-    icon: Hammer,
-    title: "One window. Everything.",
-    body: "Leads, jobs, customers, follow-ups, invoices, AI inbox — all in a native window. No tabs. No tab juggling.",
-    color: "from-fuchsia-500 to-pink-500",
-  },
-  {
-    icon: LineChart,
-    title: "Profit you can see",
-    body: "Source ROI, year-over-year, AR aging, profit insights. Know exactly which channels make money.",
-    color: "from-emerald-500 to-teal-500",
-  },
-  {
-    icon: Wallet,
-    title: "Pay-per-lead marketplace",
-    body: "500+ fresh leads pulled daily from 13+ sources. Bad lead? Refund in 24h. No subscription gotchas.",
-    color: "from-amber-500 to-orange-500",
-  },
-];
+function useTilt<T extends HTMLElement>(max = 7) {
+  const ref = useRef<T | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || isTouchDevice()) return;
+    el.style.transformStyle = "preserve-3d";
+    el.style.willChange = "transform";
+    const onMove = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      el.style.transition = "transform 120ms linear";
+      el.style.transform =
+        `perspective(1400px) rotateX(${-y * max}deg) rotateY(${x * max}deg) scale(1.01)`;
+    };
+    const onLeave = () => {
+      el.style.transition = "transform 700ms cubic-bezier(.2,.7,.2,1)";
+      el.style.transform = "perspective(1400px) rotateX(0) rotateY(0) scale(1)";
+    };
+    el.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      el.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+    };
+  }, [max]);
+  return ref;
+}
 
-const plans = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: "$99",
-    tagline: "Solo operator getting organized.",
-    features: ["Lead pipeline + CRM", "AI quick-add + follow-up", "50 leads / month", "100 AI calls / month"],
-    highlight: false,
-  },
-  {
-    id: "growth",
-    name: "Growth",
-    price: "$249",
-    tagline: "Crew of 2–3 scaling up.",
-    features: ["Everything in Starter", "Marketplace claims + wallet", "Google Ads + Meta + Zapier intake", "250 leads / 500 AI calls"],
-    highlight: true,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "$549",
-    tagline: "Going full speed.",
-    features: ["Everything in Growth", "Unlimited leads + AI", "Auto SMS + email dispatch", "10 seats · priority support"],
-    highlight: false,
-  },
-];
+function useSpotlight<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || isTouchDevice()) return;
+    const onMove = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+      el.style.setProperty("--so", "1");
+    };
+    const onLeave = () => el.style.setProperty("--so", "0");
+    el.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      el.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+  return ref;
+}
 
-const faqs = [
-  {
-    q: "Is this a web app or a real native app?",
-    a: "Real native installer for macOS (Apple Silicon + Intel), Windows, and Linux. Auto-updates. No browser. No tabs. No more “oh my session expired.”",
-  },
-  {
-    q: "Is there a free trial?",
-    a: "14 days, no credit card. You get the full Growth plan free during the trial. After that you pick a plan or downgrade — you stay in control.",
-  },
-  {
-    q: "Where do my leads come from?",
-    a: "Your own forms, your Google/Meta/Zapier integrations, and our marketplace of pre-screened leads from 13+ public sources. You only pay for marketplace leads you claim.",
-  },
-  {
-    q: "What if a marketplace lead is bad?",
-    a: "Request a refund within 24 hours through the lead detail. Duplicate, wrong number, out-of-area — credits come back automatically.",
-  },
-  {
-    q: "Can I cancel anytime?",
-    a: "Monthly billing, cancel from settings. Your data exports to CSV with one click. We don't hold it hostage.",
-  },
-];
-
-const stats = [
-  { value: "500+", label: "fresh leads pulled daily" },
-  { value: "13",   label: "automated sources" },
-  { value: "30s",  label: "AI follow-up draft" },
-  { value: "100%", label: "of your data, exportable" },
-];
-
-/* ─────────────────────────────────────────────────────────────────── */
-
-export default function Landing() {
+/* ================================================================== */
+/*  PRIMITIVES                                                        */
+/* ================================================================== */
+function Reveal({ children, delay = 0, y = 28, className = "" }: {
+  children: ReactNode; delay?: number; y?: number; className?: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [v, setV] = useState(false);
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      ([e]) => e.isIntersecting && setV(true),
+      { threshold: 0.1 }
+    );
+    if (ref.current) io.observe(ref.current);
+    return () => io.disconnect();
+  }, []);
   return (
-    <main className="relative min-h-screen overflow-hidden bg-ink-950 text-white">
-      {/* Deep-space backdrop */}
-      <div className="pointer-events-none absolute inset-0 -z-10"
-           style={{
-             background:
-               "radial-gradient(1200px 700px at 50% -10%, rgba(99,102,241,0.35), transparent 60%), radial-gradient(800px 600px at 90% 30%, rgba(6,182,212,0.18), transparent 60%), radial-gradient(700px 500px at 10% 50%, rgba(139,92,246,0.18), transparent 60%), linear-gradient(180deg, #0a0f1f 0%, #0c1224 100%)",
-           }}
-      />
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07]"
-           style={{
-             backgroundImage:
-               "linear-gradient(to right, rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,1) 1px, transparent 1px)",
-             backgroundSize: "36px 36px",
-             maskImage: "radial-gradient(ellipse 80% 60% at 50% 20%, black 30%, transparent 80%)",
-           }}
-      />
-      <div className="pointer-events-none absolute -z-10 left-1/4 top-32 h-[420px] w-[420px] rounded-full bg-brand-500/30 blur-3xl animate-blob-drift" />
-      <div className="pointer-events-none absolute -z-10 right-[8%] top-[120vh] h-[480px] w-[480px] rounded-full bg-fuchsia-500/20 blur-3xl animate-blob-drift" style={{ animationDelay: "-7s" }} />
-      {/* Aurora ribbon over hero */}
-      <div className="pointer-events-none absolute -z-10 top-0 left-1/2 -translate-x-1/2 h-[600px] w-[1100px] rounded-full opacity-60 blur-3xl animate-aurora"
-           style={{
-             background:
-               "conic-gradient(from 90deg at 50% 50%, rgba(99,102,241,0.55), rgba(6,182,212,0.45), rgba(217,70,239,0.55), rgba(99,102,241,0.55))",
-           }}
-      />
-      {/* Twinkling sparkles */}
-      {[
-        { l: "10%", t: "18%", d: "0s" },
-        { l: "82%", t: "22%", d: "1.2s" },
-        { l: "30%", t: "34%", d: "2.4s" },
-        { l: "70%", t: "8%",  d: "0.6s" },
-        { l: "55%", t: "42%", d: "1.8s" },
-        { l: "18%", t: "8%",  d: "2.8s" },
-      ].map((s, i) => (
-        <span key={i} className="sparkle animate-twinkle pointer-events-none -z-10" style={{ left: s.l, top: s.t, animationDelay: s.d }} />
-      ))}
+    <div ref={ref} className={className} style={{
+      opacity: v ? 1 : 0,
+      transform: v ? "translateY(0)" : `translateY(${y}px)`,
+      transition: `opacity 900ms cubic-bezier(.2,.7,.2,1) ${delay}ms, transform 900ms cubic-bezier(.2,.7,.2,1) ${delay}ms`,
+    }}>{children}</div>
+  );
+}
 
-      {/* ── Nav ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-ink-950/40 border-b border-white/5">
-        <div className="mx-auto max-w-6xl px-6 py-3.5 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow">
-              CF
-            </span>
-            <span className="text-white">ContractorFlow</span>
-          </Link>
-          <nav className="flex items-center gap-1 sm:gap-2 text-white/80">
-            <Link href="#features" className="text-sm font-medium hover:text-white px-3 py-2 hidden md:inline rounded-lg hover:bg-white/5">Features</Link>
-            <Link href="#reviews"  className="text-sm font-medium hover:text-white px-3 py-2 hidden md:inline rounded-lg hover:bg-white/5">Reviews</Link>
-            <Link href="#pricing"  className="text-sm font-medium hover:text-white px-3 py-2 hidden md:inline rounded-lg hover:bg-white/5">Pricing</Link>
-            <Link href="#faq"      className="text-sm font-medium hover:text-white px-3 py-2 hidden md:inline rounded-lg hover:bg-white/5">FAQ</Link>
-            <Link href="/download" className="btn bg-white text-ink-900 hover:bg-white/90 shadow-glow">
-              <Download className="h-4 w-4" /> Download
-            </Link>
-          </nav>
-        </div>
-      </header>
+function CountUp({ to, duration = 1600, prefix = "", suffix = "", sep = false }: {
+  to: number; duration?: number; prefix?: string; suffix?: string; sep?: boolean;
+}) {
+  const [val, setVal] = useState(0);
+  const ref = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    let started = false;
+    let raf = 0;
+    const run = () => {
+      const t0 = performance.now();
+      const tick = (now: number) => {
+        const p = Math.min(1, (now - t0) / duration);
+        const e = 1 - Math.pow(1 - p, 3);
+        setVal(Math.round(to * e));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !started) { started = true; run(); }
+    }, { threshold: 0.4 });
+    if (ref.current) io.observe(ref.current);
+    return () => { io.disconnect(); if (raf) cancelAnimationFrame(raf); };
+  }, [to, duration]);
+  return <span ref={ref}>{prefix}{sep ? val.toLocaleString() : val}{suffix}</span>;
+}
 
-      {/* ── Hero ────────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-6 pt-20 pb-12 text-center relative">
-        <div className="animate-fade-up">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white/90 ring-1 ring-white/15 backdrop-blur">
-            <span className="relative inline-flex h-1.5 w-1.5">
-              <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-70" />
-              <span className="relative inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </span>
-            <Zap className="h-3.5 w-3.5" />
-            Live · 500+ leads pulled today
+function ScrambleText({ to, duration = 1400, prefix = "", suffix = "", sep = false }: {
+  to: number; duration?: number; prefix?: string; suffix?: string; sep?: boolean;
+}) {
+  const target = sep ? to.toLocaleString() : String(to);
+  const [val, setVal] = useState(target.replace(/\d/g, "0"));
+  const ref = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    let started = false;
+    let raf = 0;
+    const run = () => {
+      const t0 = performance.now();
+      const tick = (now: number) => {
+        const p = Math.min(1, (now - t0) / duration);
+        const settled = Math.floor(p * target.length);
+        let out = "";
+        for (let i = 0; i < target.length; i++) {
+          const ch = target[i];
+          if (i < settled || !/\d/.test(ch)) out += ch;
+          else out += Math.floor(Math.random() * 10);
+        }
+        setVal(out);
+        if (p < 1) raf = requestAnimationFrame(tick);
+        else setVal(target);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !started) { started = true; run(); }
+    }, { threshold: 0.4 });
+    if (ref.current) io.observe(ref.current);
+    return () => { io.disconnect(); if (raf) cancelAnimationFrame(raf); };
+  }, [target, duration]);
+  return <span ref={ref}>{prefix}{val}{suffix}</span>;
+}
+
+function letters(text: string, baseDelay = 0, perChar = 24, extraStyle: CSSProperties = {}) {
+  return [...text].map((ch, i) => (
+    <span key={`${baseDelay}-${i}`} className="inline-block" style={{
+      animation: `letterIn 800ms cubic-bezier(.2,.7,.2,1) ${baseDelay + i * perChar}ms backwards`,
+      whiteSpace: "pre",
+      ...extraStyle,
+    }}>
+      {ch === " " ? " " : ch}
+    </span>
+  ));
+}
+
+/* ================================================================== */
+/*  GLOBAL OVERLAYS                                                   */
+/* ================================================================== */
+function CursorGlow() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const ring = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (isTouchDevice()) return;
+    let raf = 0, tx = -100, ty = -100, x = -100, y = -100, rx = -100, ry = -100;
+    const onMove = (e: MouseEvent) => { tx = e.clientX; ty = e.clientY; };
+    const loop = () => {
+      x += (tx - x) * 0.22;
+      y += (ty - y) * 0.22;
+      rx += (tx - rx) * 0.08;
+      ry += (ty - ry) * 0.08;
+      if (ref.current)
+        ref.current.style.transform = `translate3d(${x - 18}px, ${y - 18}px, 0)`;
+      if (ring.current)
+        ring.current.style.transform = `translate3d(${rx - 16}px, ${ry - 16}px, 0)`;
+      raf = requestAnimationFrame(loop);
+    };
+    window.addEventListener("mousemove", onMove);
+    raf = requestAnimationFrame(loop);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+  return (
+    <>
+      <div ref={ref} className="pointer-events-none fixed top-0 left-0 z-[60] hidden md:block"
+        style={{
+          width: 36, height: 36,
+          background: `radial-gradient(circle, ${P.indigoHi}cc 0%, transparent 60%)`,
+          filter: "blur(10px)",
+          mixBlendMode: "screen",
+        }} />
+      <div ref={ring} className="pointer-events-none fixed top-0 left-0 z-[60] hidden md:block"
+        style={{
+          width: 32, height: 32,
+          border: `1px solid ${P.indigoHi}55`,
+          borderRadius: "50%",
+          mixBlendMode: "screen",
+        }} />
+    </>
+  );
+}
+
+function ScrollProgress() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const on = () => {
+      const h = document.documentElement;
+      const p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+      if (ref.current) ref.current.style.transform = `scaleX(${p})`;
+    };
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
+  return (
+    <div className="fixed top-0 left-0 right-0 h-[2px] z-[55]"
+      style={{ background: "rgba(255,255,255,0.04)" }}>
+      <div ref={ref} className="h-full"
+        style={{
+          background: `linear-gradient(90deg, ${P.indigoHi}, ${P.violet}, ${P.pink})`,
+          transform: "scaleX(0)",
+          transformOrigin: "left",
+          boxShadow: `0 0 12px ${P.indigo}`,
+        }} />
+    </div>
+  );
+}
+
+function AuroraBg() {
+  return (
+    <>
+      <div className="fixed inset-0 pointer-events-none -z-10" style={{
+        background: `radial-gradient(ellipse 70% 50% at 18% 8%,  ${P.indigo}26, transparent 60%),
+                     radial-gradient(ellipse 60% 45% at 82% 28%, ${P.violet}1f, transparent 60%),
+                     radial-gradient(ellipse 70% 50% at 50% 92%, ${P.pink}14, transparent 60%)`,
+        animation: "auroraShift 22s ease-in-out infinite alternate",
+      }} />
+      <div className="fixed inset-0 pointer-events-none -z-10 opacity-[0.12]" style={{
+        backgroundImage: `linear-gradient(rgba(129,140,248,0.55) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(129,140,248,0.55) 1px, transparent 1px)`,
+        backgroundSize: "64px 64px",
+        WebkitMaskImage: "radial-gradient(ellipse 60% 50% at center, black 0%, transparent 80%)",
+        maskImage: "radial-gradient(ellipse 60% 50% at center, black 0%, transparent 80%)",
+        animation: "gridDrift 40s linear infinite",
+      }} />
+    </>
+  );
+}
+
+/* ================================================================== */
+/*  BUTTONS                                                           */
+/* ================================================================== */
+function MagneticButton({ children, primary = true, compact = false, href, onClick }: {
+  children: ReactNode; primary?: boolean; compact?: boolean; href?: string; onClick?: () => void;
+}) {
+  const refBtn = useMagnetic<HTMLButtonElement>(0.28);
+  const refLink = useMagnetic<HTMLAnchorElement>(0.28);
+  const sty: CSSProperties = {
+    ...(compact ? { padding: "6px 14px", fontSize: 13 } : { padding: "12px 20px", fontSize: 14 }),
+    background: primary ? P.text : "transparent",
+    color: primary ? P.bg : P.text,
+    border: primary ? "none" : `1px solid ${P.borderHi}`,
+    fontFamily: SANS,
+    fontWeight: 600,
+    boxShadow: primary
+      ? `0 14px 30px -10px rgba(255,255,255,0.25), inset 0 1px 0 rgba(255,255,255,0.4)`
+      : "none",
+  };
+  const inner = (
+    <>
+      {primary && (
+        <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: `linear-gradient(120deg, transparent 30%, rgba(99,102,241,0.4) 50%, transparent 70%)`,
+            animation: "shimmer 1.8s linear infinite",
+          }} />
+      )}
+      <span className="relative inline-flex items-center gap-2">{children}</span>
+    </>
+  );
+  if (href) {
+    return (
+      <Link ref={refLink} href={href}
+        className="relative inline-flex items-center gap-2 rounded-lg overflow-hidden group"
+        style={sty}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button ref={refBtn} onClick={onClick}
+      className="relative inline-flex items-center gap-2 rounded-lg overflow-hidden group"
+      style={sty}>
+      {inner}
+    </button>
+  );
+}
+
+/* ================================================================== */
+/*  NAV                                                               */
+/* ================================================================== */
+function TopNav() {
+  return (
+    <nav className="sticky top-0 z-30 w-full backdrop-blur-xl"
+      style={{ background: "rgba(6,6,10,0.7)", borderBottom: `1px solid ${P.border}` }}>
+      <div className="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md flex items-center justify-center"
+            style={{
+              background: `linear-gradient(135deg, ${P.indigoHi}, ${P.indigoDim})`,
+              boxShadow: `0 8px 18px -4px ${P.indigo}88, inset 0 1px 0 ${P.indigoHi}`,
+            }}>
+            <span style={{ fontFamily: SERIF, fontSize: 14, fontWeight: 600, color: "#fff" }}>CF</span>
+          </div>
+          <span style={{ fontFamily: SANS, fontWeight: 600, color: P.text, fontSize: 15 }}>
+            ContractorFlow
           </span>
         </div>
+        <div className="hidden md:flex items-center gap-7 text-sm" style={{ fontFamily: SANS }}>
+          {[
+            { l: "Features", href: "#features" },
+            { l: "Pricing",  href: "#pricing"  },
+            { l: "Sign in",  href: "/login"    },
+          ].map((nav) => (
+            <a key={nav.l} href={nav.href} className="relative group cursor-pointer" style={{ color: P.muted }}>
+              <span className="group-hover:text-white transition-colors duration-200">{nav.l}</span>
+              <span className="absolute left-0 -bottom-1 h-px transition-all duration-300 w-0 group-hover:w-full"
+                style={{ background: `linear-gradient(90deg, ${P.indigoHi}, ${P.violet})` }} />
+            </a>
+          ))}
+        </div>
+        <MagneticButton compact href="/download">
+          <Download size={13} /> Download
+        </MagneticButton>
+      </div>
+    </nav>
+  );
+}
 
-        <h1 className="mt-7 text-5xl sm:text-7xl font-bold tracking-tight leading-[1.02] text-balance animate-fade-up" style={{ animationDelay: "80ms" }}>
-          The contractor CRM
+/* ================================================================== */
+/*  LIVE BADGE                                                        */
+/* ================================================================== */
+function LiveBadge() {
+  return (
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
+      style={{ background: P.bg2, border: `1px solid ${P.border}` }}>
+      <span className="relative flex w-2 h-2">
+        <span className="absolute inline-flex h-full w-full rounded-full"
+          style={{ background: P.green, animation: "pulseDot 1.8s infinite" }} />
+        <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: P.green }} />
+      </span>
+      <span className="text-xs" style={{ color: P.muted, fontFamily: SANS }}>
+        Live · <span style={{ color: P.text }}><CountUp to={500} suffix="+" /></span> leads pulled today
+      </span>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  HERO                                                              */
+/* ================================================================== */
+function Hero() {
+  const D = {
+    start: 200,
+    gradLand: 200 + "The contractor ".length * 24,
+    c2: 200 + "The contractor CRM".length * 24,
+    c3: 200 + "The contractor CRMthat lives on your ".length * 24,
+  };
+  return (
+    <section className="relative pt-16 pb-12 px-5 overflow-hidden">
+      <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[680px] h-[440px] rounded-full pointer-events-none"
+        style={{
+          background: `radial-gradient(circle, ${P.indigo}55 0%, transparent 60%)`,
+          filter: "blur(60px)",
+          animation: "breathe 6s ease-in-out infinite",
+        }} />
+      <div className="absolute top-40 -left-10 w-[320px] h-[320px] rounded-full pointer-events-none"
+        style={{
+          background: `radial-gradient(circle, ${P.violet}3a 0%, transparent 70%)`,
+          filter: "blur(54px)",
+          animation: "floatY 9s ease-in-out infinite",
+        }} />
+      <div className="absolute top-32 -right-10 w-[300px] h-[300px] rounded-full pointer-events-none"
+        style={{
+          background: `radial-gradient(circle, ${P.pink}2e 0%, transparent 70%)`,
+          filter: "blur(54px)",
+          animation: "floatY 11s ease-in-out infinite 2s",
+        }} />
+
+      <div className="max-w-4xl mx-auto relative">
+        <Reveal>
+          <div className="flex justify-center mb-6"><LiveBadge /></div>
+        </Reveal>
+
+        <h1 className="text-center leading-[0.95]" style={{
+          fontFamily: SERIF,
+          fontSize: "clamp(46px, 8vw, 84px)",
+          fontWeight: 400,
+          color: P.text,
+          letterSpacing: "-0.03em",
+        }}>
+          {letters("The contractor ", D.start)}
+          <span className="inline-block" style={{
+            backgroundImage: `linear-gradient(135deg, ${P.indigoHi} 0%, ${P.indigo} 35%, ${P.violet} 70%, ${P.pink} 100%)`,
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            color: "transparent",
+            fontStyle: "italic",
+            animation: `gradientPunch 950ms cubic-bezier(.2,.9,.3,1.25) ${D.gradLand}ms backwards`,
+            filter: `drop-shadow(0 8px 30px ${P.indigo}66)`,
+          }}>CRM</span>
           <br />
-          <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-cyan-300 bg-clip-text text-transparent">that lives on your desktop.</span>
+          {letters("that lives on your ", D.c2)}
+          <span className="inline-block" style={{
+            fontStyle: "italic",
+            animation: `letterIn 800ms cubic-bezier(.2,.7,.2,1) ${D.c3}ms backwards`,
+          }}>desktop.</span>
         </h1>
 
-        <p className="mt-7 text-lg sm:text-xl text-white/70 max-w-2xl mx-auto text-pretty animate-fade-up" style={{ animationDelay: "160ms" }}>
-          Native installer. AI that drafts your proposals and follow-ups.
-          500+ fresh leads pulled in daily. One window. Everything.
-        </p>
+        <Reveal delay={1400}>
+          <p className="text-center mt-6 max-w-xl mx-auto"
+            style={{ color: P.muted, fontFamily: SANS, fontSize: 17, lineHeight: 1.55 }}>
+            Native installer. AI that drafts your proposals and follow-ups.{" "}
+            <span style={{ color: P.text }}>500+ fresh leads</span> pulled in daily. One window. Everything.
+          </p>
+        </Reveal>
 
-        {/* Primary CTAs — download is the primary */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-up" style={{ animationDelay: "240ms" }}>
-          <Link href="/download" className="btn bg-white text-ink-900 text-base px-7 py-4 hover:bg-white/90 shadow-glow">
-            <Download className="h-4 w-4" /> Download for free
-          </Link>
-          <Link href="#features" className="btn bg-white/10 text-white border border-white/20 text-base px-7 py-4 hover:bg-white/15 backdrop-blur">
-            See it work <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+        <Reveal delay={1550}>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mt-8">
+            <MagneticButton href="/download">
+              <Download size={15} /> Download for free <ArrowRight size={14} />
+            </MagneticButton>
+            <MagneticButton primary={false} href="#see-it-work">
+              <Play size={13} /> See it work
+            </MagneticButton>
+          </div>
+        </Reveal>
 
-        <ul className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/60 animate-fade-up" style={{ animationDelay: "320ms" }}>
-          {["Free 14-day trial", "No credit card", "Cancel anytime"].map((t) => (
-            <li key={t} className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" /> {t}
-            </li>
-          ))}
-        </ul>
+        <Reveal delay={1700}>
+          <div className="text-center mt-4 text-xs" style={{ color: P.subtle, fontFamily: SANS }}>
+            Free 14-day trial · No credit card · Cancel anytime
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
 
-        {/* ── Native desktop app window mockup ─────────────────────── */}
-        <div className="mt-16 relative animate-fade-up" style={{ animationDelay: "440ms" }}>
-          <div className="relative mx-auto max-w-5xl">
-            {/* Glow behind the window */}
-            <div className="absolute -inset-x-10 -top-10 bottom-0 -z-10 bg-gradient-to-b from-brand-500/30 via-fuchsia-500/20 to-transparent blur-3xl rounded-3xl" />
+/* ================================================================== */
+/*  DASHBOARD MOCKUP                                                  */
+/* ================================================================== */
+const STAGE_LABELS = ["New", "Contacted", "Quoted", "Estimate sent", "Won"];
+const STAGE_COLORS = [P.subtle, P.amber, P.violet, P.indigoHi, P.green];
 
-            <div className="rounded-2xl overflow-hidden glow-ring bg-ink-900/80 backdrop-blur">
-              {/* macOS-style title bar */}
-              <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
-                <span className="h-3 w-3 rounded-full bg-rose-400" />
-                <span className="h-3 w-3 rounded-full bg-amber-400" />
-                <span className="h-3 w-3 rounded-full bg-emerald-400" />
-                <span className="ml-3 text-xs font-mono text-white/40">ContractorFlow.app</span>
-                <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-white/50">
-                  <span className="relative inline-flex h-1.5 w-1.5">
-                    <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-70" />
-                    <span className="relative inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  </span>
-                  Live
-                </span>
+interface ToastMsg { I: LucideIcon; t: string; s: string; }
+const TOAST_MSGS: ToastMsg[] = [
+  { I: ShoppingBag, t: "New marketplace lead",  s: "Apex Fencing · 2 mi away" },
+  { I: Sparkles,    t: "AI drafted follow-up",  s: "To Maria S. · sent in 28s" },
+  { I: DollarSign,  t: "Job won",               s: "Chen K. · +$8,200" },
+  { I: Phone,       t: "Inbound call routed",   s: "Priya R. · transcript saved" },
+];
+
+function DashboardToast() {
+  const [idx, setIdx] = useState(0);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    let i = 0;
+    const fire = () => {
+      setIdx(i % TOAST_MSGS.length);
+      setVisible(true);
+      setTimeout(() => setVisible(false), 2900);
+      i++;
+    };
+    const t0 = setTimeout(fire, 1400);
+    const t1 = setInterval(fire, 4800);
+    return () => { clearTimeout(t0); clearInterval(t1); };
+  }, []);
+  const M = TOAST_MSGS[idx];
+  return (
+    <div className="absolute bottom-3 right-3 max-w-[260px] flex items-center gap-2.5 px-3 py-2 rounded-lg backdrop-blur-md pointer-events-none"
+      style={{
+        background: "rgba(27,27,38,0.92)",
+        border: `1px solid ${P.borderHi}`,
+        boxShadow: `0 16px 32px -10px rgba(0,0,0,0.6), 0 0 0 1px ${P.indigo}33`,
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(14px)",
+        transition: "all 400ms cubic-bezier(.2,.7,.2,1)",
+      }}>
+      <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+        style={{ background: `${P.indigo}33`, color: P.indigoHi }}>
+        <M.I size={13} />
+      </div>
+      <div className="min-w-0">
+        <div className="text-xs" style={{ color: P.text, fontFamily: SANS, fontWeight: 600 }}>{M.t}</div>
+        <div className="text-[10px] truncate" style={{ color: P.muted, fontFamily: SANS }}>{M.s}</div>
+      </div>
+    </div>
+  );
+}
+
+interface Lead { id: number; name: string; desc: string; value: string; stage: number; }
+
+function DashboardMockup() {
+  const tilt = useTilt<HTMLDivElement>(6);
+  const [leads, setLeads] = useState<Lead[]>([
+    { id: 1, name: "Maria S.", desc: "Bathroom remodel", value: "$12k",  stage: 3 },
+    { id: 2, name: "Chen K.",  desc: "Deck build",       value: "$8k",   stage: 4 },
+    { id: 3, name: "Priya R.", desc: "Fence install",    value: "$3.2k", stage: 1 },
+    { id: 4, name: "John D.",  desc: "Roof repair",      value: "$4.8k", stage: 0 },
+  ]);
+  const [pulseId, setPulseId] = useState<number | null>(null);
+  const cycle = useRef(0);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setLeads(prev => {
+        const candidates = prev.filter(L => L.stage < 4);
+        if (candidates.length === 0) {
+          return prev.map(L =>
+            L.id === 4 ? { ...L, stage: 0 } :
+            L.id === 3 ? { ...L, stage: 1 } :
+            L.id === 1 ? { ...L, stage: 3 } : L);
+        }
+        const target = candidates[cycle.current % candidates.length];
+        setPulseId(target.id);
+        setTimeout(() => setPulseId(null), 850);
+        cycle.current++;
+        return prev.map(L =>
+          L.id === target.id ? { ...L, stage: L.stage + 1 } : L);
+      });
+    }, 2300);
+    return () => clearInterval(t);
+  }, []);
+
+  const sidebarItems: { I: LucideIcon; l: string; active?: boolean }[] = [
+    { I: Briefcase,   l: "Pipeline", active: true },
+    { I: ShoppingBag, l: "Marketplace" },
+    { I: Inbox,       l: "Inbox" },
+    { I: Briefcase,   l: "Jobs" },
+    { I: Users,       l: "Customers" },
+    { I: Calendar,    l: "Calendar" },
+  ];
+
+  const tiles: { l: string; v: number; prefix?: string; sep?: boolean; scramble?: boolean }[] = [
+    { l: "Leads",   v: 47 },
+    { l: "Jobs",    v: 12 },
+    { l: "Revenue", v: 48200, prefix: "$", sep: true, scramble: true },
+    { l: "Due",     v: 3 },
+  ];
+
+  return (
+    <section id="see-it-work" className="px-3 sm:px-5 pb-12 scroll-mt-20">
+      <Reveal delay={80}>
+        <div ref={tilt} className="relative max-w-5xl mx-auto">
+          <div className="absolute inset-0 -m-6 rounded-3xl pointer-events-none"
+            style={{
+              background: `radial-gradient(ellipse at center, ${P.indigo}40 0%, transparent 65%)`,
+              filter: "blur(50px)",
+              animation: "breathe 5s ease-in-out infinite",
+            }} />
+
+          <div className="relative rounded-2xl overflow-hidden"
+            style={{
+              background: P.bg2,
+              border: `1px solid ${P.border}`,
+              boxShadow:
+                `0 40px 90px -20px rgba(0,0,0,0.7),
+                 0 0 0 1px ${P.border},
+                 inset 0 1px 0 ${P.borderHi}`,
+            }}>
+            <div className="flex items-center justify-between px-4 py-2.5"
+              style={{ background: P.bg3, borderBottom: `1px solid ${P.border}` }}>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full" style={{ background: "#FF5F57" }} />
+                <span className="w-3 h-3 rounded-full" style={{ background: "#FEBC2E" }} />
+                <span className="w-3 h-3 rounded-full" style={{ background: "#28C840" }} />
+              </div>
+              <div className="text-[11px]" style={{ color: P.subtle, fontFamily: MONO }}>
+                ContractorFlow.app
+              </div>
+              <div className="w-12" />
+            </div>
+
+            <div className="flex relative">
+              <div className="hidden sm:flex flex-col p-3 gap-0.5 w-44"
+                style={{ background: P.bg2, borderRight: `1px solid ${P.border}` }}>
+                <div className="text-[10px] uppercase mb-2 px-2"
+                  style={{ color: P.subtle, fontFamily: SANS, fontWeight: 600, letterSpacing: "0.16em" }}>
+                  Workspace
+                </div>
+                {sidebarItems.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm"
+                    style={{
+                      background: item.active ? P.bg3 : "transparent",
+                      color: item.active ? P.text : P.muted,
+                      fontFamily: SANS,
+                      fontWeight: item.active ? 500 : 400,
+                      animation: `sidebarIn 600ms cubic-bezier(.2,.7,.2,1) ${400 + i * 70}ms backwards`,
+                    }}>
+                    <item.I size={14} />
+                    {item.l}
+                  </div>
+                ))}
               </div>
 
-              {/* App body: sidebar + content */}
-              <div className="grid grid-cols-12">
-                {/* Sidebar */}
-                <div className="col-span-3 border-r border-white/5 p-3 space-y-1">
-                  {[
-                    { label: "Dashboard",   active: true },
-                    { label: "Pipeline",    active: false },
-                    { label: "Marketplace", active: false },
-                    { label: "Inbox",       active: false },
-                    { label: "Jobs",        active: false },
-                    { label: "Customers",   active: false },
-                    { label: "Calendar",    active: false },
-                  ].map((it) => (
-                    <div
-                      key={it.label}
-                      className={
-                        it.active
-                          ? "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium bg-white/10 text-white ring-1 ring-white/15"
-                          : "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white/50 hover:bg-white/5"
-                      }
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-60" />
-                      {it.label}
+              <div className="flex-1 p-4 sm:p-5 min-w-0 relative">
+                <div className="flex items-baseline justify-between mb-1">
+                  <div className="text-[11px]" style={{ color: P.muted, fontFamily: SANS }}>
+                    Tuesday, May 12
+                  </div>
+                  <div className="text-[11px] flex items-center gap-1"
+                    style={{ color: P.muted, fontFamily: SANS }}>
+                    Wallet{" "}
+                    <span style={{ color: P.text, fontFamily: MONO }}>
+                      $<CountUp to={482} />
+                    </span>
+                  </div>
+                </div>
+                <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400,
+                             color: P.text, letterSpacing: "-0.02em", marginBottom: 14 }}>
+                  Hey <span style={{ fontStyle: "italic" }}>Reliable Roofing</span>
+                </h3>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                  {tiles.map((s, i) => (
+                    <div key={i} className="p-2.5 rounded-lg"
+                      style={{
+                        background: P.bg,
+                        border: `1px solid ${P.border}`,
+                        animation: `tileIn 600ms cubic-bezier(.2,.7,.2,1) ${600 + i * 90}ms backwards`,
+                      }}>
+                      <div className="text-[9px] uppercase"
+                        style={{ color: P.subtle, fontFamily: SANS,
+                                 letterSpacing: "0.15em", fontWeight: 600 }}>
+                        {s.l}
+                      </div>
+                      <div className="text-lg mt-0.5"
+                        style={{ color: P.text, fontFamily: MONO, fontWeight: 500 }}>
+                        {s.scramble
+                          ? <ScrambleText to={s.v} prefix={s.prefix || ""} sep={s.sep} />
+                          : <CountUp to={s.v} prefix={s.prefix || ""} sep={s.sep} />}
+                      </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Main content */}
-                <div className="col-span-9 p-5">
-                  {/* Header row */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-[0.18em] text-brand-300 font-semibold">Tuesday, May 12</div>
-                      <div className="text-xl font-semibold mt-0.5 bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">Hey Reliable Roofing</div>
-                    </div>
-                    <div className="text-xs text-white/50">
-                      Wallet <span className="text-white font-medium">$482.00</span>
-                    </div>
-                  </div>
-
-                  {/* KPI tiles */}
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { l: "Leads",   v: "47",      g: "from-indigo-500 to-violet-500" },
-                      { l: "Jobs",    v: "12",      g: "from-violet-500 to-fuchsia-500" },
-                      { l: "Revenue", v: "$48,200", g: "from-emerald-500 to-teal-500" },
-                      { l: "Due",     v: "3",       g: "from-amber-500 to-orange-500" },
-                    ].map((k, i) => (
-                      <div
-                        key={k.l}
-                        className={`relative overflow-hidden rounded-xl p-3 text-white shadow-glow bg-gradient-to-br ${k.g} animate-tick-up`}
-                        style={{ animationDelay: `${i * 80}ms` }}
-                      >
-                        <div className="text-[10px] uppercase tracking-wider opacity-90">{k.l}</div>
-                        <div className="mt-1 text-lg font-bold">{k.v}</div>
-                        <div className="absolute right-1 top-1 h-6 w-6 rounded-full bg-white/15" />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Leads list */}
-                  <div className="mt-4 space-y-1.5">
-                    {[
-                      { name: "Maria S.", svc: "Bathroom remodel · $12k",  tag: "Estimate sent", tone: "bg-amber-500/15 text-amber-300 ring-amber-500/30" },
-                      { name: "Chen K.",  svc: "Deck build · $8k",          tag: "Won",            tone: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30" },
-                      { name: "Priya R.", svc: "Fence install · $3.2k",    tag: "Contacted",      tone: "bg-blue-500/15 text-blue-300 ring-blue-500/30" },
-                      { name: "John D.",  svc: "Roof repair · $4.8k",       tag: "New",            tone: "bg-white/10 text-white/80 ring-white/15" },
-                    ].map((l, i) => (
-                      <div
-                        key={l.name}
-                        className="flex items-center justify-between gap-3 rounded-lg p-2.5 bg-white/[0.03] ring-1 ring-white/5 hover:bg-white/[0.06] transition animate-tick-up"
-                        style={{ animationDelay: `${400 + i * 60}ms` }}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-500 to-fuchsia-500 shrink-0" />
+                <div className="space-y-1.5">
+                  {leads.map((L, i) => {
+                    const pulsing = pulseId === L.id;
+                    return (
+                      <div key={L.id} className="relative flex items-center justify-between px-3 py-2.5 rounded-lg"
+                        style={{
+                          background: pulsing ? `${P.indigo}1f` : P.bg,
+                          border: `1px solid ${pulsing ? P.indigo : P.border}`,
+                          boxShadow: pulsing
+                            ? `0 0 0 4px ${P.indigo}33, 0 14px 30px -10px ${P.indigo}88`
+                            : "none",
+                          transition: "background 550ms cubic-bezier(.2,.7,.2,1), border-color 550ms, box-shadow 550ms",
+                          animation: `leadIn 700ms cubic-bezier(.2,.7,.2,1) ${950 + i * 110}ms backwards`,
+                        }}>
+                        {pulsing && (
+                          <div className="absolute inset-0 rounded-lg pointer-events-none"
+                            style={{
+                              background: `radial-gradient(circle at 50% 50%, ${P.indigo}33 0%, transparent 70%)`,
+                              animation: "fadeOut 850ms ease-out forwards",
+                            }} />
+                        )}
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${P.indigoHi}, ${P.indigoDim})`,
+                              color: "#fff", fontFamily: SANS, fontWeight: 600,
+                              boxShadow: pulsing ? `0 0 20px ${P.indigo}` : "none",
+                              transition: "box-shadow 550ms",
+                            }}>
+                            {L.name.charAt(0)}
+                          </div>
                           <div className="min-w-0">
-                            <div className="text-sm font-medium truncate">{l.name}</div>
-                            <div className="text-xs text-white/50 truncate">{l.svc}</div>
+                            <div className="text-sm truncate"
+                              style={{ color: P.text, fontFamily: SANS, fontWeight: 500 }}>
+                              {L.name}
+                            </div>
+                            <div className="text-[11px] truncate"
+                              style={{ color: P.muted, fontFamily: SANS }}>
+                              {L.desc} · <span style={{ fontFamily: MONO }}>{L.value}</span>
+                            </div>
                           </div>
                         </div>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${l.tone}`}>{l.tag}</span>
+                        <span key={L.stage}
+                          className="text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ml-2"
+                          style={{
+                            background: `${STAGE_COLORS[L.stage]}22`,
+                            color: STAGE_COLORS[L.stage],
+                            fontFamily: SANS, fontWeight: 600,
+                            animation: "stageIn 520ms cubic-bezier(.2,.7,.2,1)",
+                          }}>
+                          {STAGE_LABELS[L.stage]}
+                        </span>
                       </div>
-                    ))}
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg overflow-hidden relative"
+                  style={{
+                    background: P.bg, border: `1px solid ${P.border}`,
+                    animation: `leadIn 700ms cubic-bezier(.2,.7,.2,1) 1500ms backwards`,
+                  }}>
+                  <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
+                    background: `linear-gradient(90deg, transparent, ${P.indigo}22, transparent)`,
+                    animation: "shimmer 3s linear infinite",
+                  }} />
+                  <Sparkles size={13} style={{ color: P.indigoHi, position: "relative" }} />
+                  <div className="text-[11px] flex-1 relative" style={{ color: P.muted, fontFamily: SANS }}>
+                    <span style={{ color: P.text }}>AI drafted follow-up</span> · Job won{" "}
+                    <span style={{ color: P.green, fontFamily: MONO }}>+$8,200</span>
                   </div>
+                  <div className="w-1.5 h-1.5 rounded-full relative"
+                    style={{ background: P.green, animation: "pulseDot 1.6s infinite" }} />
                 </div>
-              </div>
-            </div>
 
-            {/* Floating chips around the window */}
-            <div className="hidden md:block absolute -left-12 top-32 rotate-[-6deg] animate-float">
-              <div className="rounded-xl bg-white text-ink-900 px-3 py-2 shadow-soft-lg text-xs font-medium">
-                <span className="inline-flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-brand-600" />
-                  AI drafted follow-up
-                </span>
-              </div>
-            </div>
-            <div className="hidden md:block absolute -right-10 top-44 rotate-[5deg] animate-float" style={{ animationDelay: "-2s" }}>
-              <div className="rounded-xl bg-white text-ink-900 px-3 py-2 shadow-soft-lg text-xs font-medium">
-                <span className="inline-flex items-center gap-1.5">
-                  <Trophy className="h-3.5 w-3.5 text-emerald-600" />
-                  Job won · +$8,200
-                </span>
+                <DashboardToast />
               </div>
             </div>
           </div>
         </div>
+      </Reveal>
+    </section>
+  );
+}
 
-        {/* OS chips */}
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-3 animate-fade-up" style={{ animationDelay: "640ms" }}>
-          {downloadFor.map(({ os, ext, icon: Icon, href }) => (
-            <Link
-              key={os}
-              href={href}
-              className="group inline-flex items-center gap-3 rounded-xl bg-white/5 ring-1 ring-white/10 px-4 py-3 hover:bg-white/10 transition"
-            >
-              <Icon className="h-5 w-5 text-white/80" />
-              <div className="text-left">
-                <div className="text-xs uppercase tracking-wider text-white/50 font-semibold">{os}</div>
-                <div className="text-sm font-medium">{ext}</div>
-              </div>
-              <Download className="h-4 w-4 text-white/40 group-hover:text-white transition" />
-            </Link>
-          ))}
-        </div>
-
-        {/* Stats strip */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
-          {stats.map((s) => (
-            <div key={s.label} className="rounded-2xl bg-white/[0.04] ring-1 ring-white/10 backdrop-blur p-4 text-center">
-              <div className="text-3xl font-bold bg-gradient-to-r from-indigo-300 via-violet-300 to-cyan-300 bg-clip-text text-transparent">{s.value}</div>
-              <div className="mt-1 text-xs text-white/60">{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Features ────────────────────────────────────────────────── */}
-      <section id="features" className="mx-auto max-w-6xl px-6 py-24">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-300">
-            Why crews switch
+/* ================================================================== */
+/*  MARQUEE                                                           */
+/* ================================================================== */
+function ActivityMarquee() {
+  const items = [
+    "$4.8k closed in Worcester",
+    "AI sent 12 follow-ups",
+    "47 new leads from Concord",
+    "$3.2k fence install won",
+    "Tasha K. claimed 4 marketplace leads",
+    "30s avg AI draft time",
+    "Eli W. installed Saturday · won by Monday",
+    "Marisol H. signed first $12k job",
+    "Diego P. refunded a bad lead in 24h",
+  ];
+  return (
+    <div className="relative overflow-hidden py-3.5"
+      style={{
+        borderTop: `1px solid ${P.border}`,
+        borderBottom: `1px solid ${P.border}`,
+        background: "rgba(11,11,18,0.6)",
+        WebkitMaskImage: "linear-gradient(90deg, transparent, black 8%, black 92%, transparent)",
+        maskImage: "linear-gradient(90deg, transparent, black 8%, black 92%, transparent)",
+      }}>
+      <div className="flex gap-10 whitespace-nowrap"
+        style={{ animation: "marquee 40s linear infinite", width: "max-content" }}>
+        {[...items, ...items].map((it, i) => (
+          <span key={i} className="flex items-center gap-2.5 text-sm shrink-0"
+            style={{ color: P.muted, fontFamily: SANS }}>
+            <span className="relative flex w-1.5 h-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full"
+                style={{ background: P.green, animation: "pulseDot 1.5s infinite" }} />
+              <span className="relative inline-flex rounded-full w-1.5 h-1.5"
+                style={{ background: P.green }} />
+            </span>
+            {it}
           </span>
-          <h2 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight text-balance">
-            Everything you actually need. <br />
-            <span className="text-white/60">Nothing you don't.</span>
-          </h2>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          {features.map(({ icon: Icon, title, body, color }, i) => (
-            <div
-              key={title}
-              className="group rounded-2xl bg-white/[0.04] ring-1 ring-white/10 backdrop-blur p-6 hover:bg-white/[0.08] hover:ring-white/30 hover-lift animate-fade-up"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
-              <div className={`inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${color} text-white shadow-glow group-hover:scale-105 transition-transform`}>
-                <Icon className="h-5 w-5" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  STATS STRIP                                                       */
+/* ================================================================== */
+function StatsStrip() {
+  const stats = [
+    { v: 500, sfx: "+", l: "Fresh leads pulled daily" },
+    { v: 13,  sfx: "",  l: "Automated sources" },
+    { v: 30,  sfx: "s", l: "AI follow-up draft time" },
+    { v: 100, sfx: "%", l: "Of your data, exportable" },
+  ];
+  return (
+    <section className="px-5 py-12">
+      <Reveal>
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden"
+          style={{ background: P.border }}>
+          {stats.map((s, i) => (
+            <div key={i} className="p-6 text-center" style={{ background: P.bg }}>
+              <div className="text-4xl md:text-5xl tabular-nums"
+                style={{ fontFamily: SERIF, fontWeight: 400,
+                         color: P.text, letterSpacing: "-0.02em" }}>
+                <ScrambleText to={s.v} suffix={s.sfx} duration={1500 + i * 100} />
               </div>
-              <h3 className="mt-4 text-xl font-semibold tracking-tight">{title}</h3>
-              <p className="mt-2 text-sm text-white/65 leading-relaxed">{body}</p>
+              <div className="text-xs mt-2" style={{ color: P.muted, fontFamily: SANS }}>{s.l}</div>
             </div>
           ))}
         </div>
-      </section>
+      </Reveal>
+    </section>
+  );
+}
 
-      {/* ── Reviews ─────────────────────────────────────────────────── */}
-      <section id="reviews" className="mx-auto max-w-6xl px-6 py-24">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-300">
-            <Star className="h-3.5 w-3.5 inline -mt-0.5 mr-1 fill-current" /> Crews love it
-          </span>
-          <h2 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight text-balance">
-            Real contractors. Real wins.
-          </h2>
-          <div className="mt-5 inline-flex items-center gap-2 text-sm text-white/70">
-            <div className="flex items-center gap-0.5 text-amber-400">
-              {[0, 1, 2, 3, 4].map((s) => <Star key={s} className="h-5 w-5 fill-current" />)}
-            </div>
-            <span className="font-semibold text-white">4.9</span>
-            <span className="text-white/50">· based on 240+ verified reviews</span>
+/* ================================================================== */
+/*  KINETIC PHRASE                                                    */
+/* ================================================================== */
+function KineticPhrase() {
+  const items = ["AI follow-ups", "lead marketplace", "profit insights", "one window"];
+  const longest = "lead marketplace";
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setIdx(x => (x + 1) % items.length), 2000);
+    return () => clearInterval(t);
+  }, [items.length]);
+  return (
+    <Reveal>
+      <div className="max-w-3xl mx-auto px-5 my-14">
+        <div className="text-center">
+          <div className="text-[10px] uppercase mb-3"
+            style={{ color: P.indigoHi, fontFamily: SANS,
+                     fontWeight: 600, letterSpacing: "0.24em" }}>
+            What you get
+          </div>
+          <div className="flex items-center justify-center gap-3 flex-wrap"
+            style={{ fontFamily: SERIF, fontSize: "clamp(30px, 6vw, 56px)",
+                     fontWeight: 400, color: P.text, letterSpacing: "-0.025em" }}>
+            <span>Built for</span>
+            <span className="relative inline-block overflow-hidden" style={{ height: "1.1em" }}>
+              <span aria-hidden style={{ visibility: "hidden", whiteSpace: "nowrap", fontStyle: "italic" }}>
+                {longest}
+              </span>
+              {items.map((item, i) => {
+                const off = i - idx;
+                return (
+                  <span key={i} className="absolute inset-0 flex items-center justify-center whitespace-nowrap"
+                    style={{
+                      transform: `translateY(${off * 100}%)`,
+                      transition: "transform 720ms cubic-bezier(.75,0,.2,1)",
+                      opacity: Math.abs(off) > 1 ? 0 : 1,
+                      fontStyle: "italic",
+                      backgroundImage: `linear-gradient(135deg, ${P.indigoHi}, ${P.violet}, ${P.pink})`,
+                      WebkitBackgroundClip: "text",
+                      backgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      color: "transparent",
+                    }}>
+                    {item}
+                  </span>
+                );
+              })}
+            </span>
           </div>
         </div>
+      </div>
+    </Reveal>
+  );
+}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {reviews.map((r, i) => (
-            <div
-              key={r.name}
-              className="rounded-2xl bg-white/[0.04] ring-1 ring-white/10 backdrop-blur p-6 hover:bg-white/[0.07] hover:ring-white/20 transition-all animate-fade-up"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
-              <div className="flex items-center gap-0.5 text-amber-400">
-                {Array.from({ length: r.rating }).map((_, s) => <Star key={s} className="h-4 w-4 fill-current" />)}
-              </div>
-              <blockquote className="mt-4 text-base font-medium leading-relaxed text-white/90">
-                {`“${r.quote}”`}
-              </blockquote>
-              <div className="mt-5 flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${r.avatar} ring-2 ring-white/10`} />
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold truncate">{r.name}</div>
-                  <div className="text-xs text-white/50 truncate">{r.trade} · {r.city}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+/* ================================================================== */
+/*  SPOTLIGHT CARD                                                    */
+/* ================================================================== */
+function SpotlightCard({ children, className = "", popular = false }: {
+  children: ReactNode; className?: string; popular?: boolean;
+}) {
+  const ref = useSpotlight<HTMLDivElement>();
+  return (
+    <div
+      ref={ref}
+      className={`relative rounded-2xl overflow-hidden ${className}`}
+      style={{
+        background: popular
+          ? `linear-gradient(160deg, ${P.indigo}22 0%, ${P.bg2} 60%)`
+          : P.bg2,
+        border: `1px solid ${popular ? P.indigo : P.border}`,
+      } as CSSProperties}>
+      <div className="absolute inset-0 pointer-events-none rounded-2xl transition-opacity duration-300"
+        style={{
+          background:
+            `radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), ${P.indigoHi}22, transparent 40%)`,
+          opacity: "var(--so, 0)" as unknown as number,
+        }} />
+      {children}
+    </div>
+  );
+}
 
-      {/* ── Pricing ─────────────────────────────────────────────────── */}
-      <section id="pricing" className="mx-auto max-w-6xl px-6 py-24">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-300">Pricing</span>
-          <h2 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight text-balance">
-            Simple. Monthly. No contracts.
-          </h2>
-          <p className="mt-3 text-lg text-white/65">
-            Free 14-day trial on every plan. No credit card to start. Cancel from settings.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-4 items-stretch">
-          {plans.map((p) => (
-            <div
-              key={p.id}
-              className={
-                p.highlight
-                  ? "relative rounded-2xl p-7 bg-gradient-to-b from-white/10 to-white/5 ring-2 ring-brand-400/60 shadow-glow"
-                  : "rounded-2xl p-7 bg-white/[0.04] ring-1 ring-white/10 hover:ring-white/20 transition"
-              }
-            >
-              {p.highlight && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-semibold bg-brand-gradient text-white shadow-glow">
-                  Most popular
-                </span>
+/* ================================================================== */
+/*  FEATURES                                                          */
+/* ================================================================== */
+function Features() {
+  const items: { I: LucideIcon; t: string; d: string }[] = [
+    { I: Sparkles,    t: "AI that closes for you",   d: "Drafts proposals, sends follow-ups, scores incoming leads. You approve, it sends." },
+    { I: Zap,         t: "One window. Everything.",  d: "Leads, jobs, customers, follow-ups, invoices, AI inbox — all in a native window." },
+    { I: DollarSign,  t: "Profit you can see",       d: "Source ROI, year-over-year, AR aging. Know which channels make money." },
+    { I: ShoppingBag, t: "Pay-per-lead marketplace", d: "500+ fresh leads from 13+ sources. Bad lead? Refund in 24h." },
+  ];
+  return (
+    <section id="features" className="px-5 py-6 scroll-mt-20">
+      <div className="max-w-5xl mx-auto grid sm:grid-cols-2 gap-3">
+        {items.map((f, i) => (
+          <Reveal key={i} delay={i * 90}>
+            <SpotlightCard className="p-5 h-full transition-transform duration-300 hover:-translate-y-1">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3"
+                style={{ background: `${P.indigo}22`, color: P.indigoHi,
+                         border: `1px solid ${P.indigo}33` }}>
+                <f.I size={16} />
+              </div>
+              <h3 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 400,
+                           color: P.text, letterSpacing: "-0.02em" }}>{f.t}</h3>
+              <p className="mt-1.5 text-sm"
+                style={{ color: P.muted, fontFamily: SANS, lineHeight: 1.55 }}>{f.d}</p>
+            </SpotlightCard>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ================================================================== */
+/*  PRICING                                                           */
+/* ================================================================== */
+function PricingPreview() {
+  const plans = [
+    { name: "Starter", price: 99,  desc: "Solo operator getting organized.", popular: false },
+    { name: "Growth",  price: 249, desc: "Crew of 2–3 scaling up.",          popular: true  },
+    { name: "Pro",     price: 549, desc: "Going full speed.",                popular: false },
+  ];
+  return (
+    <section id="pricing" className="px-5 py-12 scroll-mt-20">
+      <Reveal>
+        <h2 className="text-center mb-2"
+          style={{ fontFamily: SERIF, fontSize: "clamp(36px, 6vw, 56px)",
+                   fontWeight: 400, color: P.text, letterSpacing: "-0.025em" }}>
+          Simple. <span style={{ fontStyle: "italic", color: P.muted }}>Monthly.</span>
+        </h2>
+        <p className="text-center mb-8 text-sm" style={{ color: P.muted, fontFamily: SANS }}>
+          No contracts. Free 14-day trial on every plan.
+        </p>
+      </Reveal>
+      <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-3">
+        {plans.map((p, i) => (
+          <Reveal key={i} delay={i * 100}>
+            <SpotlightCard popular={p.popular} className="p-5 h-full">
+              {p.popular && (
+                <>
+                  <div className="absolute -top-14 -right-14 w-52 h-52 rounded-full pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle, ${P.indigo}80 0%, transparent 70%)`,
+                      filter: "blur(28px)",
+                      animation: "breathe 4s ease-in-out infinite",
+                    }} />
+                  <div className="absolute top-3 right-3 text-[9px] px-2 py-0.5 rounded-full z-10"
+                    style={{ background: P.indigo, color: "#fff",
+                             fontFamily: SANS, fontWeight: 700, letterSpacing: "0.08em" }}>
+                    MOST POPULAR
+                  </div>
+                </>
               )}
-              <h3 className="text-lg font-semibold tracking-tight">{p.name}</h3>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-6xl font-bold price-shimmer">{p.price}</span>
-                <span className="text-sm text-white/50">/month</span>
+              <div className="relative">
+                <div className="text-sm" style={{ color: P.muted, fontFamily: SANS }}>{p.name}</div>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-4xl"
+                    style={{ fontFamily: SERIF, color: P.text,
+                             fontWeight: 400, letterSpacing: "-0.02em" }}>
+                    $<CountUp to={p.price} />
+                  </span>
+                  <span className="text-sm" style={{ color: P.subtle, fontFamily: SANS }}>/month</span>
+                </div>
+                <p className="text-sm mt-2 mb-4" style={{ color: P.muted, fontFamily: SANS }}>{p.desc}</p>
+                <Link href="/download" className="block text-center w-full py-2 rounded-lg text-sm transition-all hover:scale-[1.02]"
+                  style={{
+                    background: p.popular ? P.indigo : "transparent",
+                    color: p.popular ? "#fff" : P.text,
+                    border: p.popular ? "none" : `1px solid ${P.borderHi}`,
+                    fontFamily: SANS, fontWeight: 600,
+                    boxShadow: p.popular ? `0 10px 22px -8px ${P.indigo}88` : "none",
+                  }}>
+                  Download &amp; start free
+                </Link>
               </div>
-              <p className="mt-2 text-sm text-white/70">{p.tagline}</p>
-              <ul className="mt-6 space-y-2.5 text-sm">
-                {p.features.map((f) => (
-                  <li key={f} className="flex gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span className="text-white/85">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/download"
-                className={
-                  p.highlight
-                    ? "btn bg-white text-ink-900 mt-8 w-full justify-center hover:bg-white/90"
-                    : "btn bg-white/10 text-white border border-white/15 mt-8 w-full justify-center hover:bg-white/15"
-                }
-              >
-                <Download className="h-4 w-4" /> Download & start free
-              </Link>
-            </div>
-          ))}
-        </div>
-      </section>
+            </SpotlightCard>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-      {/* ── FAQ ─────────────────────────────────────────────────────── */}
-      <section id="faq" className="mx-auto max-w-3xl px-6 py-24">
-        <div className="text-center mb-12">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-300">
-            <HelpCircle className="h-3.5 w-3.5 inline -mt-0.5 mr-1" /> FAQ
-          </span>
-          <h2 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight">Common questions.</h2>
-        </div>
-        <div className="space-y-3">
-          {faqs.map((f, i) => (
-            <details
-              key={f.q}
-              className="group rounded-xl bg-white/[0.04] ring-1 ring-white/10 hover:ring-white/20 transition p-5 [&_summary::-webkit-details-marker]:hidden animate-fade-up"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <summary className="flex items-center justify-between cursor-pointer list-none">
-                <span className="font-semibold text-white pr-4">{f.q}</span>
-                <ChevronDown className="h-5 w-5 text-white/60 transition-transform group-open:rotate-180 shrink-0" />
-              </summary>
-              <p className="mt-3 text-sm text-white/70 leading-relaxed">{f.a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Final CTA ───────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-5xl px-6 py-24">
-        <div className="relative overflow-hidden rounded-3xl p-12 sm:p-16 text-center ring-1 ring-white/10"
-             style={{
-               background:
-                 "radial-gradient(800px 400px at 50% 0%, rgba(99,102,241,0.45), transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))",
-             }}
-        >
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight text-balance">
-            Ready to ditch the spreadsheet?
+/* ================================================================== */
+/*  FINAL CTA                                                         */
+/* ================================================================== */
+function FinalCTA() {
+  return (
+    <section className="relative px-5 py-20 overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[340px] rounded-full"
+          style={{
+            background: `radial-gradient(ellipse, ${P.indigo}55 0%, transparent 60%)`,
+            filter: "blur(50px)",
+            animation: "breathe 5s ease-in-out infinite",
+          }} />
+      </div>
+      <Reveal>
+        <div className="relative max-w-3xl mx-auto text-center">
+          <h2 style={{ fontFamily: SERIF, fontSize: "clamp(38px, 7vw, 72px)",
+                       fontWeight: 400, color: P.text, letterSpacing: "-0.03em", lineHeight: 1 }}>
+            Ready to{" "}
+            <span style={{
+              backgroundImage: `linear-gradient(135deg, ${P.indigoHi}, ${P.violet}, ${P.pink})`,
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              color: "transparent",
+              fontStyle: "italic",
+              filter: `drop-shadow(0 6px 20px ${P.indigo}55)`,
+            }}>
+              ditch the spreadsheet?
+            </span>
           </h2>
-          <p className="mt-4 text-lg text-white/70 max-w-xl mx-auto text-pretty">
-            Native desktop. AI follow-ups. 500+ leads/day. Built for the way contractors actually work.
+          <p className="mt-5 text-base" style={{ color: P.muted, fontFamily: SANS }}>
+            Native desktop · AI follow-ups · 500+ leads/day
           </p>
-          <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/download" className="btn bg-white text-ink-900 text-base px-7 py-4 hover:bg-white/90 shadow-glow">
-              <Download className="h-4 w-4" /> Download for free
-            </Link>
-            <Link href="#pricing" className="btn bg-white/10 text-white border border-white/15 text-base px-7 py-4 hover:bg-white/15">
-              See pricing <ArrowRight className="h-4 w-4" />
-            </Link>
+          <div className="flex justify-center gap-3 mt-7 flex-wrap">
+            <MagneticButton href="/download">
+              <Download size={15} /> Download for free
+            </MagneticButton>
+            <MagneticButton primary={false} href="#pricing">
+              See pricing
+            </MagneticButton>
           </div>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/50">
-            <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Free 14-day trial</span>
-            <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> No card required</span>
-            <span className="inline-flex items-center gap-1.5"><Laptop className="h-3.5 w-3.5 text-white/70" /> macOS · Windows · Linux</span>
+          <div className="mt-4 text-xs" style={{ color: P.subtle, fontFamily: SANS }}>
+            macOS · Windows · Linux
           </div>
         </div>
-      </section>
+      </Reveal>
+    </section>
+  );
+}
 
-      {/* ── Footer ──────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/5">
-        <div className="mx-auto max-w-6xl px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/50">
-          <div className="flex items-center gap-2.5">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient text-white text-xs font-bold shadow-glow">CF</span>
-            <span>© {new Date().getFullYear()} ContractorFlow</span>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link href="/download"   className="hover:text-white">Download</Link>
-            <Link href="#features"   className="hover:text-white">Features</Link>
-            <Link href="#pricing"    className="hover:text-white">Pricing</Link>
-            <Link href="/legal/terms"  className="hover:text-white">Terms</Link>
-            <Link href="/legal/privacy" className="hover:text-white">Privacy</Link>
-          </div>
-        </div>
-      </footer>
-    </main>
+/* ================================================================== */
+/*  PAGE                                                              */
+/* ================================================================== */
+export default function LandingV3() {
+  useEffect(() => {
+    if (document.getElementById("cf-fonts-v3")) return;
+    const link = document.createElement("link");
+    link.id = "cf-fonts-v3";
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap";
+    document.head.appendChild(link);
+  }, []);
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes pulseDot   { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(2.4); opacity: 0; } }
+        @keyframes fadeOut    { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes stageIn    { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes breathe    { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+        @keyframes floatY     { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes letterIn   { from { opacity: 0; transform: translateY(0.5em); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes gradientPunch { from { opacity: 0; transform: translateY(0.5em) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes sidebarIn  { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes tileIn     { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes leadIn     { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes shimmer    { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes marquee    { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes auroraShift { 0% { transform: translate(0,0) rotate(0) scale(1); opacity: 0.85; } 50% { transform: translate(2%,-1%) rotate(2deg) scale(1.05); opacity: 1; } 100% { transform: translate(-1%,1%) rotate(-1deg) scale(1); opacity: 0.85; } }
+        @keyframes gridDrift  { 0% { background-position: 0 0; } 100% { background-position: 64px 64px; } }
+        @media (hover: hover) { .cf-v3-cursor, .cf-v3-cursor a, .cf-v3-cursor button { cursor: none; } }
+      ` }} />
+
+      <div className="cf-v3-cursor" style={{ background: P.bg, color: P.text, minHeight: "100vh",
+                    fontFamily: SANS, position: "relative", overflow: "hidden" }}>
+        <AuroraBg />
+        <CursorGlow />
+        <ScrollProgress />
+
+        <div className="fixed inset-0 pointer-events-none opacity-[0.04]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          mixBlendMode: "overlay",
+        }} />
+
+        <TopNav />
+        <Hero />
+        <DashboardMockup />
+        <ActivityMarquee />
+        <StatsStrip />
+        <KineticPhrase />
+        <Features />
+        <PricingPreview />
+        <FinalCTA />
+
+        <footer className="text-center py-8 text-xs"
+          style={{ color: P.subtle, fontFamily: SANS, borderTop: `1px solid ${P.border}` }}>
+          CF · © 2026 ContractorFlow · Download · Features · Pricing · Terms · Privacy
+        </footer>
+      </div>
+    </>
   );
 }

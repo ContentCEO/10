@@ -12,8 +12,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { FollowUp, Lead } from "@/lib/types";
-import { PipelineBoard } from "@/app/(app)/dashboard/PipelineBoard";
-import { ActivityStrip } from "@/app/(app)/dashboard/ActivityStrip";
+import { PipelineBoard } from "./PipelineBoard";
+import { ActivityStrip } from "./ActivityStrip";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { WeeklyDigest } from "@/components/WeeklyDigest";
