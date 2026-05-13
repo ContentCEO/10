@@ -47,34 +47,33 @@ export function ActivityStrip() {
 
   if (loading && items.length === 0) {
     return (
-      <div className="rounded-2xl bg-white/[0.03] ring-1 ring-white/10 p-5 text-center">
-        <Loader2 className="h-5 w-5 animate-spin mx-auto text-white/40" />
+      <div className="text-center">
+        <Loader2 className="h-5 w-5 animate-spin mx-auto text-ink-400" />
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-white/[0.03] ring-1 ring-white/10 p-5">
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-xs font-mono uppercase tracking-[0.18em] text-brand-300 flex items-center gap-2">
-          <Activity className="h-3.5 w-3.5" /> Live activity
-        </div>
-        <span className="text-[10px] text-white/40 font-mono">refresh {POLL_MS / 1000}s</span>
+    <div>
+      <div className="flex items-center justify-end mb-2">
+        <span className="text-[10px] text-ink-400 font-mono inline-flex items-center gap-1">
+          <Activity className="h-3 w-3" /> refresh {POLL_MS / 1000}s
+        </span>
       </div>
       {items.length === 0 ? (
-        <div className="text-sm text-white/40 text-center py-6">
+        <div className="text-sm text-ink-400 text-center py-6 italic">
           Agents will run within 5 min and their actions stream here.
         </div>
       ) : (
         <ul className="space-y-2 max-h-[280px] overflow-y-auto scrollbar-thin pr-1">
           {items.map((a) => (
             <li key={a.id} className="flex items-start gap-2.5 text-sm">
-              <Sparkles className="h-3.5 w-3.5 text-brand-300 shrink-0 mt-0.5" />
+              <Sparkles className="h-3.5 w-3.5 text-brand-600 shrink-0 mt-0.5" />
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-mono text-cyan-300">{a.agent_slug}</div>
-                <div className="text-white/80 leading-snug truncate">{a.summary}</div>
+                <div className="text-xs font-mono text-brand-700">{a.agent_slug}</div>
+                <div className="text-ink-800 leading-snug truncate">{a.summary}</div>
               </div>
-              <span className="text-[10px] text-white/40 font-mono whitespace-nowrap mt-0.5">{timeAgo(a.created_at)}</span>
+              <span className="text-[10px] text-ink-400 font-mono whitespace-nowrap mt-0.5">{timeAgo(a.created_at)}</span>
             </li>
           ))}
         </ul>
