@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { WelcomeWizard } from "@/components/WelcomeWizard";
+import { FloatingHelp } from "@/components/FloatingHelp";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -32,6 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </main>
       </div>
       <MobileNav />
+      <FloatingHelp />
       <WelcomeWizard
         userId={user.id}
         initialBusinessName={profile?.business_name ?? null}
