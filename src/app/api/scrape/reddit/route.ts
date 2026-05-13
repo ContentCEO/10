@@ -12,13 +12,22 @@ export const runtime = "nodejs";
 // whether to engage in-thread (Reddit ToS prohibits unsolicited DMs).
 
 const DEFAULT_SUBS = [
-  // National high-volume
+  // National high-volume — home + DIY
   "HomeImprovement", "DIY", "Renovations", "RealEstate", "homeowners",
-  "HomeMaintenance", "centuryhomes", "FirstTimeHomeBuyer",
+  "HomeMaintenance", "centuryhomes", "FirstTimeHomeBuyer", "HomeDecorating",
+  "OldHouses", "FixIt", "whatisthisthing", "Home", "askacarpenter",
+  // Trade-specific deep cuts (most active 2024-26)
   "Plumbing", "Roofing", "Electricians", "Construction", "Flooring",
   "Hvacadvice", "Landscaping", "Carpentry", "Painting", "Drywall",
   "Decks", "tile", "Concrete", "MyHomeImproved", "Appliances",
-  "askanelectrician",
+  "askanelectrician", "AskCarpentry", "AskElectricians", "AskPlumbing",
+  "askanhvactech", "Insulation", "Welding", "Locksmith",
+  "Masonry", "Stonemasonry", "Bricklaying", "Tiling",
+  "GeneralContractor", "Handyman", "Cabinetry",
+  "Solar", "SolarDIY", "ElectricalEngineering",
+  "WoodWorking", "Carpentry", "houseplans", "architecture",
+  "PestControl",   "Mycology",
+  "RealEstateInvesting", "FixAndFlip", "landlord", "LandlordTenant",
   // Massachusetts — full statewide coverage
   "boston", "massachusetts", "cambridgema", "somerville",
   "WorcesterMA", "metrowestma", "newengland",

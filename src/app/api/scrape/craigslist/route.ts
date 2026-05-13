@@ -17,6 +17,7 @@ const CL_SITES = [
   "boston", "capecod", "western", "worcester", "southcoast",
   "newhampshire", "vermont", "rhodeisland", "providence",
   "hartford", "newhaven", "newlondon", "easternct", "nwct",
+  "maine", "portlandme", "bangor",
 
   // NY metro + state
   "newyork", "brooklyn", "manhattan", "queens", "bronx",
