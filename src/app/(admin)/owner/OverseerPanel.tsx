@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useTransition } from "react";
 import Link from "next/link";
 import {
   Activity, AlertTriangle, Boxes, CheckCircle2, Clock, Database, FileWarning,
-  Loader2, Pause, Play, RefreshCw, ShieldCheck, Sparkles, TrendingUp, Wifi,
-  Zap,
+  Loader2, Pause, Play, PlayCircle, RefreshCw, ShieldCheck, Sparkles,
+  TrendingUp, Wifi, Zap,
 } from "lucide-react";
 
 interface ScraperStat {
@@ -66,11 +66,41 @@ function isFresh(iso: string | null): "fresh" | "stale" | "cold" {
   return "cold";
 }
 
+// Map scraper_runs.source values to API path slugs.
+// Most match directly; this map handles any divergence.
+function sourceToSlug(source: string): string | null {
+  const direct = new Set([
+    "reddit", "craigslist", "permits", "storms", "rss", "ma-municipal",
+    "mass-gov-bids", "sam-gov", "serpapi", "yelp", "state-rfps",
+    "boston-inspections", "boston-311", "massdot-projects",
+    "ma-foreclosures", "cambridge-inspections", "ma-school-construction",
+  ]);
+  if (direct.has(source)) return source;
+  // Common naming variants
+  const variants: Record<string, string> = {
+    boston_permits: "permits",
+    cambridge_permits: "permits",
+    somerville_permits: "permits",
+    lowell_permits: "permits",
+    noaa_storms: "storms",
+    rss_universal: "rss",
+    boston_311: "boston-311",
+    boston_inspections: "boston-inspections",
+    cambridge_inspections: "cambridge-inspections",
+    massdot_projects: "massdot-projects",
+    ma_foreclosures: "ma-foreclosures",
+    ma_school_construction: "ma-school-construction",
+  };
+  return variants[source] ?? null;
+}
+
 export function OverseerPanel({ ownerEmail }: { ownerEmail: string }) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [paused, setPaused] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [triggeringSource, setTriggeringSource] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
 
   const fetchStats = useCallback(async () => {
     setRefreshing(true);
@@ -96,6 +126,22 @@ export function OverseerPanel({ ownerEmail }: { ownerEmail: string }) {
     const id = setInterval(fetchStats, POLL_INTERVAL_MS);
     return () => clearInterval(id);
   }, [fetchStats, paused]);
+
+  function triggerScraper(source: string) {
+    const slug = sourceToSlug(source);
+    if (!slug) { setError(`No API mapping for source: ${source}`); return; }
+    setTriggeringSource(source);
+    startTransition(async () => {
+      try {
+        await fetch(`/api/scrape/${encodeURIComponent(slug)}/trigger`, { method: "POST" });
+        await fetchStats();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "trigger failed");
+      } finally {
+        setTriggeringSource(null);
+      }
+    });
+  }
 
   return (
     <div className="space-y-6 text-white" style={{ colorScheme: "dark" }}>
@@ -210,6 +256,17 @@ export function OverseerPanel({ ownerEmail }: { ownerEmail: string }) {
                       <div className="flex items-center gap-3">
                         <span className={`h-2 w-2 rounded-full ${freshColor} shrink-0`} />
                         <div className="font-mono text-sm font-semibold flex-1 min-w-0 truncate">{s.source}</div>
+                        <button
+                          onClick={() => triggerScraper(s.source)}
+                          disabled={triggeringSource === s.source || !sourceToSlug(s.source)}
+                          title={sourceToSlug(s.source) ? "Run now" : "No manual trigger for this source"}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-brand-500/10 text-brand-200 ring-1 ring-brand-500/20 hover:bg-brand-500/20 disabled:opacity-40 disabled:hover:bg-brand-500/10"
+                        >
+                          {triggeringSource === s.source
+                            ? <Loader2 className="h-3 w-3 animate-spin" />
+                            : <PlayCircle className="h-3 w-3" />}
+                          run
+                        </button>
                         <span className="text-xs text-white/40 font-mono whitespace-nowrap">
                           <Clock className="inline h-3 w-3 mr-0.5" /> {timeAgo(s.last_ran_at)}
                         </span>
