@@ -30,6 +30,7 @@ import {
   Workflow,
   ShieldCheck,
   ShoppingCart,
+  Sliders,
   Sparkles,
   TrendingUp,
   UserCircle,
@@ -111,6 +112,7 @@ const SECTIONS: NavSection[] = [
     label: "Settings",
     items: [
       { href: "/profile",       label: "Profile",       icon: UserCircle },
+      { href: "/preferences",   label: "Preferences",   icon: Sliders },
       { href: "/lead-gen",      label: "Capture form",  icon: Megaphone },
       { href: "/widget",        label: "Embed widgets", icon: Code },
       { href: "/distribution",  label: "Routes",        icon: Compass },
