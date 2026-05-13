@@ -1609,7 +1609,7 @@ export default function DashboardV3() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes pulseDotV3     { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(2.4); opacity: 0; } }
         @keyframes breatheV3      { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
         @keyframes shimmerV3      { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
@@ -1637,7 +1637,7 @@ export default function DashboardV3() {
         @keyframes slideUpFadeV3  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spinV3         { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @media (hover: hover) { .cf-dash-v3, .cf-dash-v3 a, .cf-dash-v3 button { cursor: none; } .cf-dash-v3 input { cursor: text; } }
-      `}</style>
+      ` }} />
 
       <div className="cf-dash-v3" style={{ background: P.bg, color: P.text, minHeight: "100vh",
                     fontFamily: SANS, position: "relative" }}>

@@ -1099,7 +1099,7 @@ export default function LandingV3() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes pulseDot   { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(2.4); opacity: 0; } }
         @keyframes fadeOut    { from { opacity: 1; } to { opacity: 0; } }
         @keyframes stageIn    { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -1115,7 +1115,7 @@ export default function LandingV3() {
         @keyframes auroraShift { 0% { transform: translate(0,0) rotate(0) scale(1); opacity: 0.85; } 50% { transform: translate(2%,-1%) rotate(2deg) scale(1.05); opacity: 1; } 100% { transform: translate(-1%,1%) rotate(-1deg) scale(1); opacity: 0.85; } }
         @keyframes gridDrift  { 0% { background-position: 0 0; } 100% { background-position: 64px 64px; } }
         @media (hover: hover) { .cf-v3-cursor, .cf-v3-cursor a, .cf-v3-cursor button { cursor: none; } }
-      `}</style>
+      ` }} />
 
       <div className="cf-v3-cursor" style={{ background: P.bg, color: P.text, minHeight: "100vh",
                     fontFamily: SANS, position: "relative", overflow: "hidden" }}>
