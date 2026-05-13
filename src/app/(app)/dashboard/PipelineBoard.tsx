@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { ArrowRight, GripVertical, Loader2, Plus } from "lucide-react";
+import { toast } from "@/components/Toaster";
 
 interface PipelineLead {
   id: string;
@@ -36,6 +37,7 @@ export function PipelineBoard({ initial }: { initial: PipelineLead[] }) {
 
   function move(leadId: string, toStatus: string) {
     const before = leads;
+    const lead = before.find((l) => l.id === leadId);
     setLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, status: toStatus } : l));
     startTransition(async () => {
       try {
@@ -44,8 +46,17 @@ export function PipelineBoard({ initial }: { initial: PipelineLead[] }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: toStatus }),
         });
-        if (!res.ok) setLeads(before);
-      } catch { setLeads(before); }
+        if (!res.ok) {
+          setLeads(before);
+          toast({ message: "Couldn't update lead status. Try again.", type: "error" });
+          return;
+        }
+        const col = COLUMNS.find((c) => c.id === toStatus)?.label ?? toStatus;
+        toast({ message: `Moved ${lead?.name ?? "lead"} → ${col}`, type: "success" });
+      } catch {
+        setLeads(before);
+        toast({ message: "Couldn't update lead status. Try again.", type: "error" });
+      }
     });
   }
 

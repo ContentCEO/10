@@ -4,6 +4,8 @@ import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { WelcomeWizard } from "@/components/WelcomeWizard";
 import { FloatingHelp } from "@/components/FloatingHelp";
+import { Toaster } from "@/components/Toaster";
+import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { isOwnerEmail } from "@/lib/owner";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -39,6 +41,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
       <MobileNav />
       <FloatingHelp />
+      <Toaster />
+      <KeyboardShortcuts />
       <WelcomeWizard
         userId={user.id}
         initialBusinessName={profile?.business_name ?? null}
