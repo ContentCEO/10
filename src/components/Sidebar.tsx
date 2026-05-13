@@ -84,10 +84,13 @@ const SECTIONS: NavSection[] = [
   {
     label: "Marketing",
     items: [
-      { href: "/marketing-hub",     label: "Marketing hub",   icon: Megaphone },
-      { href: "/content-studio",    label: "Content studio",  icon: PenLine },
-      { href: "/neighbor-outreach", label: "Neighborhood",    icon: Compass },
-      { href: "/referrals",         label: "Referrals",       icon: Gift },
+      { href: "/marketing-hub",          label: "Marketing hub",     icon: Megaphone },
+      { href: "/content-studio",         label: "Content studio",    icon: PenLine },
+      { href: "/tools/social-captions",  label: "Social captions",   icon: Sparkles },
+      { href: "/tools/email-signature",  label: "Email signature",   icon: PenLine },
+      { href: "/tools/seo-checklist",    label: "Local SEO checklist", icon: TrendingUp },
+      { href: "/neighbor-outreach",      label: "Neighborhood",      icon: Compass },
+      { href: "/referrals",              label: "Referrals",         icon: Gift },
     ],
   },
   {
