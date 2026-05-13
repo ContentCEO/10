@@ -10,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isOwnerEmail } from "@/lib/owner";
 import { ActivityStrip } from "./ActivityStrip";
 import { PipelineBoard } from "./PipelineBoard";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { SourceRoi } from "@/components/SourceRoi";
 import { SourceChannelRoi } from "@/components/SourceChannelRoi";
 import { YearOverYear } from "@/components/YearOverYear";
@@ -51,6 +52,8 @@ export default async function DashboardPage({
     { count: leadCount },
     { count: activeJobCount },
     { data: completedJobs },
+    { data: todayCompletedJobs },
+    { count: leadsLast24h },
     { data: dueFollowUps },
     { data: recentLeads },
     { data: profile },
@@ -60,6 +63,10 @@ export default async function DashboardPage({
     supabase.from("jobs").select("id", { count: "exact", head: true })
       .in("status", ["scheduled", "in_progress"]),
     supabase.from("jobs").select("price").eq("status", "completed"),
+    supabase.from("jobs").select("price").eq("status", "completed")
+      .gte("updated_at", startOfDay).lt("updated_at", endOfDay),
+    supabase.from("leads").select("id", { count: "exact", head: true })
+      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
     supabase.from("follow_ups").select("*").is("completed_at", null)
       .gte("due_at", startOfDay).lt("due_at", endOfDay).order("due_at"),
     supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(5),
@@ -85,6 +92,19 @@ export default async function DashboardPage({
 
   const revenue = (completedJobs ?? []).reduce(
     (sum, j: { price: number | null }) => sum + (j.price ?? 0), 0);
+  const earnedToday = (todayCompletedJobs ?? []).reduce(
+    (sum, j: { price: number | null }) => sum + (j.price ?? 0), 0);
+
+  // Plan 1 / A-5 — Daily morning brief (data-driven, no AI cost).
+  const newLeads24h = leadsLast24h ?? 0;
+  const dueCount = (dueFollowUps as FollowUp[] | null)?.length ?? 0;
+  const briefParts: string[] = [];
+  if (newLeads24h > 0) briefParts.push(`${newLeads24h} new lead${newLeads24h === 1 ? "" : "s"} since yesterday`);
+  if (dueCount > 0)    briefParts.push(`${dueCount} follow-up${dueCount === 1 ? "" : "s"} due today`);
+  if (earnedToday > 0) briefParts.push(`$${earnedToday.toLocaleString()} invoiced today`);
+  const brief = briefParts.length > 0
+    ? `Today: ${briefParts.join(" · ")}.`
+    : "All quiet so far today — good time to claim some marketplace leads.";
 
   const p = profile as { business_name: string | null; credit_cents: number; preferences: { density?: string } | null } | null;
   const greeting = p?.business_name ? `Hey ${p.business_name}` : "Welcome back";
@@ -141,6 +161,15 @@ export default async function DashboardPage({
             </div>
           </div>
         </header>
+
+        {/* ── AI morning brief (data-driven) ──────────────────────── */}
+        <div className="rounded-2xl bg-gradient-to-r from-brand-500/10 via-fuchsia-500/5 to-cyan-500/10 ring-1 ring-brand-400/30 px-5 py-3 text-sm text-white/90 flex items-center gap-3">
+          <Sparkles className="h-4 w-4 text-brand-300 shrink-0" />
+          <span>{brief}</span>
+        </div>
+
+        {/* ── Recently viewed (client) ────────────────────────────── */}
+        <RecentlyViewed />
 
         {/* ── Global search bar ───────────────────────────────────── */}
         <div className="relative">
@@ -222,18 +251,19 @@ export default async function DashboardPage({
         </section>
 
         {/* ── KPI tiles ───────────────────────────────────────────── */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
-            { label: "Total leads", value: String(leadCount ?? 0),      tone: "from-indigo-500 to-violet-500",   icon: Sparkles },
-            { label: "Active jobs", value: String(activeJobCount ?? 0), tone: "from-violet-500 to-fuchsia-500",  icon: Hammer },
-            { label: "Revenue",     value: `$${revenue.toLocaleString()}`, tone: "from-emerald-500 to-teal-500", icon: CircleDollarSign },
-            { label: "Due today",   value: String(followUps.length),    tone: "from-amber-500 to-orange-500",    icon: CalendarClock },
-          ].map(({ label, value, tone, icon: Icon }) => (
+            { label: "Total leads",   value: String(leadCount ?? 0),         tone: "from-indigo-500 to-violet-500",   icon: Sparkles },
+            { label: "Active jobs",   value: String(activeJobCount ?? 0),    tone: "from-violet-500 to-fuchsia-500",  icon: Hammer },
+            { label: "Earned today",  value: `$${earnedToday.toLocaleString()}`, tone: "from-cyan-500 to-blue-500", icon: CircleDollarSign },
+            { label: "Revenue · all", value: `$${revenue.toLocaleString()}`, tone: "from-emerald-500 to-teal-500",    icon: CircleDollarSign },
+            { label: "Due today",     value: String(followUps.length),       tone: "from-amber-500 to-orange-500",    icon: CalendarClock },
+          ].map(({ label, value, tone, icon: Icon }, i) => (
             <div key={label} className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${tone} p-4 text-white shadow-glow`}>
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider opacity-90 font-semibold">
                 <Icon className="h-3 w-3" /> {label}
               </div>
-              <div className="mt-2 text-3xl font-bold tabular-nums">{value}</div>
+              <div className="mt-2 text-3xl font-bold tabular-nums count-up" style={{ animationDelay: `${i * 70}ms` }}>{value}</div>
               <div className="absolute -right-2 -top-2 h-10 w-10 rounded-full bg-white/15" />
             </div>
           ))}
