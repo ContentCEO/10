@@ -169,6 +169,60 @@ html, body {
   }
 }
 
+/* Plan 1 / F-16 — Custom branded focus rings.
+ * Every focusable element gets a brand-gradient outline instead of the
+ * browser default. Visible everywhere, including tabbing-through forms. */
+*:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px rgba(99, 102, 241, 0.55);
+  border-radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  *:focus-visible {
+    box-shadow:
+      0 0 0 2px #0a0f1f,
+      0 0 0 4px rgba(165, 180, 252, 0.7);
+  }
+}
+
+/* Plan 1 / F-12 — High-contrast accessibility mode.
+ * Triggered by setting data-contrast="high" on <html>. Increases text
+ * contrast against backgrounds, makes borders 2px solid, removes blurs.
+ * Wired via /preferences → preferences.high_contrast. */
+html[data-contrast="high"] {
+  --hc-fg: #000;
+  --hc-bg: #fff;
+}
+html[data-contrast="high"] body,
+html[data-contrast="high"] .card,
+html[data-contrast="high"] .card-hover {
+  background: var(--hc-bg) !important;
+  color: var(--hc-fg) !important;
+  border-color: #000 !important;
+  border-width: 2px !important;
+}
+html[data-contrast="high"] .text-ink-400,
+html[data-contrast="high"] .text-ink-500,
+html[data-contrast="high"] .text-ink-600 {
+  color: #1a1a1a !important;
+}
+html[data-contrast="high"] .backdrop-blur,
+html[data-contrast="high"] .backdrop-blur-md,
+html[data-contrast="high"] .backdrop-blur-xl,
+html[data-contrast="high"] .blur-2xl,
+html[data-contrast="high"] .blur-3xl {
+  backdrop-filter: none !important;
+  filter: none !important;
+}
+html[data-contrast="high"] .btn-primary {
+  background: #000 !important;
+  color: #fff !important;
+  border: 2px solid #000 !important;
+}
+
 /* Plan 1 / F-13 — Larger mobile touch targets.
  * On coarse-pointer devices (touch), bump buttons/inputs to >=44px tall.
  * Doesn't affect mouse/trackpad, which keep the denser layout. */

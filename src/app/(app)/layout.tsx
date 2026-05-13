@@ -7,6 +7,7 @@ import { FloatingHelp } from "@/components/FloatingHelp";
 import { Toaster } from "@/components/Toaster";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { AppTopBar } from "@/components/AppTopBar";
+import { PreferencesApplier } from "@/components/PreferencesApplier";
 import { isOwnerEmail } from "@/lib/owner";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -45,6 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <FloatingHelp />
       <Toaster />
       <KeyboardShortcuts />
+      <PreferencesApplier />
       <WelcomeWizard
         userId={user.id}
         initialBusinessName={profile?.business_name ?? null}

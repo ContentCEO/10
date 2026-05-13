@@ -13,6 +13,7 @@ interface Preferences {
   density?: "comfortable" | "compact";
   ai_tone?: "formal" | "friendly" | "casual" | "direct";
   sidebar_collapsed_default?: boolean;
+  high_contrast?: boolean;
   marketplace_min_score?: number;
   marketplace_services?: string[];
   marketplace_regions?: string[];
@@ -45,6 +46,7 @@ async function savePreferences(formData: FormData) {
     density:  (getStr("density") as Preferences["density"]) ?? "comfortable",
     ai_tone:  (getStr("ai_tone") as Preferences["ai_tone"]) ?? "friendly",
     sidebar_collapsed_default: getBool("sidebar_collapsed_default"),
+    high_contrast:             getBool("high_contrast"),
     marketplace_min_score:     Number.isFinite(minScore) ? minScore : 0,
     marketplace_services:      getCsv("marketplace_services"),
     marketplace_regions:       getCsv("marketplace_regions"),
@@ -209,6 +211,17 @@ export default async function PreferencesPage({
               <div>
                 <div className="font-medium text-sm">Collapse the sidebar by default</div>
                 <div className="text-xs text-ink-500">Icons-only sidebar to save horizontal space.</div>
+              </div>
+            </label>
+            <label className="sm:col-span-2 inline-flex items-start gap-3 cursor-pointer p-3 rounded-xl ring-1 ring-ink-200 bg-white hover:bg-ink-50">
+              <input
+                type="checkbox" name="high_contrast"
+                defaultChecked={p.high_contrast ?? false}
+                className="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-500"
+              />
+              <div>
+                <div className="font-medium text-sm">High-contrast mode</div>
+                <div className="text-xs text-ink-500">Boosts contrast, removes blur effects, thicker borders. Good for bright outdoor screens.</div>
               </div>
             </label>
           </div>
