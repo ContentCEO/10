@@ -91,6 +91,7 @@ const SECTIONS: NavSection[] = [
       { href: "/tools/email-signature",  label: "Email signature",   icon: PenLine },
       { href: "/tools/seo-checklist",    label: "Local SEO checklist", icon: TrendingUp },
       { href: "/tools/yard-sign-qr",     label: "Yard sign QR",      icon: PenLine },
+      { href: "/tools/door-hanger",      label: "Door hanger",       icon: PenLine },
       { href: "/neighbor-outreach",      label: "Neighborhood",      icon: Compass },
       { href: "/referrals",              label: "Referrals",         icon: Gift },
     ],
