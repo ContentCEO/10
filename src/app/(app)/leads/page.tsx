@@ -6,6 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Lead } from "@/lib/types";
 import { QuickAdd } from "./QuickAdd";
 import { SavedFilters } from "./SavedFilters";
+import { LeadNameCell } from "./LeadNameCell";
 
 export const dynamic = "force-dynamic";
 
@@ -145,12 +146,11 @@ export default async function LeadsPage({
             {rows.length ? rows.map((lead) => (
               <tr key={lead.id} className="hover:bg-brand-50/40 transition-colors group">
                 <td className="px-4 py-3">
-                  <Link href={`/leads/${lead.id}`} className="font-medium text-ink-900 group-hover:text-brand-700 transition-colors">
-                    {lead.name}
-                  </Link>
-                  <div className="text-xs text-ink-500 truncate max-w-[220px]">
-                    {lead.email ?? lead.phone ?? "—"}
-                  </div>
+                  <LeadNameCell
+                    id={lead.id}
+                    name={lead.name}
+                    contact={lead.email ?? lead.phone ?? null}
+                  />
                 </td>
                 <td className="px-4 py-3 hidden lg:table-cell text-ink-700">{lead.service_type ?? "—"}</td>
                 <td className="px-4 py-3 text-ink-600 text-xs">{lead.source ?? "—"}</td>
