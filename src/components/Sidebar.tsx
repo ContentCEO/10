@@ -75,8 +75,9 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/inbox",         label: "Inbox",         icon: MessageSquare },
       { href: "/voicemails",    label: "Voicemails",    icon: Voicemail },
-      { href: "/proposals",     label: "Proposals",     icon: FileText },
-      { href: "/sequences",     label: "Sequences",     icon: Workflow },
+      { href: "/proposals",           label: "Proposals",       icon: FileText },
+      { href: "/proposals/templates", label: "Proposal templates", icon: FileText },
+      { href: "/sequences",           label: "Sequences",       icon: Workflow },
       { href: "/calendar",      label: "Follow-ups",    icon: CalendarClock },
       { href: "/customers",     label: "Customers",     icon: Users },
     ],
