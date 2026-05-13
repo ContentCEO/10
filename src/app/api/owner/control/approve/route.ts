@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isOwnerEmail } from "@/lib/owner";
 
 export const runtime = "nodejs";
 
@@ -11,8 +12,7 @@ export async function POST(request: Request) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  const { data: me } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
-  if (!me?.is_admin) return NextResponse.json({ error: "Not admin" }, { status: 403 });
+  if (!isOwnerEmail(user.email)) return NextResponse.json({ error: "Not owner" }, { status: 403 });
 
   const body = await request.json().catch(() => null) as { action_id?: string; decision?: string } | null;
   if (!body?.action_id || !["approve", "deny"].includes(body.decision ?? "")) {

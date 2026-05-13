@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { WelcomeWizard } from "@/components/WelcomeWizard";
 import { FloatingHelp } from "@/components/FloatingHelp";
+import { isOwnerEmail } from "@/lib/owner";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -26,7 +27,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen flex bg-ink-50">
-      <Sidebar email={user.email ?? null} isAdmin={Boolean(profile?.is_admin)} />
+      <Sidebar
+        email={user.email ?? null}
+        isAdmin={Boolean(profile?.is_admin)}
+        isOwner={isOwnerEmail(user.email)}
+      />
       <div className="flex-1 flex flex-col min-w-0">
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
           {children}

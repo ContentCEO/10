@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isOwnerEmail } from "@/lib/owner";
 import { ActivityStrip } from "./ActivityStrip";
 import { PipelineBoard } from "./PipelineBoard";
 import { SourceRoi } from "@/components/SourceRoi";
@@ -18,12 +19,6 @@ import { ARAging } from "@/components/ARAging";
 import type { FollowUp, Lead } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-// Owner gets Mission Control instead.
-const OWNER_EMAILS = [
-  (process.env.OWNER_EMAIL ?? "").toLowerCase(),
-  "davichavespb2025@gmail.com",
-].filter(Boolean);
 
 interface MarketplaceFlagged {
   id: string;
@@ -44,7 +39,7 @@ export default async function DashboardPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  if (user.email && OWNER_EMAILS.includes(user.email.toLowerCase()) && searchParams?.stay !== "1") {
+  if (isOwnerEmail(user.email) && searchParams?.stay !== "1") {
     redirect("/owner/control");
   }
 

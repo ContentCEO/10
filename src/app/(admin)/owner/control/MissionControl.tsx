@@ -40,6 +40,18 @@ interface AgentAction {
   created_at: string;
 }
 
+interface LeadRow {
+  id: string;
+  name: string | null;
+  service_type: string | null;
+  city: string | null;
+  source_channel: string;
+  ai_score: number | null;
+  price_cents: number;
+  status: string;
+  created_at: string;
+}
+
 interface ControlData {
   ok: boolean;
   generated_at: string;
@@ -54,6 +66,7 @@ interface ControlData {
   agents: Agent[];
   recent_actions: AgentAction[];
   pending_approval: AgentAction[];
+  recent_leads: LeadRow[];
 }
 
 const CATEGORY_META: Record<Category, { color: string; icon: typeof Bot; label: string }> = {
@@ -290,6 +303,61 @@ export function MissionControl({ ownerEmail, ownerName }: { ownerEmail: string; 
                 );
               })}
             </div>
+          </section>
+
+          {/* Lead firehose */}
+          <section className="rounded-2xl bg-white/[0.03] ring-1 ring-white/10 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-xs font-mono uppercase tracking-[0.18em] text-brand-300 flex items-center gap-2">
+                <Zap className="h-3.5 w-3.5" /> Lead firehose · latest 30
+              </div>
+              <div className="flex items-center gap-3 text-xs text-white/40 font-mono">
+                <span>{data.rollups.leads_24h} in 24h · {data.rollups.total_leads} total</span>
+                <Link href="/admin/marketplace" className="text-brand-300 hover:underline">Full marketplace →</Link>
+              </div>
+            </div>
+            {data.recent_leads.length === 0 ? (
+              <div className="text-sm text-white/50 text-center py-8">
+                No leads yet. Scrapers run every 10-15 min — first results coming soon.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-[10px] font-mono uppercase tracking-wider text-white/40">
+                    <tr className="border-b border-white/5">
+                      <th className="px-2 py-2 font-semibold">When</th>
+                      <th className="px-2 py-2 font-semibold">Service</th>
+                      <th className="px-2 py-2 font-semibold">City</th>
+                      <th className="px-2 py-2 font-semibold">Source</th>
+                      <th className="px-2 py-2 font-semibold text-right">Score</th>
+                      <th className="px-2 py-2 font-semibold text-right">Price</th>
+                      <th className="px-2 py-2 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.recent_leads.map((l) => (
+                      <tr key={l.id} className="border-b border-white/[0.03] hover:bg-white/[0.03]">
+                        <td className="px-2 py-2 text-xs font-mono text-white/60 whitespace-nowrap">{timeAgo(l.created_at)}</td>
+                        <td className="px-2 py-2 truncate max-w-xs">{l.service_type ?? "—"}</td>
+                        <td className="px-2 py-2 text-white/60">{l.city ?? "—"}</td>
+                        <td className="px-2 py-2 text-xs font-mono text-cyan-300">{l.source_channel}</td>
+                        <td className="px-2 py-2 text-xs font-mono tabular-nums text-right">{l.ai_score ?? "—"}</td>
+                        <td className="px-2 py-2 text-xs font-mono tabular-nums text-right">${(l.price_cents / 100).toFixed(0)}</td>
+                        <td className="px-2 py-2 text-xs">
+                          <span className={
+                            l.status === "available" ? "px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/20" :
+                            l.status === "sold"      ? "px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/20" :
+                                                       "px-1.5 py-0.5 rounded bg-white/10 text-white/60 ring-1 ring-white/15"
+                          }>
+                            {l.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           {/* Recent actions feed */}

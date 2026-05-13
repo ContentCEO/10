@@ -6,6 +6,11 @@ import { runFollowupDrafter } from "@/lib/agents/followup-drafter";
 import { runCurationAssistant } from "@/lib/agents/curation-assistant";
 import { runCronWatchdog } from "@/lib/agents/cron-watchdog";
 import { runMarketingAnalyzer } from "@/lib/agents/marketing-analyzer";
+import { runDeadLeadRevival } from "@/lib/agents/dead-lead-revival";
+import { runCustomerHealth } from "@/lib/agents/customer-health";
+import { runReviewRequester } from "@/lib/agents/review-requester";
+import { runAppointmentScheduler } from "@/lib/agents/appointment-scheduler";
+import { runWeeklyDigest } from "@/lib/agents/weekly-digest";
 
 export const runtime = "nodejs";
 
@@ -36,13 +41,16 @@ export interface AgentActionLog {
 
 // Registry: slug → runner. Add a line per agent as we implement them.
 const RUNNERS: Record<string, (config: Record<string, unknown>) => Promise<AgentActionLog[]>> = {
-  "lead-triage":         runLeadTriage,
-  "followup-drafter":    runFollowupDrafter,
-  "curation-assistant":  runCurationAssistant,
-  "cron-watchdog":       runCronWatchdog,
-  "marketing-analyzer":  runMarketingAnalyzer,
-  // appointment-scheduler, customer-health, review-requester,
-  // dead-lead-revival, weekly-digest — next batch.
+  "lead-triage":           runLeadTriage,
+  "followup-drafter":      runFollowupDrafter,
+  "curation-assistant":    runCurationAssistant,
+  "cron-watchdog":         runCronWatchdog,
+  "marketing-analyzer":    runMarketingAnalyzer,
+  "dead-lead-revival":     runDeadLeadRevival,
+  "customer-health":       runCustomerHealth,
+  "review-requester":      runReviewRequester,
+  "appointment-scheduler": runAppointmentScheduler,
+  "weekly-digest":         runWeeklyDigest,
 };
 
 async function runOnce() {

@@ -50,6 +50,7 @@ interface NavSection {
   label: string | null;        // null = always-visible solo item
   items: NavItem[];
   adminOnly?: boolean;
+  ownerOnly?: boolean;
 }
 
 const SECTIONS: NavSection[] = [
@@ -121,12 +122,18 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: "Admin · Overseer",
+    label: "Owner",
+    ownerOnly: true,
+    items: [
+      { href: "/owner/control",       label: "Mission Control",  icon: ShieldCheck },
+      { href: "/owner/control/board", label: "Agent board",      icon: Bot },
+      { href: "/owner",               label: "Overseer (live)",  icon: Activity },
+    ],
+  },
+  {
+    label: "Admin",
     adminOnly: true,
     items: [
-      { href: "/owner/control",     label: "Mission Control",  icon: ShieldCheck },
-      { href: "/owner/control/board", label: "Agent board",   icon: Bot },
-      { href: "/owner",             label: "Overseer (live)",  icon: Activity },
       { href: "/admin",             label: "Admin overview",   icon: ShieldCheck },
       { href: "/admin/marketplace", label: "All leads (firehose)", icon: ShoppingCart },
       { href: "/admin/curation",    label: "Curation queue",   icon: Sparkles },
@@ -136,7 +143,9 @@ const SECTIONS: NavSection[] = [
   },
 ];
 
-export function Sidebar({ email, isAdmin }: { email: string | null; isAdmin?: boolean }) {
+export function Sidebar({
+  email, isAdmin, isOwner,
+}: { email: string | null; isAdmin?: boolean; isOwner?: boolean }) {
   const path = usePathname();
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 border-r border-ink-200/70 bg-white/80 backdrop-blur overflow-y-auto scrollbar-thin">
@@ -149,7 +158,11 @@ export function Sidebar({ email, isAdmin }: { email: string | null; isAdmin?: bo
         </Link>
       </div>
       <nav className="flex-1 px-2.5 py-4 space-y-5">
-        {SECTIONS.filter((s) => !s.adminOnly || isAdmin).map((section, idx) => (
+        {SECTIONS.filter((s) => {
+          if (s.ownerOnly && !isOwner) return false;
+          if (s.adminOnly && !isAdmin) return false;
+          return true;
+        }).map((section, idx) => (
           <div key={section.label ?? `solo-${idx}`}>
             {section.label && (
               <div className="px-3 mb-2 text-[10px] uppercase tracking-[0.14em] text-ink-400 font-semibold">

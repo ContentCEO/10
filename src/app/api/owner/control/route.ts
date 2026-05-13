@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isOwnerEmail } from "@/lib/owner";
 
 export const runtime = "nodejs";
 
@@ -12,8 +13,7 @@ export async function GET() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  const { data: me } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
-  if (!me?.is_admin) return NextResponse.json({ error: "Not admin" }, { status: 403 });
+  if (!isOwnerEmail(user.email)) return NextResponse.json({ error: "Not owner" }, { status: 403 });
 
   const admin = createAdminClient();
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -50,6 +50,13 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(20);
 
+  // Live lead firehose — latest 30 marketplace leads as they come in.
+  const { data: recentLeadsRaw } = await admin
+    .from("marketplace_leads")
+    .select("id,name,service_type,city,source_channel,ai_score,price_cents,status,created_at")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
   // Cross-account rollups
   const { count: totalAccounts } = await admin
     .from("profiles").select("id", { count: "exact", head: true });
@@ -85,5 +92,6 @@ export async function GET() {
     }>).map((a) => ({ ...a, actions_24h: actionsByAgent.get(a.slug) ?? 0 })),
     recent_actions: recentActions ?? [],
     pending_approval: pending ?? [],
+    recent_leads: recentLeadsRaw ?? [],
   });
 }
