@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "ContractorFlow",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "identifier": "com.contractorflow.app",
   "build": {
     "beforeDevCommand": "",
@@ -21,7 +21,7 @@
         "fullscreen": false,
         "decorations": true,
         "transparent": false,
-        "url": "https://contractorflow-k0fx64aom-dac3.vercel.app/",
+        "url": "https://contractorflow-git-claude-contractorflow-saas-app-1rgd9-dac3.vercel.app/",
         "userAgent": "ContractorFlow/0.1.0 (Tauri Desktop)"
       }
     ],
