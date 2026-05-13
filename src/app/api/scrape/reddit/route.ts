@@ -26,8 +26,17 @@ const DEFAULT_SUBS = [
   "GeneralContractor", "Handyman", "Cabinetry",
   "Solar", "SolarDIY", "ElectricalEngineering",
   "WoodWorking", "Carpentry", "houseplans", "architecture",
-  "PestControl",   "Mycology",
+  "PestControl", "Mycology",
   "RealEstateInvesting", "FixAndFlip", "landlord", "LandlordTenant",
+  // High-intent niche communities (idea C-17: deep cuts)
+  "OldHouses", "victorian", "homestead", "Permaculture",
+  "Bungalow", "Farmhouse", "TinyHouses", "tinyhouseplans",
+  "ContractorUK", "Renovate", "RemodelMyHouse",
+  "kitchenremodel", "BathroomRemodel", "basementremodel",
+  "Foundation", "Basement", "Crawlspace",
+  "WaterDamage", "MoldRemediation",
+  "Beekeeping", "Chickens",      // outdoor structures / coops
+  "vintagehomes", "midcenturyhome",
   // Massachusetts — full statewide coverage
   "boston", "massachusetts", "cambridgema", "somerville",
   "WorcesterMA", "metrowestma", "newengland",
@@ -216,51 +225,70 @@ async function runOnce(opts: { subs?: string[]; keywords?: string[]; limit?: num
   let duplicates = 0;
   let errors: Record<string, string> = {};
 
+  // Pass 1: pull all subs in parallel, collect matched entries.
+  const matchedEntries: Array<{ sub: string; entry: ParsedEntry; keyword: string }> = [];
   for (const sub of subs) {
     const { entries, error } = await pullSub(sub);
     if (error) errors[sub] = error;
     const slice = entries.slice(0, maxPerSub);
     fetched += slice.length;
-
     for (const e of slice) {
-      const matched = keywordMatch(e, keywords);
-      if (!matched) continue;
-      const externalId = `reddit:${e.id}`;
+      const kw = keywordMatch(e, keywords);
+      if (kw) matchedEntries.push({ sub, entry: e, keyword: kw });
+    }
+  }
 
-      const { data: existing } = await admin
-        .from("marketplace_leads").select("id")
-        .eq("source_channel", "scraped").eq("external_id", externalId)
-        .maybeSingle();
-      if (existing) { duplicates++; continue; }
+  // Cross-posting heuristic (idea C-18): if the same author shows up in
+  // multiple subs within the same scrape, they're shopping harder — likely
+  // higher intent. Boost the score and price.
+  const authorPostCount = new Map<string, number>();
+  for (const m of matchedEntries) {
+    authorPostCount.set(m.entry.author, (authorPostCount.get(m.entry.author) ?? 0) + 1);
+  }
 
-      const aiScore = scoreFor(e);
-      const priceCents = Math.max(300, Math.round(500 + aiScore * 10));
-      const subName = sub;
+  // Pass 2: dedup + insert, applying cross-post bonus.
+  for (const { sub, entry: e, keyword } of matchedEntries) {
+    const externalId = `reddit:${e.id}`;
 
-      const notes =
-`From r/${subName} · u/${e.author} · matched keyword: ${matched}
+    const { data: existing } = await admin
+      .from("marketplace_leads").select("id")
+      .eq("source_channel", "scraped").eq("external_id", externalId)
+      .maybeSingle();
+    if (existing) { duplicates++; continue; }
+
+    const crossPostCount = authorPostCount.get(e.author) ?? 1;
+    const crossPostBonus = crossPostCount >= 3 ? 20 : crossPostCount >= 2 ? 12 : 0;
+    const aiScore = Math.min(100, scoreFor(e) + crossPostBonus);
+    const priceCents = Math.max(300, Math.round(500 + aiScore * 10));
+
+    const crossPostNote = crossPostBonus > 0
+      ? `\n\nCROSS-POSTED: u/${e.author} appears in ${crossPostCount} subs this scrape (+${crossPostBonus} score).`
+      : "";
+
+    const notes =
+`From r/${sub} · u/${e.author} · matched keyword: ${keyword}
 
 ${e.contentText.slice(0, 800)}
 
-Thread: ${e.url}`;
+Thread: ${e.url}${crossPostNote}`;
 
-      const { error: insertErr } = await admin.from("marketplace_leads").insert({
-        name: `r/${subName} · u/${e.author}`,
-        service_type: e.title.slice(0, 200),
-        budget: "unsure",
-        timeline: "flexible",
-        notes,
-        ai_score: aiScore,
-        ai_summary: e.title.slice(0, 200),
-        price_cents: priceCents,
-        source_channel: "scraped",
-        external_id: externalId,
-        raw_payload: {
-          id: e.id, title: e.title, url: e.url, author: e.author, updated: e.updated,
-        } as unknown as Record<string, unknown>,
-      });
-      if (!insertErr) inserted++;
-    }
+    const { error: insertErr } = await admin.from("marketplace_leads").insert({
+      name: `r/${sub} · u/${e.author}`,
+      service_type: e.title.slice(0, 200),
+      budget: "unsure",
+      timeline: "flexible",
+      notes,
+      ai_score: aiScore,
+      ai_summary: e.title.slice(0, 200),
+      price_cents: priceCents,
+      source_channel: "scraped",
+      external_id: externalId,
+      raw_payload: {
+        id: e.id, title: e.title, url: e.url, author: e.author, updated: e.updated,
+        cross_post_count: crossPostCount,
+      } as unknown as Record<string, unknown>,
+    });
+    if (!insertErr) inserted++;
   }
 
   await admin.from("scraper_runs").insert({
