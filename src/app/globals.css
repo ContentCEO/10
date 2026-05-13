@@ -169,6 +169,23 @@ html, body {
   }
 }
 
+/* Plan 1 / F-11 — Reduce-motion respect.
+ * Honor the user's OS-level "prefer reduced motion" setting. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.12s !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-shimmer, .animate-pulse-soft, .animate-float,
+  .animate-blob-drift, .animate-marquee, .animate-aurora,
+  .animate-spin-slow, .animate-twinkle, .animate-gradient-cycle,
+  .animate-gradient-pan, .animate-fade-up, .animate-tick-up, .count-up {
+    animation: none !important;
+  }
+}
+
 /* Plan 1 / A-20 — print-friendly views.
  * Strip chrome and use ink-friendly colors when printing any page. */
 @media print {
