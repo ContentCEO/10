@@ -4,10 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-// Bulk geocode every lead/job/customer that has address fields but no lat/lng.
-// Hits Nominatim with a courteous 1.1s delay between requests (their hard
-// limit is 1 req/sec). Caps at 30 records per invocation so we stay well
-// under Vercel's 60s timeout — re-invoke until counts.remaining == 0.
+// Bulk geocode customers that have an address but no lat/lng.
+// (Schema: only `customers` has address fields. Leads/jobs inherit
+// the customer's lat/lng when they're linked via customer_id.)
+//
+// Hits Nominatim with a courteous 1.1s delay between requests (their
+// hard limit is 1 req/sec). Processes up to 30 records per invocation
+// to stay well under Vercel's 60s timeout — re-invoke until
+// remaining == 0.
 
 interface NominatimRow { lat: string; lon: string }
 
@@ -34,12 +38,9 @@ async function geocode(query: string): Promise<{ lat: number; lng: number } | nu
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-interface Row {
+interface CustomerRow {
   id: string;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zip?: string | null;
+  address: string | null;
 }
 
 export async function POST() {
@@ -47,66 +48,63 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  // Fetch ungeocoded rows from each table.
-  const [leads, jobs, customers] = await Promise.all([
-    supabase.from("leads")
-      .select("id,address,city,state,zip")
-      .eq("user_id", user.id)
-      .is("lat", null)
-      .limit(PER_RUN),
-    supabase.from("jobs")
-      .select("id,address,city,state,zip")
-      .eq("user_id", user.id)
-      .is("lat", null)
-      .limit(PER_RUN),
-    supabase.from("customers")
-      .select("id,address,city,state,zip")
-      .eq("user_id", user.id)
-      .is("lat", null)
-      .limit(PER_RUN),
-  ]);
+  const { data: rows } = await supabase
+    .from("customers")
+    .select("id,address")
+    .eq("user_id", user.id)
+    .is("lat", null)
+    .not("address", "is", null)
+    .limit(PER_RUN);
 
-  type Job = { table: "leads" | "jobs" | "customers"; row: Row };
-  const queue: Job[] = [
-    ...((leads.data ?? []) as Row[]).map((r) => ({ table: "leads"     as const, row: r })),
-    ...((jobs.data  ?? []) as Row[]).map((r) => ({ table: "jobs"      as const, row: r })),
-    ...((customers.data ?? []) as Row[]).map((r) => ({ table: "customers" as const, row: r })),
-  ].slice(0, PER_RUN);
+  const queue = (rows ?? []) as CustomerRow[];
 
   let geocoded = 0;
-  let skippedNoAddress = 0;
   let failed = 0;
 
-  for (const { table, row } of queue) {
-    const query = [row.address, row.city, row.state, row.zip].filter(Boolean).join(", ");
-    if (!query) { skippedNoAddress++; continue; }
-    const result = await geocode(query);
+  for (const row of queue) {
+    if (!row.address) continue;
+    const result = await geocode(row.address);
     if (!result) { failed++; await sleep(SLEEP_MS); continue; }
-    await supabase.from(table).update({ lat: result.lat, lng: result.lng }).eq("id", row.id);
+    await supabase.from("customers")
+      .update({ lat: result.lat, lng: result.lng })
+      .eq("id", row.id);
     geocoded++;
     await sleep(SLEEP_MS);
   }
 
-  // Count remaining work so the client can keep calling.
-  const [remLead, remJob, remCust] = await Promise.all([
-    supabase.from("leads").select("id", { count: "exact", head: true })
-      .eq("user_id", user.id).is("lat", null),
-    supabase.from("jobs").select("id", { count: "exact", head: true })
-      .eq("user_id", user.id).is("lat", null),
-    supabase.from("customers").select("id", { count: "exact", head: true })
-      .eq("user_id", user.id).is("lat", null),
-  ]);
+  // After updating customers, cascade lat/lng to any linked leads/jobs.
+  if (geocoded > 0) {
+    const updatedIds = queue.map((r) => r.id);
+    // Pull the freshly-geocoded customer rows.
+    const { data: freshCustomers } = await supabase
+      .from("customers")
+      .select("id,lat,lng")
+      .in("id", updatedIds)
+      .not("lat", "is", null);
+    for (const c of (freshCustomers ?? []) as { id: string; lat: number; lng: number }[]) {
+      await Promise.all([
+        supabase.from("leads").update({ lat: c.lat, lng: c.lng })
+          .eq("customer_id", c.id).eq("user_id", user.id),
+        supabase.from("jobs").update({ lat: c.lat, lng: c.lng })
+          .eq("customer_id", c.id).eq("user_id", user.id),
+      ]);
+    }
+  }
+
+  const { count: remaining } = await supabase
+    .from("customers").select("id", { count: "exact", head: true })
+    .eq("user_id", user.id).is("lat", null).not("address", "is", null);
+
+  const { count: noAddress } = await supabase
+    .from("customers").select("id", { count: "exact", head: true })
+    .eq("user_id", user.id).is("address", null);
 
   return NextResponse.json({
     ok: true,
     processed: queue.length,
     geocoded,
-    skipped_no_address: skippedNoAddress,
     failed,
-    remaining: {
-      leads:     remLead.count     ?? 0,
-      jobs:      remJob.count      ?? 0,
-      customers: remCust.count     ?? 0,
-    },
+    remaining: remaining ?? 0,
+    no_address: noAddress ?? 0,
   });
 }

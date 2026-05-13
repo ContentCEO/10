@@ -830,6 +830,60 @@ function RemindersRail({ followUps }: { followUps: FollowUp[] }) {
 /* ================================================================== */
 /*  LEADS MAP CARD                                                    */
 /* ================================================================== */
+function GeocodeAllButton() {
+  const [running, setRunning] = useState(false);
+  const [status, setStatus] = useState<string>("");
+  async function run() {
+    setRunning(true);
+    setStatus("Starting…");
+    let totalGeocoded = 0;
+    let safetyCap = 30; // up to ~900 records, enough for any real business
+    while (safetyCap-- > 0) {
+      try {
+        const res = await fetch("/api/geocode/backfill", { method: "POST" });
+        const json = await res.json();
+        if (!res.ok) {
+          setStatus(json.error ?? "Geocode failed");
+          break;
+        }
+        totalGeocoded += json.geocoded ?? 0;
+        const remaining = json.remaining ?? 0;
+        setStatus(`${totalGeocoded} geocoded · ${remaining} left`);
+        if (remaining === 0) {
+          setStatus(`Done — ${totalGeocoded} customers geocoded. Refresh to see the map.`);
+          break;
+        }
+      } catch {
+        setStatus("Network error — try again");
+        break;
+      }
+    }
+    setRunning(false);
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      <button onClick={run} disabled={running}
+        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs"
+        style={{
+          background: running ? P.surface3 : `linear-gradient(135deg, ${P.brand}, ${P.indigo})`,
+          color: running ? P.muted : "#fff",
+          fontFamily: SANS, fontWeight: 600,
+          boxShadow: running ? "none" : `0 6px 14px -4px ${P.brand}88`,
+          cursor: running ? "wait" : "pointer",
+        }}>
+        <Radio size={11} style={running ? { animation: "spinV4 1.4s linear infinite" } : undefined} />
+        {running ? "Geocoding…" : "Geocode my customers"}
+      </button>
+      {status && (
+        <div className="text-[11px]"
+          style={{ color: P.muted, fontFamily: MONO }}>
+          {status}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LeadsMapCard({ markers, hqLat, hqLng, businessName }: {
   markers: MapMarker[]; hqLat: number | null; hqLng: number | null; businessName: string | null;
 }) {
@@ -872,18 +926,21 @@ function LeadsMapCard({ markers, hqLat, hqLng, businessName }: {
               {markers.length} pin{markers.length === 1 ? "" : "s"}
             </span>
           </div>
-          <div className="hidden sm:flex items-center gap-3 text-xs flex-wrap"
+          <div className="hidden sm:flex items-center gap-4 text-xs flex-wrap"
             style={{ fontFamily: SANS, color: P.muted }}>
-            {counts.map((c) => (
-              <span key={c.k} className="inline-flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: c.color, boxShadow: `0 0 6px ${c.color}` }} />
-                <span style={{ color: P.text, fontWeight: 600, fontFamily: MONO }}>
-                  {stageCounts[c.k] || 0}
+            <div className="flex items-center gap-3">
+              {counts.map((c) => (
+                <span key={c.k} className="inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: c.color, boxShadow: `0 0 6px ${c.color}` }} />
+                  <span style={{ color: P.text, fontWeight: 600, fontFamily: MONO }}>
+                    {stageCounts[c.k] || 0}
+                  </span>
+                  <span style={{ color: P.subtle }}>{c.label}</span>
                 </span>
-                <span style={{ color: P.subtle }}>{c.label}</span>
-              </span>
-            ))}
+              ))}
+            </div>
+            <GeocodeAllButton />
           </div>
         </div>
 
@@ -891,21 +948,21 @@ function LeadsMapCard({ markers, hqLat, hqLng, businessName }: {
           <div className="px-4 py-12 text-center" style={{ background: "#0F172A" }}>
             <Building2 size={32} className="mx-auto mb-3" style={{ color: "#475569" }} />
             <div style={{ color: "#CBD5E1", fontFamily: SANS, fontWeight: 600, fontSize: 14 }}>
-              No geocoded leads or jobs yet
+              No geocoded locations yet
             </div>
             <p className="mt-1.5 text-sm max-w-sm mx-auto"
               style={{ color: "#94A3B8", fontFamily: SANS }}>
-              Once leads have addresses, they&apos;ll appear here on the map.
-              Use the geocode endpoint or paste an address into a lead.
+              Customers with addresses get pinned here. Hit the button to
+              geocode everyone now — leads and jobs linked to those customers
+              will inherit the location.
             </p>
-            <Link href="/leads/new" className="inline-flex items-center gap-1.5 mt-4 px-3.5 py-1.5 rounded-lg text-xs"
-              style={{
-                background: `linear-gradient(135deg, ${P.brand}, ${P.indigo})`,
-                color: "#fff", fontFamily: SANS, fontWeight: 600,
-                boxShadow: `0 6px 14px -4px ${P.brand}88`,
-              }}>
-              <Plus size={11} /> Add a lead
-            </Link>
+            <div className="mt-4 inline-flex flex-col items-center gap-2">
+              <GeocodeAllButton />
+              <Link href="/customers/new" className="text-[11px] inline-flex items-center gap-1"
+                style={{ color: "#3B82F6", fontFamily: SANS, fontWeight: 600 }}>
+                <Plus size={11} /> Add a customer
+              </Link>
+            </div>
           </div>
         ) : (
           <LeafletMap
