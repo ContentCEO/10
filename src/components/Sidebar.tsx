@@ -112,13 +112,15 @@ const SECTIONS: NavSection[] = [
       { href: "/tools/pricing-engine", label: "Pricing engine", icon: TrendingUp },
       { href: "/tools/lien-waiver",        label: "Lien waiver",        icon: FileText },
       { href: "/tools/contract-clauses",   label: "Contract clauses",   icon: FileText },
-      { href: "/team",     label: "Team",     icon: HardHat },
+      { href: "/team",            label: "Team",           icon: HardHat },
+      { href: "/subcontractors",  label: "Subcontractors", icon: HardHat },
     ],
   },
   {
     label: "Growth",
     items: [
-      { href: "/grow",         label: "Grow hub",     icon: TrendingUp },
+      { href: "/grow",             label: "Grow hub",     icon: TrendingUp },
+      { href: "/grow/source-roi",  label: "Source ROI",   icon: TrendingUp },
       { href: "/playbook-200", label: "200/day plan", icon: Rocket },
       { href: "/partnerships", label: "Partnerships", icon: Handshake },
       { href: "/lsa-setup",    label: "Google LSAs",  icon: ShieldCheck },
