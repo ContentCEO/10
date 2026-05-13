@@ -124,6 +124,7 @@ const SECTIONS: NavSection[] = [
     label: "Admin · Overseer",
     adminOnly: true,
     items: [
+      { href: "/owner/control",     label: "Mission Control",  icon: ShieldCheck },
       { href: "/owner",             label: "Overseer (live)",  icon: Activity },
       { href: "/admin",             label: "Admin overview",   icon: ShieldCheck },
       { href: "/admin/marketplace", label: "All leads (firehose)", icon: ShoppingCart },

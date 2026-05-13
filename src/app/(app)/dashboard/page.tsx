@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   ArrowRight,
   Bot,
@@ -27,10 +28,28 @@ import type { FollowUp, Lead } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+// Owner gets a different home screen (Mission Control) instead of the
+// contractor dashboard. Email match is the simplest gate; can swap to
+// a feature flag later. Owner can still navigate to /dashboard via a
+// link if they want the contractor view.
+const OWNER_EMAILS = [
+  (process.env.OWNER_EMAIL ?? "").toLowerCase(),
+  "davichavespb2025@gmail.com",
+].filter(Boolean);
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: { stay?: string };
+}) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
+
+  // Owner email auto-redirect (unless ?stay=1 to override).
+  if (user.email && OWNER_EMAILS.includes(user.email.toLowerCase()) && searchParams?.stay !== "1") {
+    redirect("/owner/control");
+  }
 
   const today = new Date();
   const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
