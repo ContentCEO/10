@@ -14,6 +14,9 @@
     { "path": "/api/scrape/serpapi",     "schedule": "0 */12 * * *" },
     { "path": "/api/scrape/yelp",        "schedule": "30 */4 * * *" },
     { "path": "/api/scrape/state-rfps",  "schedule": "0 */4 * * *" },
-    { "path": "/api/scrape/boston-inspections", "schedule": "20 */2 * * *" }
+    { "path": "/api/scrape/boston-inspections", "schedule": "20 */2 * * *" },
+    { "path": "/api/scrape/boston-311",         "schedule": "40 */2 * * *" },
+    { "path": "/api/scrape/massdot-projects",   "schedule": "15 */6 * * *" },
+    { "path": "/api/scrape/ma-foreclosures",    "schedule": "45 */6 * * *" }
   ]
 }
