@@ -19,6 +19,7 @@
     { "path": "/api/scrape/massdot-projects",   "schedule": "15 */6 * * *" },
     { "path": "/api/scrape/ma-foreclosures",    "schedule": "45 */6 * * *" },
     { "path": "/api/scrape/cambridge-inspections", "schedule": "25 */2 * * *" },
-    { "path": "/api/scrape/ma-school-construction","schedule": "35 */6 * * *" }
+    { "path": "/api/scrape/ma-school-construction","schedule": "35 */6 * * *" },
+    { "path": "/api/agents/tick",                "schedule": "*/5 * * * *" }
   ]
 }

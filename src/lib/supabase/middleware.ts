@@ -17,6 +17,21 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const path = request.nextUrl.pathname;
+  const ua = request.headers.get("user-agent") ?? "";
+  const isDesktop =
+    ua.includes("Tauri") ||
+    ua.includes("ContractorFlow") ||
+    request.headers.get("x-contractorflow-desktop") === "1";
+
+  // Desktop app should never see the marketing landing. Send it straight
+  // to /dashboard, which itself enforces auth and bounces to /login if
+  // not signed in. Public marketing routes are for browsers only.
+  if (isDesktop && path === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
+
   const isPublic =
     PUBLIC_PATHS.includes(path) ||
     path === "/sitemap.xml" ||
@@ -101,12 +116,7 @@ export async function updateSession(request: NextRequest) {
   //   - Admins can access in-app routes from a browser (for management).
   //   - Non-admin users (regular contractor customers) get bounced to
   //     /download unless they're inside the Tauri desktop app.
-  const ua = request.headers.get("user-agent") ?? "";
-  const isDesktop =
-    ua.includes("Tauri") ||
-    ua.includes("ContractorFlow") ||
-    request.headers.get("x-contractorflow-desktop") === "1";
-
+  // (isDesktop already computed at the top of this function.)
   if (!isDesktop) {
     const { data: profile } = await supabase
       .from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
