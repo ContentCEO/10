@@ -103,6 +103,7 @@ const SECTIONS: NavSection[] = [
     label: "Operations",
     items: [
       { href: "/jobs",     label: "Jobs",     icon: Hammer },
+      { href: "/route-plan",label: "Route plan", icon: Compass },
       { href: "/booking",  label: "Booking",  icon: Calendar },
       { href: "/portfolio",label: "Photo portfolio", icon: Camera },
       { href: "/invoices", label: "Invoices", icon: Receipt },
