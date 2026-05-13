@@ -6,6 +6,7 @@ import { WelcomeWizard } from "@/components/WelcomeWizard";
 import { FloatingHelp } from "@/components/FloatingHelp";
 import { Toaster } from "@/components/Toaster";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
+import { AppTopBar } from "@/components/AppTopBar";
 import { isOwnerEmail } from "@/lib/owner";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -35,6 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         isOwner={isOwnerEmail(user.email)}
       />
       <div className="flex-1 flex flex-col min-w-0">
+        <AppTopBar />
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
           {children}
         </main>
