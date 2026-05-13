@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Loader2, PenTool } from "lucide-react";
+import { SignaturePad, type SignaturePadHandle } from "@/components/SignaturePad";
 
 interface Tier { name: string; price_cents: number }
 
@@ -14,12 +15,16 @@ export function ProposalActions({
   const [signature, setSignature] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const padRef = useRef<SignaturePadHandle>(null);
 
   async function sign() {
     if (!signature.trim()) {
       setError("Please type your full name to sign");
       return;
     }
+    const pad = padRef.current;
+    const signatureData = pad && !pad.isEmpty() ? pad.toDataURL() : undefined;
+
     setSubmitting(true);
     setError(null);
     try {
@@ -30,6 +35,7 @@ export function ProposalActions({
           share_token: shareToken,
           selected_tier_idx: selectedIdx,
           customer_signature: signature.trim(),
+          signature_data: signatureData,
         }),
       });
       if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
@@ -73,13 +79,18 @@ export function ProposalActions({
       </div>
 
       <div className="mt-4">
-        <label className="label">Type your full name to sign</label>
+        <label className="label">Type your full name</label>
         <input
           className="input font-mono italic text-lg"
           value={signature}
           onChange={(e) => setSignature(e.target.value)}
           placeholder="Jane Smith"
         />
+      </div>
+
+      <div className="mt-4">
+        <label className="label">Draw your signature (optional)</label>
+        <SignaturePad ref={padRef} height={140} />
       </div>
 
       <button onClick={sign} disabled={submitting} className="btn-primary mt-5 w-full">
