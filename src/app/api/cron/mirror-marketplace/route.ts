@@ -37,13 +37,23 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient();
 
+  // Loose mode: auto-flush the curation queue every run so scraped leads
+  // appear in /marketplace immediately, no manual approval needed.
+  const { data: flushed } = await admin
+    .from("marketplace_leads")
+    .update({ requires_curation: false, curated_at: new Date().toISOString() })
+    .eq("requires_curation", true)
+    .eq("source_channel", "scraped")
+    .select("id");
+  const autoApproved = flushed?.length ?? 0;
+
   const ownerEmail = (process.env.OWNER_EMAIL ?? HARDCODED_OWNER_EMAIL).toLowerCase();
   // Look up the owner via auth (profiles table doesn't store email).
   const { data: usersList } = await admin.auth.admin.listUsers({ perPage: 200 });
   const ownerUser = usersList?.users.find((u) => u.email?.toLowerCase() === ownerEmail);
 
   if (!ownerUser?.id) {
-    return NextResponse.json({ ok: false, error: "owner user not found" }, { status: 200 });
+    return NextResponse.json({ ok: false, error: "owner user not found", auto_approved: autoApproved }, { status: 200 });
   }
   const ownerId = ownerUser.id;
 
@@ -106,6 +116,7 @@ export async function GET(request: Request) {
     mirrored,
     skipped,
     rejected_quality: rejectedQuality,
+    auto_approved: autoApproved,
   });
 }
 
