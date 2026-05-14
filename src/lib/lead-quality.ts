@@ -1,11 +1,12 @@
 /*
  * Lead-quality gate for scraped leads.
  *
- * Every lead must (after enrichment) have:
+ * Every lead must have:
  *   - name (real, not a generic placeholder)
- *   - phone (E.164 or US 10-digit, matched via regex)
- *   - location: MA city OR MA zip (01000-02799)
- *   - address: street address OR (city + zip) so we know where the property is
+ *   - phone (10 or 11 digits after stripping formatting)
+ *
+ * Geography is enforced at the scraper layer (only MA sources are
+ * polled). Address isn't gated — it's nice-to-have in notes.
  *
  * Leads that fail this gate are skipped at the mirror-to-/leads step
  * and filtered out of the marketplace view.
@@ -91,19 +92,11 @@ export function isQualifiedLead(lead: QualityCheckInput): QualityResult {
 
   const zip = (lead.zip ?? "").trim();
   const cityLower = (lead.city ?? "").trim().toLowerCase();
-  const isMAByZip = MA_ZIP_RE.test(zip);
-  const isMAByCity = MA_CITY_SET.has(cityLower);
-  const isMA = isMAByZip || isMAByCity;
-  if (!isMA) reasons.push("not-massachusetts");
-
-  // Address present iff we have a zip OR (city + something street-like in notes).
-  const notes = (lead.notes ?? "").toLowerCase();
-  const hasStreet = /\b\d+\s+[a-z]/i.test(notes);
-  const hasAddress = Boolean(zip || (cityLower && hasStreet));
-  if (!hasAddress) reasons.push("no-address");
+  const isMA = MA_ZIP_RE.test(zip) || MA_CITY_SET.has(cityLower);
+  const hasAddress = Boolean(zip || cityLower);
 
   return {
-    ok: hasRealName && hasPhone && isMA && hasAddress,
+    ok: hasRealName && hasPhone,
     reasons,
     hasPhone,
     isMA,
