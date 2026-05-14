@@ -1,7 +1,7 @@
 import { ClipboardCheck, Filter, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { type MarketplaceLead } from "@/lib/marketplace";
-import { CurationRow } from "./CurationRow";
+import { CurationList } from "./CurationList";
 import { AutoApproveControl } from "./AutoApproveControl";
 
 export const dynamic = "force-dynamic";
@@ -135,11 +135,7 @@ export default async function CurationPage({
           </p>
         </div>
       ) : (
-        <ul className="space-y-3">
-          {rows.map((lead) => (
-            <CurationRow key={lead.id} lead={lead} sourceLabel={SOURCE_LABELS[String((lead.raw_payload as { source?: string })?.source ?? "")]} />
-          ))}
-        </ul>
+        <CurationList rows={rows} sourceLabels={SOURCE_LABELS} />
       )}
     </div>
   );
