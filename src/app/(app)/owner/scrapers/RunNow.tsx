@@ -9,22 +9,31 @@ export function ScraperRunNowButton({ source }: { source: string }) {
 
   async function run() {
     setBusy(true);
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 65_000);
     try {
       const res = await fetch(`/api/owner/scrapers/run?source=${encodeURIComponent(source)}`, {
         method: "POST",
         cache: "no-store",
+        signal: ctrl.signal,
       });
-      const j = await res.json().catch(() => ({}));
+      clearTimeout(timeout);
+      const j = await res.json().catch(() => ({} as { ok?: boolean; error?: string; totalInserted?: number; totalFetched?: number }));
       if (!res.ok || j?.ok === false) {
         toast({ message: `Run failed: ${j?.error ?? res.statusText}`, type: "error" });
         return;
       }
-      const inserted = j?.totalInserted ?? j?.inserted ?? "?";
-      const fetched = j?.totalFetched ?? j?.fetched ?? "?";
+      const inserted = j?.totalInserted ?? 0;
+      const fetched = j?.totalFetched ?? 0;
       toast({ message: `${source}: ${inserted} inserted / ${fetched} fetched`, type: "success" });
-      setTimeout(() => window.location.reload(), 600);
+      setTimeout(() => window.location.reload(), 800);
     } catch (e) {
-      toast({ message: `Run failed: ${(e as Error).message}`, type: "error" });
+      clearTimeout(timeout);
+      const err = e as Error;
+      const msg = err.name === "AbortError"
+        ? "Still running — refresh in a minute to see results."
+        : `Run failed: ${err.message}`;
+      toast({ message: msg, type: err.name === "AbortError" ? "success" : "error" });
     } finally {
       setBusy(false);
     }
