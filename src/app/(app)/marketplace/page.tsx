@@ -30,21 +30,21 @@ export default async function MarketplacePage({
     .from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
   const seeAll = isOwnerEmail(user.email) || Boolean((viewerProfile as { is_admin?: boolean } | null)?.is_admin);
 
-  // Owner/admin gets every available lead, no quality gate at the
-  // display layer. Regular contractors still get the MA + has-phone
-  // filter since they're paying to claim and need actionable rows.
+  // Filter: lead must have a real name AND a phone number. That's it.
+  // No geography or curation gates at the display layer.
   let query = supabase
     .from("marketplace_leads")
     .select("*")
     .eq("status", "available")
+    .not("name", "is", null)
+    .not("phone", "is", null)
+    .neq("name", "")
+    .neq("phone", "")
     .order("ai_score", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(seeAll ? 500 : 50);
   if (!seeAll) {
-    query = query
-      .not("phone", "is", null)
-      .or("zip.like.01%,zip.like.02%")
-      .or("requires_curation.is.null,requires_curation.eq.false");
+    query = query.or("requires_curation.is.null,requires_curation.eq.false");
   }
 
   if (searchParams.service) query = query.ilike("service_type", `%${searchParams.service}%`);
