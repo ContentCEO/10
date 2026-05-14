@@ -10,6 +10,7 @@ import { AppTopBar } from "@/components/AppTopBar";
 import { PreferencesApplier } from "@/components/PreferencesApplier";
 import { CommandPalette } from "@/components/CommandPalette";
 import { FullscreenOnMount } from "@/components/FullscreenOnMount";
+import { DesktopLockGate } from "@/components/DesktopLockGate";
 import { isOwnerEmail } from "@/lib/owner";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -51,6 +52,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <PreferencesApplier />
       <CommandPalette />
       <FullscreenOnMount />
+      <DesktopLockGate />
       <WelcomeWizard
         userId={user.id}
         initialBusinessName={profile?.business_name ?? null}

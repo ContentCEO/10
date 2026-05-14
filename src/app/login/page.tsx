@@ -398,6 +398,9 @@ function LoginInner() {
   }
 
   function go() {
+    // Mark this session as unlocked so the DesktopLockGate doesn't
+    // bounce us back to /login while we're already navigating away.
+    try { window.sessionStorage.setItem("cf:unlocked-this-session", "1"); } catch { /* ignore */ }
     setStage("welcome");
     setTimeout(() => {
       router.push(destination());
