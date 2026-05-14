@@ -119,14 +119,19 @@ export function isMassachusettsLead(lead: { city: string | null; zip: string | n
 }
 
 /*
- * Phone enrichment via a configurable HTTP API. Reads:
- *   PHONE_ENRICH_URL — POST endpoint that accepts JSON { name, address, city, zip }
- *                      and returns { phone: string | null }.
- *   PHONE_ENRICH_KEY — bearer token / API key.
+ * Phone enrichment. Reads provider config from env. Two ways to wire:
  *
- * Designed so the user can drop in BatchData, Whitepages, PeopleDataLabs,
- * Apollo, or a self-hosted proxy without touching code. If env vars
- * aren't set, returns null — the lead is skipped by the quality gate.
+ *   - BatchData (recommended): set BATCHDATA_API_KEY. We call their
+ *     property skip-trace endpoint directly and return the first valid
+ *     phone we find on any matched person.
+ *
+ *   - Generic: set PHONE_ENRICH_URL + PHONE_ENRICH_KEY. Your endpoint
+ *     receives JSON { name, address, city, zip } and returns
+ *     { phone: string | null }. Use this to plug Whitepages, Endato,
+ *     PeopleDataLabs, or a self-hosted proxy.
+ *
+ * Returns null if no key is configured OR no match is found. The lead
+ * is then skipped by the quality gate.
  */
 export interface EnrichInput {
   name: string;
@@ -135,11 +140,61 @@ export interface EnrichInput {
   zip: string | null;
 }
 
-export async function enrichPhone(input: EnrichInput): Promise<string | null> {
-  const url = process.env.PHONE_ENRICH_URL;
-  const key = process.env.PHONE_ENRICH_KEY;
-  if (!url || !key) return null;
+interface BatchDataPhone { number?: string; phone?: string }
+interface BatchDataPerson { phoneNumbers?: BatchDataPhone[]; phones?: BatchDataPhone[] }
+interface BatchDataResponse {
+  results?: { persons?: BatchDataPerson[] };
+  persons?: BatchDataPerson[];
+}
 
+async function enrichPhoneBatchData(input: EnrichInput, apiKey: string): Promise<string | null> {
+  const parts = input.name.trim().split(/\s+/);
+  const firstName = parts[0] ?? "";
+  const lastName  = parts.slice(1).join(" ");
+  const street    = (input.address ?? "").split(",")[0]?.trim() ?? "";
+
+  const body = {
+    requests: [{
+      propertyAddress: {
+        street,
+        city: input.city ?? "",
+        state: "MA",
+        zip: input.zip ?? "",
+      },
+      ...(firstName ? { name: { first: firstName, last: lastName } } : {}),
+    }],
+  };
+
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8_000);
+    const res = await fetch("https://api.batchdata.com/api/v1/property/skip-trace", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const j = await res.json().catch(() => null) as BatchDataResponse | null;
+    const persons = j?.results?.persons ?? j?.persons ?? [];
+    for (const p of persons) {
+      const phones = p?.phoneNumbers ?? p?.phones ?? [];
+      for (const ph of phones) {
+        const num = (ph?.number ?? ph?.phone ?? "").replace(/\D/g, "");
+        if (num.length === 10 || num.length === 11) return num;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function enrichPhoneGeneric(input: EnrichInput, url: string, key: string): Promise<string | null> {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 8_000);
@@ -161,4 +216,20 @@ export async function enrichPhone(input: EnrichInput): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+export async function enrichPhone(input: EnrichInput): Promise<string | null> {
+  const batchKey = process.env.BATCHDATA_API_KEY;
+  if (batchKey) {
+    const p = await enrichPhoneBatchData(input, batchKey);
+    if (p) return p;
+  }
+
+  const url = process.env.PHONE_ENRICH_URL;
+  const key = process.env.PHONE_ENRICH_KEY;
+  if (url && key) {
+    return enrichPhoneGeneric(input, url, key);
+  }
+
+  return null;
 }
