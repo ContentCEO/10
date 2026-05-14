@@ -65,7 +65,13 @@ export default async function CustomerDetail({ params }: { params: { id: string 
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Link href="/customers" className="text-sm text-slate-500">← Customers</Link>
+      <div className="flex items-center justify-between gap-2">
+        <Link href="/customers" className="text-sm text-slate-500">← Customers</Link>
+        <Link href={`/customers/${params.id}/timeline`}
+          className="text-xs text-brand-600 font-semibold hover:underline">
+          View timeline →
+        </Link>
+      </div>
 
       <header>
         <h1 className="text-2xl font-bold">{c.name}</h1>

@@ -13,6 +13,7 @@ import {
   CircleDollarSign,
   Clock,
   Code,
+  FileCode,
   FileText,
   PenLine,
   Compass,
@@ -99,6 +100,7 @@ const SECTIONS: NavSection[] = [
       { href: "/customers",     label: "Customers",     icon: Users },
       { href: "/customers/ltv", label: "Customer LTV",  icon: Crown },
       { href: "/customers/import", label: "Import CSV", icon: UploadCloud },
+      { href: "/customers/duplicates", label: "Customer dupes", icon: Copy },
       { href: "/leads/duplicates", label: "Duplicates",  icon: Copy },
       { href: "/leads/bulk",       label: "Bulk actions", icon: Layers },
     ],
@@ -122,8 +124,10 @@ const SECTIONS: NavSection[] = [
   {
     label: "Operations",
     items: [
-      { href: "/jobs",     label: "Jobs",     icon: Hammer },
-      { href: "/route-plan",label: "Route plan", icon: Compass },
+      { href: "/jobs",          label: "Jobs",          icon: Hammer },
+      { href: "/job-templates", label: "Job templates", icon: FileCode },
+      { href: "/dispatch",      label: "Dispatch",      icon: Users },
+      { href: "/route-plan",    label: "Route plan",    icon: Compass },
       { href: "/booking",  label: "Booking",  icon: Calendar },
       { href: "/portfolio",label: "Photo portfolio", icon: Camera },
       { href: "/invoices", label: "Invoices", icon: Receipt },

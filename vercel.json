@@ -18,6 +18,7 @@
     { "path": "/api/cron/reengagement",            "schedule": "0 15 * * 3" },
     { "path": "/api/cron/abandon-stale-leads",     "schedule": "0 4 * * *" },
     { "path": "/api/cron/lead-trade-classify",     "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/lead-intent-classify",    "schedule": "5-59/15 * * * *" },
     { "path": "/api/cron/daily-standup",           "schedule": "0 11 * * *" },
     { "path": "/api/agents/tick",                  "schedule": "*/5 * * * *" },
 
