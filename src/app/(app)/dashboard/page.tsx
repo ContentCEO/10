@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isOwnerEmail } from "@/lib/owner";
 import type { FollowUp, Lead } from "@/lib/types";
 import DashboardV4Client from "./DashboardV4Client";
 import type { MapMarker } from "./LeafletMap";
@@ -24,19 +23,10 @@ interface MarketplaceFlagged {
   notes: string | null;
 }
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams?: { stay?: string };
-}) {
+export default async function DashboardPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-
-  // Owners get bounced to Mission Control unless they explicitly say "stay".
-  if (isOwnerEmail(user.email) && searchParams?.stay !== "1") {
-    redirect("/owner/control");
-  }
 
   const today = new Date();
   const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();

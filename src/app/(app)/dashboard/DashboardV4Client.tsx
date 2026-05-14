@@ -1466,9 +1466,7 @@ export default function DashboardV4Client(props: Props) {
             <div className="mt-10 mb-6 text-center text-[10px] uppercase"
               style={{ color: P.subtle, fontFamily: SANS,
                        letterSpacing: "0.24em", fontWeight: 600 }}>
-              ContractorFlow · Built for crews · v4 preview
-              {" · "}
-              <Link href="/dashboard?stay=1" style={{ color: P.brand }}>old dashboard</Link>
+              ContractorFlow · Built for crews
             </div>
           </main>
         </div>
