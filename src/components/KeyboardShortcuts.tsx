@@ -29,12 +29,13 @@ export function KeyboardShortcuts() {
 
   const shortcuts: Shortcut[] = [
     { keys: ["?"],          label: "Show this cheat sheet" },
+    { keys: ["Cmd", "M"],   label: "Open the map" },
+    { keys: ["Cmd", "K"],   label: "Global search" },
     { keys: ["g", "d"],     label: "Go to Dashboard",       href: "/dashboard" },
     { keys: ["g", "l"],     label: "Go to Leads pipeline",  href: "/leads" },
     { keys: ["g", "j"],     label: "Go to Jobs",            href: "/jobs" },
     { keys: ["g", "c"],     label: "Go to Customers",       href: "/customers" },
     { keys: ["g", "i"],     label: "Go to Inbox",           href: "/inbox" },
-    { keys: ["g", "m"],     label: "Go to Marketplace",     href: "/marketplace" },
     { keys: ["g", "p"],     label: "Go to Preferences",     href: "/preferences" },
     { keys: ["n"],          label: "New lead",              href: "/leads/new" },
     { keys: ["Esc"],        label: "Close modal" },
@@ -51,6 +52,15 @@ export function KeyboardShortcuts() {
     }
 
     function onKey(e: KeyboardEvent) {
+      // Cmd/Ctrl + M → open the map (works even inside text fields,
+      // since this is an explicit modifier combo).
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey
+          && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        router.push("/map");
+        return;
+      }
+
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (inTextField()) return;
 

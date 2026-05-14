@@ -19,6 +19,7 @@
         "minHeight": 640,
         "resizable": true,
         "fullscreen": false,
+        "maximized": true,
         "decorations": true,
         "transparent": false,
         "url": "https://contractorflow-git-claude-contractorflow-saas-app-1rgd9-dac3.vercel.app/",
