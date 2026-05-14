@@ -9,26 +9,65 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { ReviewRequestPanel } from "./ReviewRequestPanel";
 import { JobPhotos } from "./JobPhotos";
 import { SubAssignmentsCard } from "./SubAssignmentsCard";
+import { FsrLinkCard } from "./FsrLinkCard";
 
 export const dynamic = "force-dynamic";
 
 async function update(id: string, formData: FormData) {
   "use server";
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
   const price = formData.get("price");
   const costEst = formData.get("cost_estimate");
   const costAct = formData.get("cost_actual");
+  const nextStatus = (formData.get("status") as JobStatus) || "scheduled";
+
   await supabase.from("jobs").update({
     title: String(formData.get("title") ?? "").trim(),
     description: (formData.get("description") as string) || null,
     start_date: (formData.get("start_date") as string) || null,
     end_date: (formData.get("end_date") as string) || null,
-    status: (formData.get("status") as JobStatus) || "scheduled",
+    status: nextStatus,
     price: price ? Number(price) : null,
     cost_estimate_cents: costEst ? Math.round(Number(costEst) * 100) : null,
     cost_actual_cents:   costAct ? Math.round(Number(costAct) * 100) : null,
     customer_id: (formData.get("customer_id") as string) || null,
   }).eq("id", id);
+
+  // N-1: Auto-create a draft invoice when a job flips to completed
+  // (idempotent — only if no invoice already exists for this job AND
+  // the job has a price set).
+  if (nextStatus === "completed" && price) {
+    const { data: existing } = await supabase
+      .from("invoices").select("id").eq("job_id", id).maybeSingle();
+    if (!existing) {
+      const { data: job } = await supabase
+        .from("jobs").select("customer_id,title").eq("id", id).single();
+      const j = job as { customer_id: string | null; title: string } | null;
+      const amountCents = Math.round(Number(price) * 100);
+      // Auto-increment invoice number per contractor.
+      const { count } = await supabase
+        .from("invoices").select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      const number = `INV-${(((count ?? 0) + 1)).toString().padStart(4, "0")}`;
+      const issuedAt = new Date();
+      const dueAt = new Date(issuedAt); dueAt.setDate(dueAt.getDate() + 14);
+      await supabase.from("invoices").insert({
+        user_id: user.id,
+        customer_id: j?.customer_id ?? null,
+        job_id: id,
+        number,
+        amount_cents: amountCents,
+        tax_cents: 0,
+        notes: `Auto-generated from ${j?.title ?? "completed job"}.`,
+        status: "draft",
+        issued_at: issuedAt.toISOString(),
+        due_at: dueAt.toISOString(),
+      });
+    }
+  }
+
   revalidatePath(`/jobs/${id}`);
 }
 
@@ -101,6 +140,8 @@ export default async function JobDetail({ params }: { params: { id: string } }) 
       )}
 
       <JobPhotos jobId={j.id} photos={photoList} />
+
+      <FsrLinkCard token={(j as Job & { share_token?: string | null }).share_token ?? null} status={j.status} />
 
       <SubAssignmentsCard jobId={j.id} />
 
