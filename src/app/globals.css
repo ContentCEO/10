@@ -3,46 +3,75 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-  --bg: #f8fafc;
+  color-scheme: dark;
+  --bg: #06060A;
 }
 
 html, body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply antialiased font-sans;
+  background-color: #06060A;
+  color: #FAFAFA;
   background-image:
-    radial-gradient(900px 500px at 80% -10%, rgba(99, 102, 241, 0.10), transparent 60%),
-    radial-gradient(700px 400px at -10% 10%, rgba(6, 182, 212, 0.08), transparent 60%);
+    radial-gradient(900px 500px at 80% -10%, rgba(99, 102, 241, 0.20), transparent 60%),
+    radial-gradient(700px 400px at -10% 10%, rgba(167, 139, 250, 0.12), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 92%, rgba(236, 72, 153, 0.08), transparent 60%);
   background-attachment: fixed;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11"; /* nicer numerals */
 }
+
+/* Match the dashboard's typographic identity everywhere:
+ * H1 + H2 default to Instrument Serif (font-serif). Any page that
+ * needs the sans treatment can opt out with class="font-sans". Italic
+ * <em> inside a heading gets the accent italic for free.
+ */
+h1, h2 {
+  font-family: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+h1 em, h2 em { font-style: italic; }
+
+/* H3+ stays Geist (default) — keeps card titles + smaller headings
+ * consistent with body copy. */
+
+::selection { background: rgba(99, 102, 241, 0.2); }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium tracking-tight transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06060A];
   }
   .btn-primary {
-    @apply btn text-white shadow-glow;
-    background-image: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+    @apply btn text-white shadow-soft;
+    background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #8b5cf6 100%);
     background-size: 200% 200%;
     animation: gradient-pan 6s ease infinite;
+    box-shadow: 0 10px 22px -8px rgba(99,102,241,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
   }
-  .btn-primary:hover { @apply shadow-lg -translate-y-px; }
+  .btn-primary:hover { @apply -translate-y-px; box-shadow: 0 14px 28px -10px rgba(99,102,241,0.7), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .btn-primary:active { @apply translate-y-0; }
 
   .btn-secondary {
-    @apply btn bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-px;
+    @apply btn bg-white/[0.04] text-white/85 ring-1 ring-inset ring-white/10 hover:bg-white/[0.08] hover:ring-white/20 hover:-translate-y-px;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-white/70 hover:bg-white/[0.06] hover:text-white;
   }
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 shadow-sm;
+    @apply btn bg-rose-500/90 text-white hover:bg-rose-500 shadow-soft;
   }
 
   .input {
-    @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100;
+    @apply w-full rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/10 text-white placeholder:text-white/30 px-3.5 py-2.5 text-sm transition
+      focus:ring-2 focus:ring-brand-400/60 focus:bg-white/[0.06] focus:outline-none;
   }
-  .label { @apply block text-sm font-medium text-slate-700 mb-1; }
+  .label { @apply block text-sm font-medium text-white/70 mb-1.5; }
 
   .card {
-    @apply rounded-xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-sm transition-shadow;
+    @apply rounded-2xl ring-1 ring-inset ring-white/10 bg-white/[0.03] transition-all duration-200;
+    box-shadow: 0 8px 24px -12px rgba(0,0,0,0.45);
   }
-  .card-hover { @apply hover:shadow-card-hover; }
+  .card-hover { @apply hover:ring-white/20 hover:-translate-y-0.5; }
+  .card-hover:hover { box-shadow: 0 16px 40px -16px rgba(0,0,0,0.55); }
 
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset;
@@ -56,21 +85,268 @@ html, body {
   }
 
   .stat-tile {
-    @apply relative overflow-hidden rounded-2xl border border-white/40 p-5 text-white shadow-glow;
+    @apply relative overflow-hidden rounded-2xl border border-white/40 p-5 text-white shadow-glow transition-transform duration-300;
   }
+  .stat-tile:hover { @apply -translate-y-0.5; }
   .stat-tile::after {
     content: "";
     @apply absolute inset-0 pointer-events-none;
     background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.25), transparent 50%);
   }
+
+  .kpi {
+    @apply card p-5 flex flex-col gap-1.5;
+  }
+  .kpi-label { @apply text-xs font-medium uppercase tracking-wider text-white/50; }
+  .kpi-value { @apply text-3xl font-semibold tracking-tight text-white; }
+  .kpi-delta-up { @apply inline-flex items-center gap-1 text-xs font-medium text-emerald-300; }
+  .kpi-delta-down { @apply inline-flex items-center gap-1 text-xs font-medium text-rose-300; }
+
+  .pill-active {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30;
+  }
+  .pill-idle {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-white/[0.06] text-white/50 ring-1 ring-inset ring-white/10;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold tracking-tight text-white;
+  }
+  .section-eyebrow {
+    @apply inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-300;
+  }
+  .display-h1 {
+    @apply font-serif text-5xl sm:text-6xl tracking-tight text-white;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+  }
+  .display-h2 {
+    @apply font-serif text-3xl sm:text-4xl tracking-tight text-white;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  /* Italic accent inside a display headline, e.g.
+     <h1 class="display-h2">Good <em>afternoon</em>, Davi</h1> */
+  .display-h1 em, .display-h2 em { font-style: italic; }
+  .lede {
+    @apply text-base sm:text-lg text-white/60 leading-relaxed;
+  }
+
+  .surface-soft {
+    @apply rounded-2xl bg-gradient-to-br from-brand-500/10 via-white/[0.02] to-accent-400/10 ring-1 ring-inset ring-white/10;
+  }
+  .ring-divider {
+    @apply ring-1 ring-inset ring-white/10;
+  }
+
+  .live-dot {
+    @apply relative inline-flex h-2 w-2 rounded-full bg-emerald-500;
+  }
+  .live-dot::before {
+    content: "";
+    @apply absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-75;
+  }
+
+  .marquee {
+    @apply flex gap-10 animate-marquee whitespace-nowrap will-change-transform;
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-pretty  { text-wrap: pretty; }
+  .mask-fade-x {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+  .price-shimmer {
+    background-image: linear-gradient(110deg, #a5b4fc 0%, #c4b5fd 25%, #67e8f9 50%, #c4b5fd 75%, #a5b4fc 100%);
+    background-size: 220% 220%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-cycle 6s ease infinite;
+  }
+  .hover-lift {
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s, border-color 0.4s;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px) scale(1.01);
+  }
+  .glow-ring {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.08),
+      0 20px 60px -20px rgba(99,102,241,0.6),
+      0 0 90px -30px rgba(139,92,246,0.45);
+  }
+  .sparkle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: radial-gradient(circle, #fff 0%, rgba(255,255,255,0.6) 60%, transparent 100%);
+    box-shadow: 0 0 8px 2px rgba(255,255,255,0.4);
+  }
+  .count-up {
+    animation: count-up 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes count-up {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.85); }
+    60%  { opacity: 1; transform: translateY(-2px) scale(1.02); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+/* Plan 1 / F-16 — Custom branded focus rings.
+ * Every focusable element gets a brand-gradient outline instead of the
+ * browser default. Visible everywhere, including tabbing-through forms. */
+*:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px #06060A,
+    0 0 0 4px rgba(165, 180, 252, 0.7);
+  border-radius: 6px;
+}
+
+/* Dark-app theme scope.
+ * Flips the most common light Tailwind utility classes to dark inside the
+ * (app) layout, so legacy pages that hard-code `bg-white` / `text-ink-*`
+ * read as dark surfaces without touching every file. */
+[data-theme="dark-app"] .bg-white                { background-color: rgba(255,255,255,0.03) !important; }
+[data-theme="dark-app"] .bg-ink-50               { background-color: transparent !important; }
+[data-theme="dark-app"] .bg-ink-100              { background-color: rgba(255,255,255,0.04) !important; }
+[data-theme="dark-app"] .bg-ink-200              { background-color: rgba(255,255,255,0.06) !important; }
+[data-theme="dark-app"] .hover\:bg-ink-50:hover  { background-color: rgba(255,255,255,0.06) !important; }
+[data-theme="dark-app"] .hover\:bg-ink-100:hover { background-color: rgba(255,255,255,0.08) !important; }
+[data-theme="dark-app"] .hover\:bg-white:hover   { background-color: rgba(255,255,255,0.06) !important; }
+[data-theme="dark-app"] .text-ink-900            { color: #FAFAFA !important; }
+[data-theme="dark-app"] .text-ink-800            { color: rgba(255,255,255,0.92) !important; }
+[data-theme="dark-app"] .text-ink-700            { color: rgba(255,255,255,0.82) !important; }
+[data-theme="dark-app"] .text-ink-600            { color: rgba(255,255,255,0.65) !important; }
+[data-theme="dark-app"] .text-ink-500            { color: rgba(255,255,255,0.48) !important; }
+[data-theme="dark-app"] .text-ink-400            { color: rgba(255,255,255,0.35) !important; }
+[data-theme="dark-app"] .text-ink-300            { color: rgba(255,255,255,0.28) !important; }
+[data-theme="dark-app"] .border-ink-100          { border-color: rgba(255,255,255,0.06) !important; }
+[data-theme="dark-app"] .border-ink-200          { border-color: rgba(255,255,255,0.10) !important; }
+[data-theme="dark-app"] .border-ink-300          { border-color: rgba(255,255,255,0.16) !important; }
+[data-theme="dark-app"] .divide-ink-100 > * + *  { border-color: rgba(255,255,255,0.06) !important; }
+[data-theme="dark-app"] .divide-ink-200 > * + *  { border-color: rgba(255,255,255,0.10) !important; }
+[data-theme="dark-app"] .ring-ink-200            { --tw-ring-color: rgba(255,255,255,0.10) !important; }
+[data-theme="dark-app"] .ring-ink-300            { --tw-ring-color: rgba(255,255,255,0.16) !important; }
+/* Light brand tints become softer dark tints */
+[data-theme="dark-app"] .bg-brand-50             { background-color: rgba(99,102,241,0.10) !important; }
+[data-theme="dark-app"] .bg-brand-100            { background-color: rgba(99,102,241,0.14) !important; }
+[data-theme="dark-app"] .text-brand-600          { color: #a5b4fc !important; }
+[data-theme="dark-app"] .text-brand-700          { color: #c7d2fe !important; }
+[data-theme="dark-app"] .text-brand-800          { color: #e0e7ff !important; }
+[data-theme="dark-app"] .text-emerald-600        { color: #6ee7b7 !important; }
+[data-theme="dark-app"] .text-emerald-700        { color: #86efac !important; }
+[data-theme="dark-app"] .text-rose-600           { color: #fda4af !important; }
+[data-theme="dark-app"] .text-rose-700           { color: #fecdd3 !important; }
+[data-theme="dark-app"] .text-amber-600          { color: #fcd34d !important; }
+[data-theme="dark-app"] .text-amber-700          { color: #fde68a !important; }
+[data-theme="dark-app"] .bg-emerald-50           { background-color: rgba(16,185,129,0.10) !important; }
+[data-theme="dark-app"] .bg-emerald-100          { background-color: rgba(16,185,129,0.14) !important; }
+[data-theme="dark-app"] .bg-amber-50             { background-color: rgba(245,158,11,0.10) !important; }
+[data-theme="dark-app"] .bg-amber-100            { background-color: rgba(245,158,11,0.14) !important; }
+[data-theme="dark-app"] .bg-rose-50              { background-color: rgba(244,63,94,0.10) !important; }
+[data-theme="dark-app"] .bg-rose-100             { background-color: rgba(244,63,94,0.14) !important; }
+[data-theme="dark-app"] .bg-cyan-50              { background-color: rgba(6,182,212,0.10) !important; }
+[data-theme="dark-app"] .bg-cyan-100             { background-color: rgba(6,182,212,0.14) !important; }
+
+/* Plan 1 / F-12 — High-contrast accessibility mode.
+ * Triggered by setting data-contrast="high" on <html>. Increases text
+ * contrast against backgrounds, makes borders 2px solid, removes blurs.
+ * Wired via /preferences → preferences.high_contrast. */
+html[data-contrast="high"] {
+  --hc-fg: #000;
+  --hc-bg: #fff;
+}
+html[data-contrast="high"] body,
+html[data-contrast="high"] .card,
+html[data-contrast="high"] .card-hover {
+  background: var(--hc-bg) !important;
+  color: var(--hc-fg) !important;
+  border-color: #000 !important;
+  border-width: 2px !important;
+}
+html[data-contrast="high"] .text-ink-400,
+html[data-contrast="high"] .text-ink-500,
+html[data-contrast="high"] .text-ink-600 {
+  color: #1a1a1a !important;
+}
+html[data-contrast="high"] .backdrop-blur,
+html[data-contrast="high"] .backdrop-blur-md,
+html[data-contrast="high"] .backdrop-blur-xl,
+html[data-contrast="high"] .blur-2xl,
+html[data-contrast="high"] .blur-3xl {
+  backdrop-filter: none !important;
+  filter: none !important;
+}
+html[data-contrast="high"] .btn-primary {
+  background: #000 !important;
+  color: #fff !important;
+  border: 2px solid #000 !important;
+}
+
+/* Plan 1 / F-13 — Larger mobile touch targets.
+ * On coarse-pointer devices (touch), bump buttons/inputs to >=44px tall.
+ * Doesn't affect mouse/trackpad, which keep the denser layout. */
+@media (pointer: coarse) {
+  .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger {
+    min-height: 44px;
+  }
+  input, select, textarea {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS auto-zoom on focus */
+  }
+}
+
+/* Plan 1 / F-11 — Reduce-motion respect.
+ * Honor the user's OS-level "prefer reduced motion" setting. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.12s !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-shimmer, .animate-pulse-soft, .animate-float,
+  .animate-blob-drift, .animate-marquee, .animate-aurora,
+  .animate-spin-slow, .animate-twinkle, .animate-gradient-cycle,
+  .animate-gradient-pan, .animate-fade-up, .animate-tick-up, .count-up {
+    animation: none !important;
+  }
+}
+
+/* Plan 1 / A-20 — print-friendly views.
+ * Strip chrome and use ink-friendly colors when printing any page. */
+@media print {
+  aside, nav, header.sticky, footer, [data-print-hide],
+  .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger {
+    display: none !important;
+  }
+  body, html { background: white !important; color: black !important; }
+  .card, .card-hover { box-shadow: none !important; border-color: #cbd5e1 !important; }
+  main, [data-print-area] { padding: 0 !important; margin: 0 !important; }
+  a[href] { color: black !important; text-decoration: none !important; }
 }
 
 @layer utilities {
   .bg-grid {
     background-image:
-      linear-gradient(to right, rgba(15,23,42,0.06) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(15,23,42,0.06) 1px, transparent 1px);
+      linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px);
     background-size: 28px 28px;
     mask-image: radial-gradient(ellipse 70% 50% at 50% 30%, black 50%, transparent 100%);
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.25);
+    border-radius: 999px;
   }
 }

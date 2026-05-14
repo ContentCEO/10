@@ -1,0 +1,72 @@
+name: Debug Tauri signing
+
+# Diagnostic workflow to figure out why TAURI_SIGNING_PRIVATE_KEY breaks
+# with "Missing comment in secret key". Trigger manually from Actions tab.
+#
+# It prints diagnostic info about the secret (length, first/last chars,
+# whether it looks like base64 or rsign format) WITHOUT leaking the value
+# (GitHub auto-masks the full string in logs).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Inspect TAURI_SIGNING_PRIVATE_KEY metadata
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          PW: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          echo "=== Key metadata ==="
+          echo "Length: $(printf '%s' "$KEY" | wc -c) bytes"
+          echo "Line count: $(printf '%s' "$KEY" | wc -l)"
+          echo "First 30 chars: ${KEY:0:30}"
+          echo "Last 10 chars: ${KEY: -10}"
+          echo ""
+          echo "=== Decoded check ==="
+          # If it's base64, decode and check the header
+          DECODED=$(printf '%s' "$KEY" | base64 -d 2>/dev/null || echo "NOT_BASE64")
+          if [ "$DECODED" = "NOT_BASE64" ]; then
+            echo "Key value is NOT base64"
+            echo "Probably raw rsign format already"
+            echo "First line: $(printf '%s' "$KEY" | head -1)"
+          else
+            echo "Key value IS base64"
+            echo "Decoded first line: $(printf '%s' "$DECODED" | head -1)"
+            echo "Decoded line count: $(printf '%s' "$DECODED" | wc -l)"
+          fi
+          echo ""
+          echo "=== Password metadata ==="
+          echo "PW length: $(printf '%s' "$PW" | wc -c) bytes"
+          echo "PW first char: ${PW:0:1}"
+          echo "PW last char: ${PW: -1}"
+          echo ""
+          echo "=== Comparing to expected format ==="
+          echo "Expected raw format: starts with 'untrusted comment:'"
+          echo "Expected base64: starts with 'dW50cnVzdGVkIGNvbW1lbnQ6'"
+
+      - name: Install Rust + Tauri CLI
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Install Tauri CLI + try to sign a dummy file
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          source "$HOME/.cargo/env" || true
+          echo "dummy file" > /tmp/dummy.bin
+          npx @tauri-apps/cli@latest signer sign /tmp/dummy.bin 2>&1 || echo "Signing failed — see error above"

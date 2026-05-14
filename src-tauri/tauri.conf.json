@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ContractorFlow",
+  "version": "0.1.8",
+  "identifier": "com.contractorflow.app",
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "frontendDist": "../public",
+    "devUrl": "http://localhost:3000"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "ContractorFlow",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 640,
+        "resizable": true,
+        "fullscreen": true,
+        "maximized": true,
+        "decorations": true,
+        "transparent": false,
+        "url": "https://contractorflow-git-claude-contractorflow-saas-app-1rgd9-dac3.vercel.app/",
+        "userAgent": "ContractorFlow/0.1.0 (Tauri Desktop)"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "publisher": "ContractorFlow",
+    "category": "Business",
+    "shortDescription": "AI CRM for contractors",
+    "longDescription": "ContractorFlow is an AI-powered CRM for contractors and home service businesses. Track leads, manage jobs, and run AI follow-ups from your desktop.",
+    "copyright": "© 2026 ContractorFlow",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "wix": {
+        "language": "en-US"
+      },
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "displayLanguageSelector": false
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "signingIdentity": "-"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc0MjJFRDRFNDlCQTU2QzAKUldUQVZycEpUdTBpZEltMzdRZkJTSVMxQnpFTVFwd2lIdWlxRzNDMm5ZeFlxNDNBdUlpclNzVW0K",
+      "endpoints": [
+        "https://github.com/ContentCEO/10/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}

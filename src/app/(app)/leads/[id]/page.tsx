@@ -6,6 +6,8 @@ import { LEAD_STATUS_LABELS, type Lead, type LeadStatus } from "@/lib/types";
 import { LeadStatusBadge } from "@/components/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { AiTools } from "./AiTools";
+import { NextActionPanel } from "./NextActionPanel";
+import { ScoreButton } from "./ScoreButton";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +106,14 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
           <button className="btn-primary">Convert to job</button>
         </form>
       </header>
+
+      <ScoreButton
+        leadId={l.id}
+        initialScore={l.ai_score}
+        initialSummary={l.ai_summary}
+      />
+
+      <NextActionPanel leadId={l.id} />
 
       <AiTools lead={l} />
 

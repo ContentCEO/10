@@ -13,6 +13,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const leadId = body?.leadId as string | undefined;
   const tone = (body?.tone as string) || "professional";
+  const tiered = Boolean(body?.tiered);
   if (!leadId) return NextResponse.json({ error: "leadId required" }, { status: 400 });
 
   const [{ data: lead }, { data: profile }] = await Promise.all([
@@ -25,18 +26,41 @@ export async function POST(request: Request) {
   const p = profile as Profile | null;
   const business = p?.business_name || "Our company";
 
-  const system =
-    "You write clean, professional project proposals/estimates for contractors. " +
-    "Output plain text suitable for copy-pasting into a document. Use clear " +
-    "section headings (no markdown symbols), short paragraphs, and a simple " +
-    "line-item summary with prices. Do not include legal boilerplate.";
+  const system = tiered
+    ? "You write tiered project proposals for contractors using a Good / Better / Best " +
+      "structure. Studies show clients pick the middle tier most often, lifting average " +
+      "deal size 15-30%. Output plain text with three clearly labeled tiers, each with: " +
+      "name, what's included (3-5 bullet points without markdown symbols), and total price. " +
+      "After the three tiers, add a short 'Next Steps' section. No legal boilerplate."
+    : "You write clean, professional project proposals/estimates for contractors. " +
+      "Output plain text suitable for copy-pasting into a document. Use clear " +
+      "section headings (no markdown symbols), short paragraphs, and a simple " +
+      "line-item summary with prices. Do not include legal boilerplate.";
 
-  const user_prompt = `Draft a ${tone} proposal for this lead.
+  const baseEstimate = l.estimated_value ?? null;
+  const tieredPrompt =
+    `Draft a ${tone} Good / Better / Best proposal.
 
 Customer name: ${l.name}
 Service requested: ${l.service_type ?? "(not specified)"}
 Customer notes: ${l.notes ?? "(none)"}
-Estimated total: ${l.estimated_value ? `$${l.estimated_value}` : "(propose a reasonable estimate)"}
+Reference budget: ${baseEstimate ? `$${baseEstimate}` : "(use sensible market values)"}
+
+Tiers:
+- "Good" — practical scope, lower price (about 80% of reference)
+- "Better" — recommended scope, mid price (about reference budget) — mark this the recommended option
+- "Best" — premium scope with upgrades, higher price (about 130% of reference)
+
+Sender business: ${business}
+Sign off with the business name.`;
+
+  const standardPrompt =
+    `Draft a ${tone} proposal for this lead.
+
+Customer name: ${l.name}
+Service requested: ${l.service_type ?? "(not specified)"}
+Customer notes: ${l.notes ?? "(none)"}
+Estimated total: ${baseEstimate ? `$${baseEstimate}` : "(propose a reasonable estimate)"}
 
 Sender business: ${business}
 
@@ -44,7 +68,11 @@ Include sections: Overview, Scope of Work, Timeline, Pricing (with 3-5 line item
 that add up to the total), and Next Steps. Sign off with the business name.`;
 
   try {
-    const text = await generateText({ system, user: user_prompt, maxTokens: 1200 });
+    const text = await generateText({
+      system,
+      user: tiered ? tieredPrompt : standardPrompt,
+      maxTokens: tiered ? 1600 : 1200,
+    });
     return NextResponse.json({ text });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "AI generation failed";

@@ -74,10 +74,28 @@ cp .env.example .env.local
 
 1. Create a Supabase project.
 2. Open the SQL editor and run the contents of `supabase/schema.sql`.
-3. Copy your project URL, anon key, and service role key into `.env.local`.
+3. Then run, in order, the files in `supabase/migrations/`:
+   - `2026-05-11_marketplace.sql` — lead marketplace tables and RLS
+   - `2026-05-11_wallet.sql` — wallet credit + atomic debit RPC
+   - `2026-05-11_account_type.sql` — homeowner / contractor account types
+   - `2026-05-11_contractor_directory.sql` — public profile fields, credentials, photos, reviews
+   - `2026-05-11_revenue.sql` — job cost tracking + review request fields
+   - `2026-05-11_recurring.sql` — recurring service engine on customers
+   - `2026-05-11_invoicing.sql` — invoices table + Stripe payment link
+   - `2026-05-11_lead_sources.sql` — marketplace source attribution + dedupe
+   - `2026-05-11_lead_scoring.sql` — AI lead score + speed-to-lead on contractor leads
+   - `2026-05-11_messaging.sql` — outbound message log + auto-dispatch toggle
+   - `2026-05-11_employees.sql` — employee account type, invites, time entries, tasks, job photos
+   - `2026-05-11_lead_gen_engine.sql` — alert webhook, referrals, scraper audit, message templates
+   - `2026-05-11_disputes_and_widgets.sql` — lead disputes (auto-refund) + partner widgets (reverse marketplace)
+   - `2026-05-11_wave9_platform.sql` — auto-bid + booking + push + agency + brand + inbound SMS
+   - `2026-05-11_notification_prefs.sql` — per-contractor notification toggles (email/push/webhook/SMS)
+   - `2026-05-11_onboarding_videos.sql` — per-profile onboarding video list (JSONB)
+4. Copy your project URL, anon key, and service role key into `.env.local`.
 
 The schema enables Row Level Security so each user can only see their own
-customers, leads, jobs, and follow-ups.
+customers, leads, jobs, and follow-ups. Marketplace leads are readable by any
+authenticated user while `available`, and only their buyer once `sold`.
 
 ### 3. AI provider
 
@@ -101,6 +119,23 @@ npm run dev
 ```
 
 Visit <http://localhost:3000>.
+
+### 6. Daily cron (optional, for recurring jobs + marketplace cleanup)
+
+The deployed instance ships with a Vercel Cron Job defined in `vercel.json`
+that hits `/api/cron/daily` at 08:00 UTC every day. The endpoint:
+
+- Generates the next job + reminder for any customer whose recurring schedule
+  is due.
+- Marks marketplace leads as `expired` past their `expires_at` window.
+
+Set `CRON_SECRET` (Vercel → Settings → Environment Variables) to any long
+random string. Vercel Cron will include it as `Authorization: Bearer <secret>`
+when calling the endpoint. To trigger manually locally:
+
+```bash
+curl http://localhost:3000/api/cron/daily
+```
 
 ## Notes
 

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    { "path": "/api/cron/daily",                   "schedule": "0 * * * *" },
+    { "path": "/api/cron/review-requests",         "schedule": "*/10 * * * *" },
+    { "path": "/api/cron/recurring-services",      "schedule": "0 7 * * *" },
+    { "path": "/api/cron/lead-decay",              "schedule": "30 5 * * *" },
+    { "path": "/api/cron/job-completion-followups","schedule": "*/30 * * * *" },
+    { "path": "/api/cron/late-invoice-reminders",  "schedule": "0 10 * * *" },
+    { "path": "/api/cron/appointment-reminders",   "schedule": "0 * * * *" },
+    { "path": "/api/cron/nps-autosend",            "schedule": "0 9 * * *" },
+    { "path": "/api/cron/owner-digest",            "schedule": "0 12 * * *" },
+    { "path": "/api/cron/lead-ai-summary",         "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/job-cost-overrun",        "schedule": "0 */6 * * *" },
+    { "path": "/api/cron/proposal-followups",      "schedule": "30 10 * * *" },
+    { "path": "/api/cron/compliance-alerts",       "schedule": "0 8 * * *" },
+    { "path": "/api/cron/weekly-review",           "schedule": "0 14 * * 1" },
+    { "path": "/api/cron/reengagement",            "schedule": "0 15 * * 3" },
+    { "path": "/api/cron/abandon-stale-leads",     "schedule": "0 4 * * *" },
+    { "path": "/api/cron/lead-trade-classify",     "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/lead-intent-classify",    "schedule": "5-59/15 * * * *" },
+    { "path": "/api/cron/daily-standup",           "schedule": "0 11 * * *" },
+    { "path": "/api/cron/thank-you-notes",         "schedule": "0 16 * * *" },
+    { "path": "/api/cron/recurring-invoices",      "schedule": "0 7 * * *" },
+    { "path": "/api/cron/customer-anniversary",    "schedule": "30 13 * * *" },
+    { "path": "/api/cron/webhook-notifications",   "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/lead-spam-filter",        "schedule": "20 * * * *" },
+    { "path": "/api/cron/onboarding-sequence",     "schedule": "0 15 * * *" },
+    { "path": "/api/cron/lead-instant-reply",      "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/auto-proposal-draft",     "schedule": "*/30 * * * *" },
+    { "path": "/api/cron/inbox-digest",            "schedule": "0 13 * * *" },
+    { "path": "/api/cron/stale-lead-followup",     "schedule": "15 * * * *" },
+    { "path": "/api/cron/milestone-celebrations",  "schedule": "0 14 * * *" },
+    { "path": "/api/cron/emergency-alert",         "schedule": "*/5 * * * *" },
+    { "path": "/api/agents/tick",                  "schedule": "*/5 * * * *" },
+
+    { "path": "/api/scrape/reddit",                "schedule": "*/5 * * * *" },
+    { "path": "/api/scrape/permits",               "schedule": "2-59/5 * * * *" },
+
+    { "path": "/api/scrape/boston-inspections",    "schedule": "5 * * * *" },
+    { "path": "/api/scrape/cambridge-inspections", "schedule": "10 * * * *" },
+    { "path": "/api/scrape/boston-311",            "schedule": "15 * * * *" },
+    { "path": "/api/scrape/ma-municipal",          "schedule": "20 * * * *" },
+
+    { "path": "/api/scrape/ma-evictions",          "schedule": "30 */2 * * *" },
+    { "path": "/api/scrape/ma-licenses",           "schedule": "35 */2 * * *" },
+    { "path": "/api/scrape/ma-foreclosures",       "schedule": "45 */2 * * *" },
+
+    { "path": "/api/scrape/mass-gov-bids",         "schedule": "0 */6 * * *" },
+    { "path": "/api/scrape/massdot-projects",      "schedule": "30 */6 * * *" },
+    { "path": "/api/scrape/ma-school-construction","schedule": "15 */6 * * *" },
+
+    { "path": "/api/cron/mirror-marketplace",      "schedule": "*/2 * * * *" }
+  ]
+}

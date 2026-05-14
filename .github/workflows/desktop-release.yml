@@ -1,0 +1,112 @@
+name: Desktop installers
+
+# Builds .exe (Windows), .dmg (macOS Intel + ARM), and .AppImage/.deb (Linux)
+# installers and attaches them to a GitHub Release when you push a tag like v0.1.0.
+#
+# To cut a release:
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# The workflow also produces a latest.json updater manifest that the desktop
+# app polls for auto-updates.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            args: ""
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            args: ""
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Linux build deps
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            build-essential \
+            libssl-dev \
+            libgtk-3-dev
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install npm deps
+        run: npm install --no-audit --no-fund
+
+      - name: Generate Tauri icons
+        run: npm run tauri:icon
+
+      - name: Debug signing secret shape (no secret leak)
+        if: matrix.target == 'aarch64-apple-darwin'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          echo "key length:      ${#TAURI_SIGNING_PRIVATE_KEY} (expect 348)"
+          echo "password length: ${#TAURI_SIGNING_PRIVATE_KEY_PASSWORD} (expect 14)"
+          echo "key first 12:    ${TAURI_SIGNING_PRIVATE_KEY:0:12} (expect dW50cnVzdGVk)"
+          echo "key hash prefix: $(printf %s "$TAURI_SIGNING_PRIVATE_KEY" | shasum -a 256 | cut -c1-16)"
+          echo "pw hash prefix:  $(printf %s "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" | shasum -a 256 | cut -c1-16)"
+          echo "expected prefix: $(printf %s "cf-update-2026" | shasum -a 256 | cut -c1-16)"
+
+      - name: Build desktop app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "ContractorFlow ${{ github.ref_name }}"
+          releaseBody: |
+            ContractorFlow desktop ${{ github.ref_name }}.
+
+            Downloads:
+            - **Windows**: ContractorFlow_*.exe
+            - **macOS (Apple Silicon)**: ContractorFlow_*_aarch64.dmg
+            - **macOS (Intel)**: ContractorFlow_*_x64.dmg
+            - **Linux**: ContractorFlow_*.AppImage / .deb
+
+            Auto-update enabled via the Tauri updater plugin.
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

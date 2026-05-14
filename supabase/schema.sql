@@ -24,6 +24,23 @@ create table if not exists public.profiles (
   email text,
   full_name text,
   business_name text,
+  account_type text not null default 'contractor'
+    check (account_type in ('homeowner', 'contractor')),
+  credit_cents int not null default 0,
+  headline text,
+  bio text,
+  services text[] not null default '{}',
+  service_zips text[] not null default '{}',
+  service_cities text[] not null default '{}',
+  years_in_business int,
+  phone_public text,
+  website text,
+  logo_url text,
+  hero_image_url text,
+  is_published boolean not null default false,
+  google_review_url text,
+  payment_link_url text,
+  auto_dispatch_enabled boolean not null default false,
   stripe_customer_id text,
   stripe_subscription_id text,
   subscription_status subscription_status default 'trialing',
@@ -34,9 +51,15 @@ create table if not exists public.profiles (
 -- Auto-create a profile row when a user signs up.
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer as $$
+declare
+  acct text;
 begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email)
+  acct := coalesce(new.raw_user_meta_data->>'account_type', 'contractor');
+  if acct not in ('homeowner', 'contractor') then
+    acct := 'contractor';
+  end if;
+  insert into public.profiles (id, email, account_type)
+  values (new.id, new.email, acct)
   on conflict (id) do nothing;
   return new;
 end;
@@ -50,6 +73,10 @@ create trigger on_auth_user_created
 -- ============================================================
 -- CUSTOMERS
 -- ============================================================
+do $$ begin
+  create type recurring_frequency as enum ('weekly', 'biweekly', 'monthly', 'quarterly');
+exception when duplicate_object then null; end $$;
+
 create table if not exists public.customers (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -58,10 +85,18 @@ create table if not exists public.customers (
   email text,
   address text,
   notes text,
+  recurring_frequency recurring_frequency,
+  recurring_service   text,
+  recurring_price     numeric(10,2),
+  recurring_next_at   date,
+  recurring_active    boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 create index if not exists customers_user_idx on public.customers(user_id);
+create index if not exists customers_recurring_due_idx
+  on public.customers(recurring_next_at)
+  where recurring_active = true;
 
 -- ============================================================
 -- LEADS
@@ -78,11 +113,16 @@ create table if not exists public.leads (
   estimated_value numeric(10,2),
   status lead_status not null default 'new',
   notes text,
+  ai_score int check (ai_score between 0 and 100),
+  ai_summary text,
+  ai_scored_at timestamptz,
+  first_responded_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 create index if not exists leads_user_idx on public.leads(user_id);
 create index if not exists leads_status_idx on public.leads(status);
+create index if not exists leads_ai_score_idx on public.leads(ai_score desc nulls last);
 
 -- ============================================================
 -- JOBS
@@ -98,6 +138,9 @@ create table if not exists public.jobs (
   end_date date,
   status job_status not null default 'scheduled',
   price numeric(10,2),
+  cost_estimate_cents int,
+  cost_actual_cents   int,
+  review_requested_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

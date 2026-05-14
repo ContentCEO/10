@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LEAD_STATUS_LABELS, type LeadStatus } from "@/lib/types";
+import { scheduleLeadFollowUps } from "@/lib/follow-up-sequence";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,9 @@ async function createLead(formData: FormData) {
 
   const { data, error } = await supabase.from("leads").insert(payload).select("id").single();
   if (error || !data) throw new Error(error?.message ?? "Failed to create lead");
+  await scheduleLeadFollowUps(supabase, {
+    userId: user.id, leadId: data.id, leadName: payload.name,
+  });
   redirect(`/leads/${data.id}`);
 }
 
