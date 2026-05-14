@@ -10,6 +10,7 @@ import { ReviewRequestPanel } from "./ReviewRequestPanel";
 import { JobPhotos } from "./JobPhotos";
 import { SubAssignmentsCard } from "./SubAssignmentsCard";
 import { FsrLinkCard } from "./FsrLinkCard";
+import { BeforeAfterSlider } from "./BeforeAfterSlider";
 
 export const dynamic = "force-dynamic";
 
@@ -140,6 +141,8 @@ export default async function JobDetail({ params }: { params: { id: string } }) 
       )}
 
       <JobPhotos jobId={j.id} photos={photoList} />
+
+      <BeforeAfterSlider photos={photoList} />
 
       <FsrLinkCard token={(j as Job & { share_token?: string | null }).share_token ?? null} status={j.status} />
 
