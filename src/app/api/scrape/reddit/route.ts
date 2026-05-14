@@ -12,36 +12,10 @@ export const runtime = "nodejs";
 // whether to engage in-thread (Reddit ToS prohibits unsolicited DMs).
 
 const DEFAULT_SUBS = [
-  // National high-volume — home + DIY
-  "HomeImprovement", "DIY", "Renovations", "RealEstate", "homeowners",
-  "HomeMaintenance", "centuryhomes", "FirstTimeHomeBuyer", "HomeDecorating",
-  "OldHouses", "FixIt", "whatisthisthing", "Home", "askacarpenter",
-  // Trade-specific deep cuts (most active 2024-26)
-  "Plumbing", "Roofing", "Electricians", "Construction", "Flooring",
-  "Hvacadvice", "Landscaping", "Carpentry", "Painting", "Drywall",
-  "Decks", "tile", "Concrete", "MyHomeImproved", "Appliances",
-  "askanelectrician", "AskCarpentry", "AskElectricians", "AskPlumbing",
-  "askanhvactech", "Insulation", "Welding", "Locksmith",
-  "Masonry", "Stonemasonry", "Bricklaying", "Tiling",
-  "GeneralContractor", "Handyman", "Cabinetry",
-  "Solar", "SolarDIY", "ElectricalEngineering",
-  "WoodWorking", "Carpentry", "houseplans", "architecture",
-  "PestControl", "Mycology",
-  "RealEstateInvesting", "FixAndFlip", "landlord", "LandlordTenant",
-  // High-intent niche communities (idea C-17: deep cuts)
-  "OldHouses", "victorian", "homestead", "Permaculture",
-  "Bungalow", "Farmhouse", "TinyHouses", "tinyhouseplans",
-  "ContractorUK", "Renovate", "RemodelMyHouse",
-  "kitchenremodel", "BathroomRemodel", "basementremodel",
-  "Foundation", "Basement", "Crawlspace",
-  "WaterDamage", "MoldRemediation",
-  "Beekeeping", "Chickens",      // outdoor structures / coops
-  "vintagehomes", "midcenturyhome",
-  // Massachusetts — full statewide coverage
+  // Massachusetts — statewide + major cities
   "boston", "massachusetts", "cambridgema", "somerville",
-  "WorcesterMA", "metrowestma", "newengland",
+  "WorcesterMA", "metrowestma",
   "Springfield", "lowell", "lawrence",
-  // MA cities + towns (small subs, low volume each but high signal)
   "Brookline", "newton", "quincy", "MAPolitics",
   "Acton", "Andover", "Arlington_MA", "Brockton", "Burlington",
   "Chelmsford", "Chelsea", "Dorchester", "Everett", "FallRiver",
@@ -54,13 +28,6 @@ const DEFAULT_SUBS = [
   "WestRoxbury", "Weymouth", "Winchester", "Winthrop",
   "Woburn", "Yarmouth", "Capecod", "BerkshireCo",
   "MAFreeForAll", "boston_apartments", "Massachusettshelp",
-  // Neighbors (jobs spill across state lines)
-  "ProvidenceRI", "RhodeIsland", "Connecticut", "NewHampshire",
-  "VTContractors", "ManchesterNH", "NashuaNH", "RochesterNH",
-  // Major US metros
-  "nyc", "AskNYC", "chicago", "LosAngeles", "sandiego", "Seattle",
-  "denver", "Atlanta", "Houston", "Dallas", "philadelphia", "Phoenix",
-  "Portland", "PortlandOR", "Minneapolis", "PugetSound", "bayarea",
 ];
 
 const DEFAULT_KEYWORDS = [

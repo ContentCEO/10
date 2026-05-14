@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCronAuthorized } from "@/lib/cron-auth";
+import { isQualifiedLead } from "@/lib/lead-quality";
 
 export const runtime = "nodejs";
 
@@ -62,8 +63,14 @@ export async function GET(request: Request) {
   const candidates = fresh ?? [];
   let mirrored = 0;
   let skipped = 0;
+  let rejectedQuality = 0;
 
   for (const m of candidates) {
+    const quality = isQualifiedLead({
+      name: m.name, phone: m.phone, city: m.city, zip: m.zip, notes: m.notes,
+    });
+    if (!quality.ok) { rejectedQuality++; continue; }
+
     const sourceTag = m.external_id ? `scrape:${m.external_id}` : `scrape:${m.id}`;
 
     const { data: existing } = await admin
@@ -98,6 +105,7 @@ export async function GET(request: Request) {
     scanned: candidates.length,
     mirrored,
     skipped,
+    rejected_quality: rejectedQuality,
   });
 }
 

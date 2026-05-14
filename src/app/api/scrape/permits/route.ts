@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { BudgetTier } from "@/lib/marketplace";
+import { enrichPhone, isQualifiedLead, isMassachusettsLead } from "@/lib/lead-quality";
 
 export const runtime = "nodejs";
 
@@ -485,7 +486,7 @@ async function fetchEmpty(_: number): Promise<PermitLead[]> {
 }
 
 const SOURCES: CitySource[] = [
-  // Massachusetts
+  // Massachusetts only — non-MA sources are disabled until expansion.
   { key: "boston_permits",     city: "Boston",     fetch: fetchBoston },
   { key: "cambridge_permits",  city: "Cambridge",  fetch: fetchCambridge },
   { key: "somerville_permits", city: "Somerville", fetch: fetchSomerville },
@@ -494,67 +495,6 @@ const SOURCES: CitySource[] = [
   { key: "brockton_permits",   city: "Brockton",   fetch: fetchEmpty },
   { key: "springfield_permits",city: "Springfield",fetch: fetchEmpty },
   { key: "worcester_permits",  city: "Worcester",  fetch: fetchEmpty },
-
-  // National — typed fetchers
-  { key: "nyc_permits",         city: "New York",      fetch: fetchNyc },
-  { key: "chicago_permits",     city: "Chicago",       fetch: fetchChicago },
-  { key: "la_permits",          city: "Los Angeles",   fetch: fetchLA },
-  { key: "sf_permits",          city: "San Francisco", fetch: fetchSF },
-  { key: "seattle_permits",     city: "Seattle",       fetch: fetchSeattle },
-  { key: "austin_permits",      city: "Austin",        fetch: fetchAustin },
-  { key: "dallas_permits",      city: "Dallas",        fetch: fetchDallas },
-  { key: "dc_permits",          city: "Washington",    fetch: fetchDC },
-  { key: "detroit_permits",     city: "Detroit",       fetch: fetchDetroit },
-
-  // National — generic Socrata fetchers
-  { key: "philadelphia_permits", city: "Philadelphia",
-    fetch: (limit) => fetchGenericPermits("Philadelphia",
-      `https://phl.carto.com/api/v2/sql?q=SELECT+*+FROM+permits+ORDER+BY+permitissuedate+DESC+LIMIT+${limit}`,
-      { id: "permitnumber", type: "permittype", desc: "approvedscopeofwork", cost: "totaltax_assesment", addr: "address", zip: "zip" }) },
-  { key: "san_diego_permits", city: "San Diego",
-    fetch: (limit) => fetchGenericPermits("San Diego",
-      `https://data.sandiego.gov/api/3/action/datastore_search?resource_id=permits&limit=${limit}`,
-      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
-  { key: "denver_permits", city: "Denver",
-    fetch: (limit) => fetchGenericPermits("Denver",
-      `https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-permits.json?$limit=${limit}`,
-      { id: "permit_id", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
-  { key: "phoenix_permits", city: "Phoenix",
-    fetch: (limit) => fetchGenericPermits("Phoenix",
-      `https://www.phoenixopendata.com/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
-      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
-  { key: "san_jose_permits", city: "San Jose",
-    fetch: (limit) => fetchGenericPermits("San Jose",
-      `https://data.sanjoseca.gov/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
-      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
-  { key: "miami_dade_permits", city: "Miami",
-    fetch: (limit) => fetchGenericPermits("Miami",
-      `https://gis-mdc.opendata.arcgis.com/datasets/Permits/FeatureServer/0/query?where=1=1&outFields=*&f=json&resultRecordCount=${limit}`,
-      { id: "PermitNumber", type: "PermitType", desc: "Description", cost: "Valuation", addr: "Address", zip: "Zip" }) },
-  { key: "minneapolis_permits", city: "Minneapolis",
-    fetch: (limit) => fetchGenericPermits("Minneapolis",
-      `https://opendata.minneapolismn.gov/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
-      { id: "permit_number", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
-  { key: "indianapolis_permits", city: "Indianapolis",
-    fetch: (limit) => fetchGenericPermits("Indianapolis",
-      `https://data.indy.gov/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
-      { id: "permit_number", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
-  { key: "charlotte_permits", city: "Charlotte",
-    fetch: (limit) => fetchGenericPermits("Charlotte",
-      `https://data.charlottenc.gov/api/3/action/datastore_search?resource_id=building-permits&limit=${limit}`,
-      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
-  { key: "baltimore_permits", city: "Baltimore",
-    fetch: (limit) => fetchGenericPermits("Baltimore",
-      `https://data.baltimorecity.gov/resource/building-permits.json?$limit=${limit}`,
-      { id: "permit_number", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
-  { key: "las_vegas_permits", city: "Las Vegas",
-    fetch: (limit) => fetchGenericPermits("Las Vegas",
-      `https://opendata.lasvegasnevada.gov/resource/building-permits.json?$limit=${limit}`,
-      { id: "permit_number", type: "permit_type", desc: "description", cost: "estimated_cost", addr: "address", zip: "zip" }) },
-  { key: "honolulu_permits", city: "Honolulu",
-    fetch: (limit) => fetchGenericPermits("Honolulu",
-      `https://data.honolulu.gov/resource/building-permits.json?$limit=${limit}`,
-      { id: "permit_number", type: "permit_type", desc: "description", cost: "valuation", addr: "address", zip: "zip" }) },
 ];
 
 async function runOnce(opts: { source?: string; limit?: number; min_cost?: number }) {
@@ -564,23 +504,41 @@ async function runOnce(opts: { source?: string; limit?: number; min_cost?: numbe
   const limit = opts.limit ?? 250;
   const minCost = opts.min_cost ?? 5000;
   const admin = createAdminClient();
-  const results: Record<string, { fetched: number; inserted: number; duplicates: number; skipped_low_value: number }> = {};
+  const results: Record<string, { fetched: number; inserted: number; duplicates: number; skipped_low_value: number; skipped_not_ma: number; skipped_quality: number }> = {};
 
   const toRun = opts.source ? SOURCES.filter((s) => s.key === opts.source) : SOURCES;
 
   for (const src of toRun) {
     const rows = await src.fetch(limit).catch(() => [] as PermitLead[]);
-    let inserted = 0, duplicates = 0, skippedLowValue = 0;
+    let inserted = 0, duplicates = 0, skippedLowValue = 0, skippedNotMA = 0, skippedQuality = 0;
     for (const r of rows) {
       if (r.estimated_cost != null && r.estimated_cost < minCost) { skippedLowValue++; continue; }
+      if (!isMassachusettsLead({ city: r.city, zip: r.zip })) { skippedNotMA++; continue; }
       const { data: existing } = await admin
         .from("marketplace_leads").select("id")
         .eq("source_channel", "scraped").eq("external_id", r.externalId).maybeSingle();
       if (existing) { duplicates++; continue; }
+
+      // Phone enrichment via configured provider (BatchData / Whitepages /
+      // PeopleDataLabs / etc). Returns null if env vars unset.
+      const phone = await enrichPhone({
+        name: r.name,
+        address: r.address,
+        city: r.city,
+        zip: r.zip,
+      });
+
+      const notes = `${r.address ? `Address: ${r.address}\n` : ""}${r.notes}`;
+      const quality = isQualifiedLead({
+        name: r.name, phone, city: r.city, zip: r.zip, notes,
+      });
+      if (!quality.ok) { skippedQuality++; continue; }
+
       const { error } = await admin.from("marketplace_leads").insert({
         name: r.name,
+        phone,
         service_type: r.service_type,
-        notes: `${r.address ? `Address: ${r.address}\n` : ""}${r.notes}`,
+        notes,
         city: r.city,
         zip: r.zip,
         budget: classifyBudget(r.estimated_cost),
@@ -597,7 +555,7 @@ async function runOnce(opts: { source?: string; limit?: number; min_cost?: numbe
     await admin.from("scraper_runs").insert({
       source: src.key, region: src.city, fetched: rows.length, inserted, duplicates,
     });
-    results[src.key] = { fetched: rows.length, inserted, duplicates, skipped_low_value: skippedLowValue };
+    results[src.key] = { fetched: rows.length, inserted, duplicates, skipped_low_value: skippedLowValue, skipped_not_ma: skippedNotMA, skipped_quality: skippedQuality };
   }
   return results;
 }

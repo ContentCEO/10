@@ -30,10 +30,14 @@ export default async function MarketplacePage({
     .from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
   const seeAll = isOwnerEmail(user.email) || Boolean((viewerProfile as { is_admin?: boolean } | null)?.is_admin);
 
+  // Quality gate at the display layer: MA-only zips + must have a phone.
+  // Mirrors the server-side rule in src/lib/lead-quality.ts.
   let query = supabase
     .from("marketplace_leads")
     .select("*")
     .eq("status", "available")
+    .not("phone", "is", null)
+    .or("zip.like.01%,zip.like.02%")
     .order("ai_score", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(seeAll ? 200 : 50);
