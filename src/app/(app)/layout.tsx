@@ -8,6 +8,7 @@ import { Toaster } from "@/components/Toaster";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { AppTopBar } from "@/components/AppTopBar";
 import { PreferencesApplier } from "@/components/PreferencesApplier";
+import { CommandPalette } from "@/components/CommandPalette";
 import { isOwnerEmail } from "@/lib/owner";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -47,6 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Toaster />
       <KeyboardShortcuts />
       <PreferencesApplier />
+      <CommandPalette />
       <WelcomeWizard
         userId={user.id}
         initialBusinessName={profile?.business_name ?? null}

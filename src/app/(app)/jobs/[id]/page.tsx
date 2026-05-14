@@ -11,6 +11,7 @@ import { JobPhotos } from "./JobPhotos";
 import { SubAssignmentsCard } from "./SubAssignmentsCard";
 import { FsrLinkCard } from "./FsrLinkCard";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
+import { TaskList } from "./TaskList";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,11 @@ export default async function JobDetail({ params }: { params: { id: string } }) 
     supabase.from("invoices").select("*").eq("job_id", params.id).order("created_at", { ascending: false }),
     supabase.from("job_photos").select("*").eq("job_id", params.id).order("taken_at", { ascending: false }),
   ]);
+
+  const { data: tasksData } = await supabase.from("job_tasks")
+    .select("id,title,is_done,done_at,sort_order")
+    .eq("job_id", params.id).order("sort_order");
+  const tasks = (tasksData ?? []) as Array<{ id: string; title: string; is_done: boolean; done_at: string | null; sort_order: number }>;
   if (!job) notFound();
   const j = job as Job;
   const invoiceList = (invoices ?? []) as Invoice[];
@@ -139,6 +145,8 @@ export default async function JobDetail({ params }: { params: { id: string } }) 
           </div>
         </div>
       )}
+
+      <TaskList jobId={j.id} tasks={tasks} />
 
       <JobPhotos jobId={j.id} photos={photoList} />
 
