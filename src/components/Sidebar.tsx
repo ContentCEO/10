@@ -201,7 +201,6 @@ const SECTIONS: NavSection[] = [
     label: "Owner",
     ownerOnly: true,
     items: [
-      { href: "/owner/control",       label: "Mission Control",  icon: ShieldCheck },
       { href: "/owner/control/board", label: "Agent board",      icon: Bot },
       { href: "/owner",               label: "Overseer (live)",  icon: Activity },
     ],
@@ -210,7 +209,6 @@ const SECTIONS: NavSection[] = [
     label: "Admin",
     adminOnly: true,
     items: [
-      { href: "/admin",             label: "Admin overview",      icon: ShieldCheck },
       { href: "/admin/insights",    label: "Insights",            icon: TrendingUp },
       { href: "/admin/cron",        label: "Cron schedule",       icon: Activity },
       { href: "/admin/audit",       label: "Audit log",           icon: ShieldCheck },
