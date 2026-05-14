@@ -3,6 +3,7 @@ import { ShoppingCart, Sparkles, Store } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { type MarketplaceLead } from "@/lib/marketplace";
 import { formatDate } from "@/lib/utils";
+import { isOwnerEmail } from "@/lib/owner";
 import { DisputeButton } from "./DisputeButton";
 import { WalletBar } from "./WalletBar";
 import { MarketplaceCard } from "./MarketplaceCard";
@@ -22,14 +23,23 @@ export default async function MarketplacePage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // Owner + admins see uncurated scraped leads too; everyone else gets
+  // the curated firehose. This is what makes the scraped pipeline
+  // visible in /marketplace immediately for the platform owner.
+  const { data: viewerProfile } = await supabase
+    .from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
+  const seeAll = isOwnerEmail(user.email) || Boolean((viewerProfile as { is_admin?: boolean } | null)?.is_admin);
+
   let query = supabase
     .from("marketplace_leads")
     .select("*")
     .eq("status", "available")
-    .or("requires_curation.is.null,requires_curation.eq.false")
     .order("ai_score", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(seeAll ? 200 : 50);
+  if (!seeAll) {
+    query = query.or("requires_curation.is.null,requires_curation.eq.false");
+  }
 
   if (searchParams.service) query = query.ilike("service_type", `%${searchParams.service}%`);
   if (searchParams.zip)     query = query.eq("zip", searchParams.zip);

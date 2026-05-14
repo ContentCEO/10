@@ -18,8 +18,10 @@ const ALLOWED_SOURCES = new Set([
 ]);
 
 // Manual runs are scoped so they always finish under Vercel's timeout.
+// Cron schedules still hit the unbounded endpoints for full coverage.
 const QUICK_PARAMS: Record<string, string> = {
   permits: "?source=boston_permits&limit=50",
+  reddit:  "?subs=HomeImprovement,DIY,Plumbing,Roofing,Electricians,boston,massachusetts,Renovations,homeowners,Construction&limit=20",
 };
 
 async function loadHandler(source: string): Promise<((req: Request) => Promise<Response>) | null> {

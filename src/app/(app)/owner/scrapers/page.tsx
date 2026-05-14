@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isOwnerEmail } from "@/lib/owner";
 import { Activity, AlertCircle, CheckCircle2, RefreshCw } from "lucide-react";
 import { ScraperRunNowButton } from "./RunNow";
+import { RunAllControls } from "./RunAllControls";
 
 export const dynamic = "force-dynamic";
 
@@ -139,6 +140,8 @@ export default async function ScrapersPage() {
           tone={dead.length > 0 ? "warn" : "ok"}
         />
       </section>
+
+      <RunAllControls sources={KNOWN_SOURCES.map((s) => s.route)} />
 
       {grandInserted === 0 && (
         <div className="card p-4 ring-1 ring-amber-400/30 bg-amber-500/10">
