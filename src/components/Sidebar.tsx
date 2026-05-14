@@ -203,6 +203,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/owner/control/board", label: "Agent board",      icon: Bot },
       { href: "/owner",               label: "Overseer (live)",  icon: Activity },
+      { href: "/owner/scrapers",      label: "Scraper health",   icon: Activity },
     ],
   },
   {

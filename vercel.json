@@ -60,6 +60,8 @@
     { "path": "/api/scrape/mass-gov-bids",         "schedule": "0 */6 * * *" },
     { "path": "/api/scrape/massdot-projects",      "schedule": "30 */6 * * *" },
     { "path": "/api/scrape/ma-school-construction","schedule": "15 */6 * * *" },
-    { "path": "/api/scrape/serpapi",               "schedule": "0 */12 * * *" }
+    { "path": "/api/scrape/serpapi",               "schedule": "0 */12 * * *" },
+
+    { "path": "/api/cron/mirror-marketplace",      "schedule": "*/2 * * * *" }
   ]
 }
