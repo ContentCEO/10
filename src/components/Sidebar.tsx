@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   Award,
+  BarChart3,
   Bot,
   Briefcase,
   Calendar,
@@ -127,8 +128,9 @@ const SECTIONS: NavSection[] = [
   {
     label: "Operations",
     items: [
-      { href: "/jobs",          label: "Jobs",          icon: Hammer },
-      { href: "/job-templates", label: "Job templates", icon: FileCode },
+      { href: "/jobs",              label: "Jobs",              icon: Hammer },
+      { href: "/jobs/profitability",label: "Job P&L",           icon: BarChart3 },
+      { href: "/job-templates",     label: "Job templates",     icon: FileCode },
       { href: "/dispatch",      label: "Dispatch",      icon: Users },
       { href: "/route-plan",    label: "Route plan",    icon: Compass },
       { href: "/booking",  label: "Booking",  icon: Calendar },
