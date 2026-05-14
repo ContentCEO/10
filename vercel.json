@@ -28,6 +28,9 @@
     { "path": "/api/cron/onboarding-sequence",     "schedule": "0 15 * * *" },
     { "path": "/api/cron/lead-instant-reply",      "schedule": "*/5 * * * *" },
     { "path": "/api/cron/auto-proposal-draft",     "schedule": "*/30 * * * *" },
+    { "path": "/api/cron/inbox-digest",            "schedule": "0 13 * * *" },
+    { "path": "/api/cron/stale-lead-followup",     "schedule": "15 * * * *" },
+    { "path": "/api/cron/milestone-celebrations",  "schedule": "0 14 * * *" },
     { "path": "/api/agents/tick",                  "schedule": "*/5 * * * *" },
 
     { "path": "/api/scrape/reddit",                "schedule": "*/5 * * * *" },

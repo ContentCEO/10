@@ -6,6 +6,7 @@ import {
   Activity,
   Award,
   BarChart3,
+  Battery,
   Bot,
   Briefcase,
   Calendar,
@@ -106,6 +107,7 @@ const SECTIONS: NavSection[] = [
       { href: "/customers/ltv", label: "Customer LTV",  icon: Crown },
       { href: "/customers/import", label: "Import CSV", icon: UploadCloud },
       { href: "/customers/duplicates", label: "Customer dupes", icon: Copy },
+      { href: "/customers/vip",     label: "VIP customers",   icon: Crown },
       { href: "/leads/duplicates", label: "Duplicates",  icon: Copy },
       { href: "/leads/bulk",       label: "Bulk actions", icon: Layers },
       { href: "/leads/recycle",    label: "Recycle bin",  icon: Recycle },
@@ -153,6 +155,7 @@ const SECTIONS: NavSection[] = [
       { href: "/documents",       label: "Documents",      icon: FileText },
       { href: "/team/timesheet",     label: "Timesheet",         icon: Clock },
       { href: "/team/profitability", label: "Team profitability", icon: Trophy },
+      { href: "/team/capacity",      label: "Capacity",           icon: Battery },
     ],
   },
   {
