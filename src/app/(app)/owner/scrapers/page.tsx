@@ -73,7 +73,7 @@ export default async function ScrapersPage() {
   const admin = createAdminClient();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ data: runs }, { count: marketplaceCount }, { count: leadsToday }] = await Promise.all([
+  const [{ data: runs }, { count: marketplaceCount }, { count: leadsToday }, { count: pendingCount }] = await Promise.all([
     admin.from("scraper_runs")
       .select("source,region,fetched,inserted,duplicates,created_at")
       .gte("created_at", since)
@@ -87,6 +87,9 @@ export default async function ScrapersPage() {
       .select("id", { count: "exact", head: true })
       .ilike("source", "scrape:%")
       .gte("created_at", since),
+    admin.from("marketplace_leads")
+      .select("id", { count: "exact", head: true })
+      .eq("requires_curation", true),
   ]);
 
   const stats: Record<string, SourceStat> = {};
@@ -129,7 +132,7 @@ export default async function ScrapersPage() {
         </p>
       </header>
 
-      <section className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <section className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Tile label="Sources" value={String(KNOWN_SOURCES.length)} icon={Activity} />
         <Tile label="Scraped rows (24h)" value={String(marketplaceCount ?? 0)} icon={CheckCircle2} />
         <Tile label="Mirrored to /leads (24h)" value={String(leadsToday ?? 0)} icon={CheckCircle2} />
@@ -139,6 +142,18 @@ export default async function ScrapersPage() {
           icon={AlertCircle}
           tone={dead.length > 0 ? "warn" : "ok"}
         />
+        <a href="/admin/curation" className="card p-4 flex items-start gap-3 hover:ring-brand-400/40 transition">
+          <div className={(pendingCount ?? 0) > 0
+            ? "h-9 w-9 rounded-lg bg-amber-500/15 ring-1 ring-amber-400/30 flex items-center justify-center text-amber-300"
+            : "h-9 w-9 rounded-lg bg-brand-500/15 ring-1 ring-brand-400/30 flex items-center justify-center text-brand-200"}>
+            <AlertCircle className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-wider text-white/50 font-mono">Pending import</div>
+            <div className="text-2xl font-semibold text-white tabular-nums mt-0.5">{pendingCount ?? 0}</div>
+            <div className="text-[10px] text-white/40 mt-0.5">Review &amp; bulk-import →</div>
+          </div>
+        </a>
       </section>
 
       <RunAllControls sources={KNOWN_SOURCES.map((s) => s.route)} />
