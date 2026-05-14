@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,6 +13,7 @@ import {
   Calendar,
   CalendarClock,
   Camera,
+  ChevronDown,
   CircleDollarSign,
   Clock,
   Code,
@@ -220,10 +222,48 @@ const SECTIONS: NavSection[] = [
   },
 ];
 
+const STORAGE_KEY = "cf:sidebar-expanded";
+
+function sectionContainsActive(section: NavSection, path: string): boolean {
+  return section.items.some((it) => path === it.href || path.startsWith(it.href + "/"));
+}
+
 export function Sidebar({
   email, isAdmin, isOwner,
 }: { email: string | null; isAdmin?: boolean; isOwner?: boolean }) {
   const path = usePathname();
+
+  // Which sections are expanded? Default: only the section containing the
+  // current page. Persist on every toggle.
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    let restored: string[] | null = null;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) restored = JSON.parse(raw) as string[];
+    } catch { /* ignore */ }
+
+    const next = new Set<string>();
+    // Start from persisted choice if present, else empty.
+    if (restored) restored.forEach((s) => next.add(s));
+    // Always ensure the section containing the active page is open.
+    for (const s of SECTIONS) {
+      if (s.label && sectionContainsActive(s, path)) next.add(s.label);
+    }
+    setExpanded(next);
+  }, [path]);
+
+  function toggle(label: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next))); } catch { /* ignore */ }
+      return next;
+    });
+  }
+
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 border-r border-ink-200/70 bg-white/80 backdrop-blur overflow-y-auto scrollbar-thin">
       <div className="px-5 py-4 border-b border-ink-200/70 sticky top-0 bg-white/90 backdrop-blur z-10">
@@ -234,45 +274,71 @@ export function Sidebar({
           <span className="gradient-text">ContractorFlow</span>
         </Link>
       </div>
-      <nav className="flex-1 px-2.5 py-4 space-y-5">
+      <nav className="flex-1 px-2.5 py-4 space-y-3">
         {SECTIONS.filter((s) => {
           if (s.ownerOnly && !isOwner) return false;
           if (s.adminOnly && !isAdmin) return false;
           return true;
-        }).map((section, idx) => (
-          <div key={section.label ?? `solo-${idx}`}>
-            {section.label && (
-              <div className="px-3 mb-2 text-[10px] uppercase tracking-[0.14em] text-ink-400 font-semibold">
-                {section.label}
-              </div>
-            )}
-            <div className="space-y-0.5">
-              {section.items.map(({ href, label, icon: Icon }) => {
-                const active = path === href || path.startsWith(href + "/");
-                return (
-                  <Link
-                    key={href} href={href}
+        }).map((section, idx) => {
+          const isCollapsible = !!section.label;
+          const isOpen = !isCollapsible || expanded.has(section.label!);
+          const activeCount = section.items.filter(
+            (it) => path === it.href || path.startsWith(it.href + "/"),
+          ).length;
+
+          return (
+            <div key={section.label ?? `solo-${idx}`}>
+              {isCollapsible && (
+                <button
+                  type="button"
+                  onClick={() => toggle(section.label!)}
+                  aria-expanded={isOpen}
+                  className="w-full px-3 mb-1.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-ink-400 font-semibold hover:text-ink-700 transition-colors"
+                >
+                  <ChevronDown
                     className={cn(
-                      "group relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-150",
-                      active
-                        ? "bg-brand-50/60 text-brand-700"
-                        : "text-ink-700 hover:bg-ink-50 hover:text-ink-900",
+                      "h-3 w-3 shrink-0 transition-transform duration-200",
+                      isOpen ? "rotate-0" : "-rotate-90",
                     )}
-                  >
-                    {active && (
-                      <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-brand-500" />
-                    )}
-                    <Icon className={cn(
-                      "h-4 w-4 transition-colors shrink-0",
-                      active ? "text-brand-600" : "text-ink-500 group-hover:text-ink-700",
-                    )} />
-                    <span className="truncate">{label}</span>
-                  </Link>
-                );
-              })}
+                  />
+                  <span className="flex-1 text-left">{section.label}</span>
+                  {activeCount > 0 && (
+                    <span className="text-[9px] text-brand-600 normal-case tracking-normal font-bold">
+                      ●
+                    </span>
+                  )}
+                </button>
+              )}
+              {isOpen && (
+                <div className="space-y-0.5">
+                  {section.items.map(({ href, label, icon: Icon }) => {
+                    const active = path === href || path.startsWith(href + "/");
+                    return (
+                      <Link
+                        key={href} href={href}
+                        className={cn(
+                          "group relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-150",
+                          active
+                            ? "bg-brand-50/60 text-brand-700"
+                            : "text-ink-700 hover:bg-ink-50 hover:text-ink-900",
+                        )}
+                      >
+                        {active && (
+                          <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-brand-500" />
+                        )}
+                        <Icon className={cn(
+                          "h-4 w-4 transition-colors shrink-0",
+                          active ? "text-brand-600" : "text-ink-500 group-hover:text-ink-700",
+                        )} />
+                        <span className="truncate">{label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
       <form action="/auth/signout" method="post"
         className="border-t border-ink-200/70 px-3 py-3 sticky bottom-0 bg-white/90 backdrop-blur">
