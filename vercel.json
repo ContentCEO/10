@@ -24,6 +24,8 @@
     { "path": "/api/cron/recurring-invoices",      "schedule": "0 7 * * *" },
     { "path": "/api/cron/customer-anniversary",    "schedule": "30 13 * * *" },
     { "path": "/api/cron/webhook-notifications",   "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/lead-spam-filter",        "schedule": "20 * * * *" },
+    { "path": "/api/cron/onboarding-sequence",     "schedule": "0 15 * * *" },
     { "path": "/api/agents/tick",                  "schedule": "*/5 * * * *" },
 
     { "path": "/api/scrape/reddit",                "schedule": "*/5 * * * *" },
