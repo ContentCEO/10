@@ -26,6 +26,8 @@
     { "path": "/api/cron/webhook-notifications",   "schedule": "*/5 * * * *" },
     { "path": "/api/cron/lead-spam-filter",        "schedule": "20 * * * *" },
     { "path": "/api/cron/onboarding-sequence",     "schedule": "0 15 * * *" },
+    { "path": "/api/cron/lead-instant-reply",      "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/auto-proposal-draft",     "schedule": "*/30 * * * *" },
     { "path": "/api/agents/tick",                  "schedule": "*/5 * * * *" },
 
     { "path": "/api/scrape/reddit",                "schedule": "*/5 * * * *" },

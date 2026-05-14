@@ -39,6 +39,31 @@ export async function POST(request: Request) {
   const to   = normalizePhone(toRaw);
   const admin = createAdminClient();
 
+  // W-5: STOP/START opt-out handling. Mirror Twilio's compliance pipeline
+  // in our DB so our own crons honor it (broadcast, reminders, NPS, etc.)
+  const STOP_WORDS  = new Set(["STOP","STOPALL","UNSUBSCRIBE","CANCEL","END","QUIT"]);
+  const START_WORDS = new Set(["START","UNSTOP","YES"]);
+  const word = body.trim().toUpperCase().replace(/[^A-Z]/g, "");
+  if (STOP_WORDS.has(word) || START_WORDS.has(word)) {
+    const tail = from.slice(-10);
+    if (tail.length === 10) {
+      const { data: matches } = await admin
+        .from("customers").select("id,phone");
+      const ids = ((matches ?? []) as { id: string; phone: string | null }[])
+        .filter((c) => c.phone && normalizePhone(c.phone).slice(-10) === tail)
+        .map((c) => c.id);
+      if (ids.length > 0) {
+        await admin.from("customers")
+          .update({
+            sms_opted_out: STOP_WORDS.has(word),
+            sms_opted_out_at: STOP_WORDS.has(word) ? new Date().toISOString() : null,
+          })
+          .in("id", ids);
+      }
+    }
+    // Fall through — still log the message below.
+  }
+
   // Find the contractor who owns the inbound Twilio number. We match on the
   // alert_phone field — set this on your profile to your Twilio number.
   let user_id: string | null = null;

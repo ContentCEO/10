@@ -38,7 +38,8 @@ export async function POST(request: Request) {
   let query = supabase.from("customers")
     .select("id,name,phone")
     .eq("user_id", user.id)
-    .not("phone", "is", null);
+    .not("phone", "is", null)
+    .eq("sms_opted_out", false);
 
   if (audience === "recurring") {
     query = query.eq("recurring_active", true);

@@ -170,6 +170,7 @@ const SECTIONS: NavSection[] = [
       { href: "/grow/hours-accuracy",    label: "Hours accuracy",   icon: Clock },
       { href: "/grow/lead-heatmap",      label: "Lead heatmap",     icon: Calendar },
       { href: "/grow/zip-performance",   label: "ZIP performance",  icon: MapPin },
+      { href: "/grow/daily-revenue",     label: "Daily revenue",    icon: TrendingUp },
       { href: "/playbook-200", label: "200/day plan", icon: Rocket },
       { href: "/partnerships", label: "Partnerships", icon: Handshake },
       { href: "/lsa-setup",    label: "Google LSAs",  icon: ShieldCheck },
