@@ -93,9 +93,9 @@ export function RecentlyViewed() {
         <Clock className="h-3 w-3" /> Recent
       </span>
       {items.map((it) => (
-        <span key={it.href} className="group inline-flex items-center gap-1.5 rounded-full bg-white ring-1 ring-ink-200/70 px-2.5 py-1 text-xs whitespace-nowrap shrink-0 hover:bg-ink-50 transition">
-          <Link href={it.href} className="text-ink-700 hover:text-ink-900 font-medium">{it.label}</Link>
-          <button onClick={() => remove(it.href)} aria-label="Remove" className="text-ink-300 hover:text-ink-600 opacity-0 group-hover:opacity-100 transition">
+        <span key={it.href} className="group inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] ring-1 ring-white/10 px-2.5 py-1 text-xs whitespace-nowrap shrink-0 hover:bg-white/[0.08] transition">
+          <Link href={it.href} className="text-white/85 hover:text-white font-medium">{it.label}</Link>
+          <button onClick={() => remove(it.href)} aria-label="Remove" className="text-white/30 hover:text-white/80 opacity-0 group-hover:opacity-100 transition">
             <X className="h-3 w-3" />
           </button>
         </span>

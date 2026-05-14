@@ -48,7 +48,7 @@ export function WeatherWidget({ zip }: { zip?: string }) {
 
   if (loading) {
     return (
-      <div className="text-center text-ink-400">
+      <div className="text-center text-white/40">
         <Loader2 className="h-5 w-5 animate-spin mx-auto" />
       </div>
     );
@@ -56,7 +56,7 @@ export function WeatherWidget({ zip }: { zip?: string }) {
 
   if (!data?.ok || !data.days) {
     return (
-      <div className="text-center text-ink-400 text-xs">
+      <div className="text-center text-white/40 text-xs">
         Weather unavailable.
       </div>
     );
@@ -68,12 +68,12 @@ export function WeatherWidget({ zip }: { zip?: string }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-xs font-mono uppercase tracking-[0.18em] text-brand-600 flex items-center gap-2">
+        <div className="text-xs font-mono uppercase tracking-[0.18em] text-brand-300 flex items-center gap-2">
           <Sun className="h-3.5 w-3.5" /> Weather · {data.place}
         </div>
       </div>
       {heavyRain && (
-        <div className="mb-3 rounded-lg bg-amber-50 ring-1 ring-amber-200 px-3 py-2 text-xs text-amber-800 flex items-center gap-2">
+        <div className="mb-3 rounded-lg bg-amber-500/15 ring-1 ring-amber-400/30 px-3 py-2 text-xs text-amber-200 flex items-center gap-2">
           <CloudRain className="h-3.5 w-3.5" />
           Rain expected today ({today.rain_pct}% · {today.rain_in}&quot;). Plan to reschedule outdoor work.
         </div>
@@ -83,15 +83,15 @@ export function WeatherWidget({ zip }: { zip?: string }) {
           const Icon = iconFor(d.code);
           const day = i === 0 ? "Today" : new Date(d.date).toLocaleDateString("en-US", { weekday: "short" });
           return (
-            <div key={d.date} className="rounded-xl bg-ink-50 ring-1 ring-ink-200/70 p-3 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-ink-500 font-mono">{day}</div>
-              <Icon className="h-6 w-6 mx-auto mt-1.5 text-brand-600" />
-              <div className="mt-1 text-xs text-ink-600">{d.label}</div>
-              <div className="mt-1 text-sm font-semibold text-ink-800">
+            <div key={d.date} className="rounded-xl bg-white/[0.04] ring-1 ring-white/10 p-3 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-white/50 font-mono">{day}</div>
+              <Icon className="h-6 w-6 mx-auto mt-1.5 text-brand-300" />
+              <div className="mt-1 text-xs text-white/70">{d.label}</div>
+              <div className="mt-1 text-sm font-semibold text-white">
                 <span>{d.high}°</span>
-                <span className="text-ink-400"> / {d.low}°</span>
+                <span className="text-white/40"> / {d.low}°</span>
               </div>
-              <div className="mt-1 text-[10px] text-ink-500 flex items-center justify-center gap-2 font-mono">
+              <div className="mt-1 text-[10px] text-white/50 flex items-center justify-center gap-2 font-mono">
                 <span><CloudRain className="inline h-2.5 w-2.5 mr-0.5" />{d.rain_pct}%</span>
                 <span><Wind className="inline h-2.5 w-2.5 mr-0.5" />{d.wind_mph}</span>
               </div>

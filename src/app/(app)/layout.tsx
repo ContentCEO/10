@@ -33,7 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="min-h-screen flex bg-ink-50">
+    <div data-theme="dark-app" className="min-h-screen flex bg-transparent text-white">
       <Sidebar
         email={user.email ?? null}
         isAdmin={Boolean(profile?.is_admin)}

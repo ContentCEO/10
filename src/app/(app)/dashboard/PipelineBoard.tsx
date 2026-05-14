@@ -78,20 +78,20 @@ export function PipelineBoard({ initial }: { initial: PipelineLead[] }) {
             }}
             className={
               hover === col.id
-                ? "rounded-2xl bg-brand-50 ring-2 ring-brand-400/60 p-3 min-h-[200px] transition"
-                : "rounded-2xl bg-ink-50 ring-1 ring-ink-200/70 p-3 min-h-[200px] transition"
+                ? "rounded-2xl bg-white/[0.08] ring-2 ring-brand-400/60 p-3 min-h-[200px] transition"
+                : "rounded-2xl bg-white/[0.03] ring-1 ring-white/10 p-3 min-h-[200px] transition"
             }
           >
             <div className={`relative overflow-hidden rounded-lg bg-gradient-to-br ${col.tone} px-3 py-2 mb-3`}>
-              <div className="text-xs font-mono uppercase tracking-[0.18em] text-ink-700 font-semibold">{col.label}</div>
+              <div className="text-xs font-mono uppercase tracking-[0.18em] text-white/90 font-semibold">{col.label}</div>
               <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-bold tabular-nums text-ink-900">{colLeads.length}</span>
-                {total > 0 && <span className="text-xs text-ink-600 tabular-nums">${total.toLocaleString()}</span>}
+                <span className="text-2xl font-bold tabular-nums text-white">{colLeads.length}</span>
+                {total > 0 && <span className="text-xs text-white/70 tabular-nums">${total.toLocaleString()}</span>}
               </div>
             </div>
             <div className="space-y-1.5">
               {colLeads.length === 0 && (
-                <div className="text-xs text-ink-400 text-center py-4 border border-dashed border-ink-200 rounded-lg">Drop a lead here</div>
+                <div className="text-xs text-white/30 text-center py-4 border border-dashed border-white/10 rounded-lg">Drop a lead here</div>
               )}
               {colLeads.map((l) => (
                 <div
@@ -99,15 +99,15 @@ export function PipelineBoard({ initial }: { initial: PipelineLead[] }) {
                   draggable
                   onDragStart={(e) => { setDragId(l.id); e.dataTransfer.setData("text/plain", l.id); }}
                   className={
-                    "group flex items-start gap-2 rounded-lg bg-white ring-1 ring-ink-200/70 p-2.5 cursor-grab active:cursor-grabbing hover:bg-ink-50 hover:ring-brand-300/60 transition" +
+                    "group flex items-start gap-2 rounded-lg bg-white/[0.04] ring-1 ring-white/10 p-2.5 cursor-grab active:cursor-grabbing hover:bg-white/[0.08] hover:ring-brand-300/60 transition" +
                     (pending && dragId === l.id ? " opacity-50" : "")
                   }
                 >
-                  <GripVertical className="h-3 w-3 text-ink-300 mt-0.5 shrink-0 group-hover:text-ink-500 transition" />
+                  <GripVertical className="h-3 w-3 text-white/30 mt-0.5 shrink-0 group-hover:text-white/60 transition" />
                   <Link href={`/leads/${l.id}`} className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-ink-900 truncate">{l.name}</div>
-                    <div className="text-[11px] text-ink-500 truncate">{l.service_type ?? "—"}</div>
-                    {l.price ? <div className="text-[11px] text-emerald-600 font-mono tabular-nums mt-0.5">${l.price.toLocaleString()}</div> : null}
+                    <div className="text-sm font-medium text-white truncate">{l.name}</div>
+                    <div className="text-[11px] text-white/50 truncate">{l.service_type ?? "—"}</div>
+                    {l.price ? <div className="text-[11px] text-emerald-300 font-mono tabular-nums mt-0.5">${l.price.toLocaleString()}</div> : null}
                   </Link>
                 </div>
               ))}

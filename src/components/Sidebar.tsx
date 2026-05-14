@@ -263,8 +263,8 @@ export function Sidebar({
   }
 
   return (
-    <aside className="hidden md:flex md:flex-col md:w-64 border-r border-ink-200/70 bg-white/80 backdrop-blur overflow-y-auto scrollbar-thin">
-      <div className="px-5 py-4 border-b border-ink-200/70 sticky top-0 bg-white/90 backdrop-blur z-10">
+    <aside className="hidden md:flex md:flex-col md:w-64 border-r border-white/5 bg-[#0b0b14]/90 backdrop-blur overflow-y-auto scrollbar-thin">
+      <div className="px-5 py-4 border-b border-white/5 sticky top-0 bg-[#0b0b14]/95 backdrop-blur z-10">
         <Link href="/dashboard" className="flex items-center gap-2.5 font-semibold tracking-tight group">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow transition-transform group-hover:scale-105">
             CF
@@ -291,7 +291,7 @@ export function Sidebar({
                   type="button"
                   onClick={() => toggle(section.label!)}
                   aria-expanded={isOpen}
-                  className="w-full px-3 mb-1.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-ink-400 font-semibold hover:text-ink-700 transition-colors"
+                  className="w-full px-3 mb-1.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-white/40 font-semibold hover:text-white transition-colors"
                 >
                   <ChevronDown
                     className={cn(
@@ -317,16 +317,16 @@ export function Sidebar({
                         className={cn(
                           "group relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-150",
                           active
-                            ? "bg-brand-50/60 text-brand-700"
-                            : "text-ink-700 hover:bg-ink-50 hover:text-ink-900",
+                            ? "bg-brand-500/15 text-brand-200"
+                            : "text-white/70 hover:bg-white/5 hover:text-white",
                         )}
                       >
                         {active && (
-                          <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-brand-500" />
+                          <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-brand-400" />
                         )}
                         <Icon className={cn(
                           "h-4 w-4 transition-colors shrink-0",
-                          active ? "text-brand-600" : "text-ink-500 group-hover:text-ink-700",
+                          active ? "text-brand-300" : "text-white/50 group-hover:text-white/90",
                         )} />
                         <span className="truncate">{label}</span>
                       </Link>
@@ -339,8 +339,8 @@ export function Sidebar({
         })}
       </nav>
       <form action="/auth/signout" method="post"
-        className="border-t border-ink-200/70 px-3 py-3 sticky bottom-0 bg-white/90 backdrop-blur">
-        <div className="px-2 pb-2 text-xs text-ink-500 truncate" title={email ?? ""}>{email}</div>
+        className="border-t border-white/5 px-3 py-3 sticky bottom-0 bg-[#0b0b14]/95 backdrop-blur">
+        <div className="px-2 pb-2 text-xs text-white/40 truncate" title={email ?? ""}>{email}</div>
         <button className="btn-secondary w-full justify-start">
           <LogOut className="h-4 w-4" /> Sign out
         </button>

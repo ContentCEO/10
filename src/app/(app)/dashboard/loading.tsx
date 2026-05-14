@@ -1,5 +1,4 @@
-// Skeleton loader for /dashboard — matches the new light v4 chrome
-// so the page doesn't flash dark before content loads.
+// Dark skeleton matching the v4 dashboard chrome.
 
 export default function DashboardLoading() {
   return (
@@ -26,9 +25,9 @@ function SkeletonBlock({ h, className = "", rounded = "rounded-2xl" }: {
   h: string; className?: string; rounded?: string;
 }) {
   return (
-    <div className={`relative overflow-hidden ${rounded} bg-white ring-1 ring-ink-200/70 ${h} ${className}`}>
+    <div className={`relative overflow-hidden ${rounded} bg-white/[0.03] ring-1 ring-white/10 ${h} ${className}`}>
       <div className="absolute inset-0 -translate-x-full animate-shimmer"
-           style={{ background: "linear-gradient(90deg, transparent 0%, rgba(15,23,42,0.04) 50%, transparent 100%)" }} />
+           style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%)" }} />
     </div>
   );
 }
