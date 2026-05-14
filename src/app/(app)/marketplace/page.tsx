@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { type MarketplaceLead } from "@/lib/marketplace";
 import { formatDate } from "@/lib/utils";
 import { isOwnerEmail } from "@/lib/owner";
+import { isQualifiedLead } from "@/lib/lead-quality";
 import { DisputeButton } from "./DisputeButton";
 import { WalletBar } from "./WalletBar";
 import { MarketplaceCard } from "./MarketplaceCard";
@@ -30,8 +31,9 @@ export default async function MarketplacePage({
     .from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
   const seeAll = isOwnerEmail(user.email) || Boolean((viewerProfile as { is_admin?: boolean } | null)?.is_admin);
 
-  // Filter: lead must have a real name AND a phone number. That's it.
-  // No geography or curation gates at the display layer.
+  // Filter (server-side): non-empty name + non-empty phone + status
+  // available. MA + contractor-intent are applied below in JS via
+  // isQualifiedLead since they're multi-field rules.
   let query = supabase
     .from("marketplace_leads")
     .select("*")
@@ -42,7 +44,7 @@ export default async function MarketplacePage({
     .neq("phone", "")
     .order("ai_score", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(seeAll ? 500 : 50);
+    .limit(seeAll ? 1000 : 200);
   if (!seeAll) {
     query = query.or("requires_curation.is.null,requires_curation.eq.false");
   }
@@ -58,7 +60,18 @@ export default async function MarketplacePage({
     supabase.from("profiles").select("credit_cents").eq("id", user.id).single(),
   ]);
 
-  const rows    = (available ?? []) as MarketplaceLead[];
+  // JS-side enforcement of MA + contractor-intent (both multi-field).
+  const rawRows = (available ?? []) as MarketplaceLead[];
+  const rows = rawRows.filter((r) => isQualifiedLead({
+    name: r.name,
+    phone: r.phone,
+    city: r.city,
+    zip: r.zip,
+    notes: r.notes,
+    service_type: r.service_type,
+    ai_summary: r.ai_summary,
+  }).ok).slice(0, seeAll ? 500 : 50);
+
   const mine    = (claimed ?? []) as MarketplaceLead[];
   const balance = profile?.credit_cents ?? 0;
   const hotCount = rows.filter((r) => r.ai_score >= 80).length;
