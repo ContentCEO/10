@@ -24,6 +24,7 @@ import {
   Hammer,
   Handshake,
   HardHat,
+  Layers,
   LayoutDashboard,
   LogOut,
   type LucideIcon,
@@ -96,6 +97,7 @@ const SECTIONS: NavSection[] = [
       { href: "/customers/ltv", label: "Customer LTV",  icon: Crown },
       { href: "/customers/import", label: "Import CSV", icon: UploadCloud },
       { href: "/leads/duplicates", label: "Duplicates",  icon: Copy },
+      { href: "/leads/bulk",       label: "Bulk actions", icon: Layers },
     ],
   },
   {
