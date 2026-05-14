@@ -8,6 +8,7 @@ import { JobStatusBadge, InvoiceStatusBadge } from "@/components/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ReviewRequestPanel } from "./ReviewRequestPanel";
 import { JobPhotos } from "./JobPhotos";
+import { SubAssignmentsCard } from "./SubAssignmentsCard";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,8 @@ export default async function JobDetail({ params }: { params: { id: string } }) 
       )}
 
       <JobPhotos jobId={j.id} photos={photoList} />
+
+      <SubAssignmentsCard jobId={j.id} />
 
       <section className="card p-5">
         <div className="flex items-center justify-between">
