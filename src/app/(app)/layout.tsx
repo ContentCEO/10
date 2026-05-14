@@ -28,6 +28,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (profile?.account_type === "employee")  redirect("/work");
   if (profile?.account_type === "agency")    redirect("/agency");
 
+  // Self-heal: the owner account is auto-promoted to is_admin on every
+  // login. Idempotent; no-op once flipped.
+  const isOwner = isOwnerEmail(user.email);
+  if (isOwner && profile && !profile.is_admin) {
+    await supabase.from("profiles").update({ is_admin: true }).eq("id", user.id);
+    profile.is_admin = true;
+  }
+
   const alreadyOnboarded = Boolean(
     profile?.business_name && Array.isArray(profile?.services) && profile.services.length > 0,
   );
@@ -37,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar
         email={user.email ?? null}
         isAdmin={Boolean(profile?.is_admin)}
-        isOwner={isOwnerEmail(user.email)}
+        isOwner={isOwner}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <AppTopBar />
