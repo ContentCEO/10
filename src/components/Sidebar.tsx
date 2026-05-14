@@ -36,6 +36,7 @@ import {
   Phone,
   Plug,
   Receipt,
+  Recycle,
   Repeat,
   Rocket,
   Scale,
@@ -103,6 +104,7 @@ const SECTIONS: NavSection[] = [
       { href: "/customers/duplicates", label: "Customer dupes", icon: Copy },
       { href: "/leads/duplicates", label: "Duplicates",  icon: Copy },
       { href: "/leads/bulk",       label: "Bulk actions", icon: Layers },
+      { href: "/leads/recycle",    label: "Recycle bin",  icon: Recycle },
     ],
   },
   {

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Hammer, Package, Plus, Trash2, Wallet } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Hammer, Package, Plus, Sparkles, Trash2, Wallet } from "lucide-react";
 
 interface Line {
   id: number;
@@ -143,6 +143,8 @@ export function QuickEstimateBuilder() {
         </div>
       </section>
 
+      <PricingSuggestion total={total} />
+
       <section className="card p-5 bg-gradient-to-br from-brand-50/60 via-white to-violet-50/40">
         <h2 className="text-base font-semibold mb-3">Quote</h2>
         <dl className="space-y-1 text-sm">
@@ -172,6 +174,114 @@ function Row({ label, value, muted = false, big = false }: {
       <dd className={`tabular-nums font-mono ${big ? "text-2xl font-semibold text-ink-900" : ""}`}>
         ${value.toFixed(2)}
       </dd>
+    </div>
+  );
+}
+
+/* Sister: pulls /api/ai/price-suggest data when user types a service name. */
+interface SuggestResp {
+  ok: boolean;
+  service: string;
+  sample_size: number;
+  message?: string;
+  suggested?: { conservative: number; median: number; aggressive: number };
+  range?: { min: number; max: number };
+  win_rate_by_band?: {
+    low:  { win_rate: number };
+    mid:  { win_rate: number };
+    high: { win_rate: number };
+  };
+}
+
+function PricingSuggestion({ total }: { total: number }) {
+  const [service, setService] = useState("");
+  const [data, setData] = useState<SuggestResp | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const q = service.trim();
+    if (q.length < 3) { setData(null); return; }
+    const t = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/ai/price-suggest?service=${encodeURIComponent(q)}`);
+        const json = await res.json();
+        if (json.ok) setData(json);
+      } catch { /* silent */ }
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [service]);
+
+  const band = total > 0 && data?.suggested
+    ? (total <= data.suggested.conservative ? "low"
+      : total >= data.suggested.aggressive ? "high"
+      : "mid")
+    : null;
+
+  return (
+    <section className="card p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <Sparkles className="h-4 w-4 text-brand-600" />
+        <h2 className="text-base font-semibold">Suggested price from your history</h2>
+      </div>
+      <input
+        className="input mb-3"
+        placeholder="Type the service type (e.g. bathroom remodel, gutter clean)"
+        value={service}
+        onChange={(e) => setService(e.target.value)}
+      />
+      {loading && <div className="text-xs text-ink-500 italic">Looking at your past wins…</div>}
+      {data && data.sample_size === 0 && (
+        <div className="text-xs text-ink-500 italic">{data.message}</div>
+      )}
+      {data?.suggested && data.range && (
+        <>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <Tier label="Conservative" sub="25th pct" v={data.suggested.conservative}
+              winRate={data.win_rate_by_band?.low.win_rate} />
+            <Tier label="Median"       sub="50th pct" v={data.suggested.median}    accent
+              winRate={data.win_rate_by_band?.mid.win_rate} />
+            <Tier label="Aggressive"   sub="75th pct" v={data.suggested.aggressive}
+              winRate={data.win_rate_by_band?.high.win_rate} />
+          </div>
+          <div className="mt-2 text-[11px] text-ink-500">
+            Based on <span className="font-mono tabular-nums">{data.sample_size}</span> past matches
+            (range ${data.range.min.toLocaleString()}–${data.range.max.toLocaleString()}).
+          </div>
+          {total > 0 && band && (
+            <div className={`mt-3 text-xs rounded-lg p-2 ${
+              band === "high" ? "bg-amber-50 text-amber-800 ring-1 ring-amber-200" :
+              band === "low"  ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200" :
+                                "bg-brand-50 text-brand-800 ring-1 ring-brand-200"}`}>
+              Your current quote of <strong>${total.toFixed(0)}</strong>{" "}
+              is in the <strong>{band}</strong> band — historical win rate at this price:{" "}
+              <strong className="tabular-nums font-mono">
+                {Math.round((data.win_rate_by_band?.[band].win_rate ?? 0) * 100)}%
+              </strong>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function Tier({ label, sub, v, accent, winRate }: {
+  label: string; sub: string; v: number; accent?: boolean; winRate?: number;
+}) {
+  return (
+    <div className={`rounded-lg p-3 ${accent ? "bg-brand-50 ring-1 ring-brand-300" : "bg-ink-50"}`}>
+      <div className="text-[10px] uppercase tracking-wider text-ink-500 font-semibold">{label}</div>
+      <div className="text-[9px] text-ink-400 font-mono">{sub}</div>
+      <div className="text-lg tabular-nums font-mono font-semibold text-ink-900 mt-1">
+        ${v.toLocaleString()}
+      </div>
+      {winRate != null && winRate > 0 && (
+        <div className="text-[10px] text-ink-500 font-mono tabular-nums">
+          win {(winRate * 100).toFixed(0)}%
+        </div>
+      )}
     </div>
   );
 }

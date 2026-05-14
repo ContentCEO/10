@@ -46,10 +46,53 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (body.status === "won") {
     const { data: lead } = await supabase
       .from("leads")
-      .select("id,name,service_type,price,customer_id")
+      .select("id,name,phone,email,service_type,price,customer_id,notes")
       .eq("id", params.id).eq("user_id", user.id).single();
 
     if (lead) {
+      let customerId = lead.customer_id;
+
+      // S-2: If the won lead has no customer attached yet, auto-create one
+      // (idempotent — skip if an exact email or phone match already exists).
+      if (!customerId) {
+        let matchedId: string | null = null;
+        if (lead.email) {
+          const { data: m } = await supabase.from("customers")
+            .select("id").eq("user_id", user.id).ilike("email", lead.email).maybeSingle();
+          matchedId = (m as { id: string } | null)?.id ?? null;
+        }
+        if (!matchedId && lead.phone) {
+          const digits = lead.phone.replace(/\D/g, "").slice(-10);
+          if (digits.length === 10) {
+            const { data: m } = await supabase.from("customers")
+              .select("id,phone").eq("user_id", user.id);
+            const matched = ((m ?? []) as { id: string; phone: string | null }[])
+              .find((c) => c.phone?.replace(/\D/g, "").slice(-10) === digits);
+            matchedId = matched?.id ?? null;
+          }
+        }
+
+        if (matchedId) {
+          customerId = matchedId;
+        } else {
+          const { data: newCust } = await supabase.from("customers").insert({
+            user_id: user.id,
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            notes: lead.notes ?? null,
+          }).select("id").single();
+          customerId = (newCust as { id: string } | null)?.id ?? null;
+        }
+
+        if (customerId) {
+          await supabase.from("leads")
+            .update({ customer_id: customerId })
+            .eq("id", params.id).eq("user_id", user.id);
+        }
+      }
+
+      // Auto-create the Job (existing I-1 logic).
       const { data: existing } = await supabase
         .from("jobs").select("id").eq("lead_id", params.id).maybeSingle();
 
@@ -57,7 +100,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         await supabase.from("jobs").insert({
           user_id: user.id,
           lead_id: params.id,
-          customer_id: lead.customer_id ?? null,
+          customer_id: customerId,
           title: `${lead.service_type ?? "Job"} · ${lead.name}`,
           description: "Auto-created from won lead.",
           status: "scheduled",
