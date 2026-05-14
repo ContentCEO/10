@@ -17,6 +17,8 @@
     { "path": "/api/cron/weekly-review",           "schedule": "0 14 * * 1" },
     { "path": "/api/cron/reengagement",            "schedule": "0 15 * * 3" },
     { "path": "/api/cron/abandon-stale-leads",     "schedule": "0 4 * * *" },
+    { "path": "/api/cron/lead-trade-classify",     "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/daily-standup",           "schedule": "0 11 * * *" },
     { "path": "/api/agents/tick",                  "schedule": "*/5 * * * *" },
 
     { "path": "/api/scrape/reddit",                "schedule": "*/5 * * * *" },
