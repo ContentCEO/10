@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { FullscreenOnMount } from "@/components/FullscreenOnMount";
 
 const P = {
   bg:       "#06060A",
@@ -135,10 +136,12 @@ function PinUnlock({ record, onUnlock, onForget }: {
         Enter your 4-digit PIN to unlock.
       </p>
 
-      <div className={`mt-6 flex items-center justify-center gap-2 ${shake ? "animate-shake" : ""}`}
-           style={{ animation: "loginFieldIn 600ms ease-out 800ms backwards" }}>
+      <div
+        onClick={() => inputRef.current?.focus()}
+        className={`mt-6 flex items-center justify-center gap-2 cursor-text ${shake ? "animate-shake" : ""}`}
+        style={{ animation: "loginFieldIn 600ms ease-out 800ms backwards" }}>
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="w-12 h-14 rounded-xl flex items-center justify-center text-2xl font-mono tabular-nums"
+          <div key={i} className="w-12 h-14 rounded-xl flex items-center justify-center text-2xl font-mono tabular-nums select-none"
             style={{
               background: P.card,
               border: `1px solid ${i < pin.length ? P.indigoHi : P.border}`,
@@ -156,7 +159,8 @@ function PinUnlock({ record, onUnlock, onForget }: {
         autoComplete="one-time-code"
         value={pin}
         onChange={(e) => onChange(e.target.value)}
-        className="absolute opacity-0 pointer-events-none w-px h-px"
+        onBlur={() => setTimeout(() => inputRef.current?.focus(), 0)}
+        className="sr-only"
         aria-label="PIN"
       />
 
@@ -231,9 +235,11 @@ function PinSetup({ email, name, onDone }: {
         Next time you open the app, use this PIN instead of your password.
       </p>
 
-      <div className="mt-6 flex items-center justify-center gap-2">
+      <div
+        onClick={() => inputRef.current?.focus()}
+        className="mt-6 flex items-center justify-center gap-2 cursor-text">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="w-12 h-14 rounded-xl flex items-center justify-center text-2xl font-mono"
+          <div key={i} className="w-12 h-14 rounded-xl flex items-center justify-center text-2xl font-mono select-none"
             style={{
               background: P.card,
               border: `1px solid ${i < value.length ? P.indigoHi : P.border}`,
@@ -249,7 +255,8 @@ function PinSetup({ email, name, onDone }: {
         inputMode="numeric"
         value={value}
         onChange={(e) => onPinChange(e.target.value)}
-        className="absolute opacity-0 pointer-events-none w-px h-px"
+        onBlur={() => setTimeout(() => inputRef.current?.focus(), 0)}
+        className="sr-only"
         aria-label="PIN"
       />
 
@@ -401,6 +408,7 @@ function LoginInner() {
   return (
     <main className="relative min-h-screen overflow-hidden grid place-items-center px-6"
           style={{ background: P.bg, color: P.text, fontFamily: SANS }}>
+      <FullscreenOnMount />
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes letterIn { from { opacity: 0; transform: translateY(0.5em); } to { opacity: 1; transform: translateY(0); } }
         @keyframes loginFieldIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }

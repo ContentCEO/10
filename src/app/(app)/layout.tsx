@@ -9,6 +9,7 @@ import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { AppTopBar } from "@/components/AppTopBar";
 import { PreferencesApplier } from "@/components/PreferencesApplier";
 import { CommandPalette } from "@/components/CommandPalette";
+import { FullscreenOnMount } from "@/components/FullscreenOnMount";
 import { isOwnerEmail } from "@/lib/owner";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -49,6 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <KeyboardShortcuts />
       <PreferencesApplier />
       <CommandPalette />
+      <FullscreenOnMount />
       <WelcomeWizard
         userId={user.id}
         initialBusinessName={profile?.business_name ?? null}
