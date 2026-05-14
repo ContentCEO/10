@@ -4,9 +4,9 @@
  * Every lead must have:
  *   - name (real, not a generic placeholder)
  *   - phone (10 or 11 digits after stripping formatting)
- *
- * Geography is enforced at the scraper layer (only MA sources are
- * polled). Address isn't gated — it's nice-to-have in notes.
+ *   - MA location (zip starts 01/02 OR city is in MA list)
+ *   - service_type / notes mention a contractor-relevant trade
+ *     (painting, remodeling, kitchen, bath, electrical, plumbing, etc.)
  *
  * Leads that fail this gate are skipped at the mirror-to-/leads step
  * and filtered out of the marketplace view.
@@ -57,7 +57,9 @@ export interface QualityCheckInput {
   phone: string | null;
   city: string | null;
   zip: string | null;
-  notes: string | null;  // may contain street address
+  notes: string | null;          // post body / description / address line
+  service_type?: string | null;  // headline / trade
+  ai_summary?: string | null;    // model-generated headline
 }
 
 export interface QualityResult {
@@ -67,6 +69,68 @@ export interface QualityResult {
   isMA: boolean;
   hasAddress: boolean;
   hasRealName: boolean;
+  hasContractorIntent: boolean;
+}
+
+// Keywords that indicate the lead is asking for or about contracting/
+// construction work. Substring-matched case-insensitively against
+// service_type + ai_summary + notes.
+export const CONTRACTOR_INTENT_KEYWORDS = [
+  // Whole-job
+  "remodel", "remodeling", "renovation", "renovate", "rebuild", "addition",
+  "build out", "buildout", "construction", "contractor", "general contractor",
+  "handyman", "punch list", "fix", "repair",
+  // Rooms
+  "kitchen", "bathroom", "bath remodel", "shower", "tub", "vanity",
+  "basement", "basement finish", "basement remodel",
+  "attic", "garage", "in-law", "mudroom", "laundry room",
+  // Structure / framing
+  "framing", "frame", "carpentry", "carpenter", "trim", "trim work",
+  "drywall", "sheetrock", "plaster", "popcorn ceiling",
+  "foundation", "crawlspace", "joist", "beam", "structural",
+  // Paint / finish
+  "painting", "paint", "interior paint", "exterior paint", "wallpaper",
+  // Floors
+  "flooring", "hardwood", "refinish", "tile", "carpet",
+  "luxury vinyl", "lvp", "lvt", "laminate",
+  // Exterior
+  "roof", "roofing", "roofer", "shingle", "metal roof",
+  "siding", "vinyl siding", "fiber cement", "stucco",
+  "gutter", "soffit", "fascia", "chimney",
+  "deck", "porch", "patio", "pergola", "screen porch", "fence",
+  "window", "windows", "door", "garage door",
+  "concrete", "driveway", "paver", "walkway", "asphalt", "masonry",
+  "brick", "stone", "stonework",
+  // Electrical
+  "electrical", "electrician", "wiring", "rewire", "outlet", "panel",
+  "panel upgrade", "200 amp", "ev charger", "level 2",
+  "ceiling fan", "recessed light", "fixture", "lighting",
+  "gfci", "afci", "smoke detector", "generator", "transfer switch",
+  // Plumbing
+  "plumbing", "plumber", "leak", "water heater", "tankless",
+  "drain", "drain cleaning", "clog", "toilet", "faucet", "sink",
+  "sewer", "sump pump", "garbage disposal", "boiler",
+  "shower install", "tub install", "re-pipe", "repipe",
+  // HVAC
+  "hvac", "ac unit", "central air", "ductless", "mini split",
+  "furnace", "heat pump", "duct", "ductwork", "thermostat",
+  // Specialty / damage
+  "insulation", "spray foam", "blown in",
+  "water damage", "flood", "mold", "mold remediation",
+  "asbestos", "lead paint", "lead abatement",
+  "solar", "solar panel", "battery backup",
+  "cabinet", "cabinetry", "countertop", "quartz", "granite",
+  "demolition", "demo", "junk removal",
+  "landscaping", "landscape", "sod", "mulch",
+  "tree", "tree removal", "stump grinding",
+  "snow removal", "plow",
+  "pool", "hot tub",
+];
+
+export function hasContractorIntent(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const haystack = text.toLowerCase();
+  return CONTRACTOR_INTENT_KEYWORDS.some((kw) => haystack.includes(kw));
 }
 
 const GENERIC_NAME_PATTERNS = [
@@ -93,15 +157,21 @@ export function isQualifiedLead(lead: QualityCheckInput): QualityResult {
   const zip = (lead.zip ?? "").trim();
   const cityLower = (lead.city ?? "").trim().toLowerCase();
   const isMA = MA_ZIP_RE.test(zip) || MA_CITY_SET.has(cityLower);
+  if (!isMA) reasons.push("not-massachusetts");
   const hasAddress = Boolean(zip || cityLower);
 
+  const intentText = [lead.service_type, lead.ai_summary, lead.notes].filter(Boolean).join(" \n ");
+  const hasIntent = hasContractorIntent(intentText);
+  if (!hasIntent) reasons.push("no-contractor-intent");
+
   return {
-    ok: hasRealName && hasPhone,
+    ok: hasRealName && hasPhone && isMA && hasIntent,
     reasons,
     hasPhone,
     isMA,
     hasAddress,
     hasRealName,
+    hasContractorIntent: hasIntent,
   };
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Pause, Play, Repeat, Zap } from "lucide-react";
+import { Loader2, Pause, Play, Repeat, Trash2, Zap } from "lucide-react";
 import { toast } from "@/components/Toaster";
 
 interface Props {
@@ -60,8 +60,31 @@ async function runOne(source: string): Promise<RunResult> {
 
 export function RunAllControls({ sources }: Props) {
   const [busy, setBusy] = useState(false);
+  const [wiping, setWiping] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; current: string } | null>(null);
   const [results, setResults] = useState<RunResult[]>([]);
+
+  async function wipeScraped() {
+    if (wiping) return;
+    if (!confirm("Permanently delete ALL scraped leads (marketplace + /leads)? Sold rows are kept.")) return;
+    setWiping(true);
+    try {
+      const res = await fetch("/api/owner/wipe-scraped", { method: "POST", cache: "no-store" });
+      const j = await res.json().catch(() => ({} as { ok?: boolean; error?: string; marketplace_deleted?: number; leads_deleted?: number }));
+      if (!res.ok || j?.ok === false) {
+        toast({ message: `Wipe failed: ${j?.error ?? res.statusText}`, type: "error" });
+        return;
+      }
+      const m = j?.marketplace_deleted ?? 0;
+      const l = j?.leads_deleted ?? 0;
+      toast({ message: `Wiped ${m} marketplace_leads + ${l} /leads rows`, type: "success" });
+      setTimeout(() => window.location.reload(), 800);
+    } catch (e) {
+      toast({ message: `Wipe failed: ${(e as Error).message}`, type: "error" });
+    } finally {
+      setWiping(false);
+    }
+  }
 
   const [interval, setIntervalMs]     = useState<number>(INTERVAL_OPTIONS[1].ms);
   const [duration, setDurationMs]     = useState<number>(DURATION_OPTIONS[1].ms);
@@ -138,6 +161,15 @@ export function RunAllControls({ sources }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={wipeScraped}
+            disabled={busy || scheduleActive || wiping}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-rose-500/15 ring-1 ring-rose-400/30 text-rose-200 hover:bg-rose-500/25 px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
+          >
+            {wiping ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+            Wipe all scraped
+          </button>
           <button
             type="button"
             onClick={runAll}
