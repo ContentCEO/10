@@ -3,10 +3,22 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isOwnerEmail } from "@/lib/owner";
 import { Activity, AlertCircle, CheckCircle2, RefreshCw } from "lucide-react";
+import { isQualifiedLead } from "@/lib/lead-quality";
 import { ScraperRunNowButton } from "./RunNow";
 import { RunAllControls } from "./RunAllControls";
 
 export const dynamic = "force-dynamic";
+
+interface SampleLead {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  city: string | null;
+  zip: string | null;
+  notes: string | null;
+  service_type: string | null;
+  ai_summary: string | null;
+}
 
 interface RunRow {
   source: string;
@@ -73,7 +85,7 @@ export default async function ScrapersPage() {
   const admin = createAdminClient();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ data: runs }, { count: marketplaceCount }, { count: leadsToday }, { count: pendingCount }] = await Promise.all([
+  const [{ data: runs }, { count: marketplaceCount }, { count: leadsToday }, { count: pendingCount }, { data: sampleRows }] = await Promise.all([
     admin.from("scraper_runs")
       .select("source,region,fetched,inserted,duplicates,created_at")
       .gte("created_at", since)
@@ -90,7 +102,39 @@ export default async function ScrapersPage() {
     admin.from("marketplace_leads")
       .select("id", { count: "exact", head: true })
       .eq("requires_curation", true),
+    admin.from("marketplace_leads")
+      .select("id,name,phone,city,zip,notes,service_type,ai_summary")
+      .eq("source_channel", "scraped")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(500),
   ]);
+
+  // Quality-gate breakdown: run each sample row through isQualifiedLead
+  // and tally which check rejected it. This is the diagnostic for
+  // "marketplace shows 0 but I have 2200 scraped rows".
+  const sample = (sampleRows ?? []) as SampleLead[];
+  let passes = 0;
+  const fails = { name: 0, phone: 0, ma: 0, intent: 0 };
+  const examples: { reason: string; row: SampleLead }[] = [];
+  for (const r of sample) {
+    const q = isQualifiedLead({
+      name: r.name, phone: r.phone, city: r.city, zip: r.zip,
+      notes: r.notes, service_type: r.service_type, ai_summary: r.ai_summary,
+    });
+    if (q.ok) { passes++; continue; }
+    if (!q.hasRealName)         fails.name++;
+    if (!q.hasPhone)            fails.phone++;
+    if (!q.isMA)                fails.ma++;
+    if (!q.hasContractorIntent) fails.intent++;
+    // Stash one example per reason for the table
+    for (const reason of q.reasons) {
+      if (!examples.find((e) => e.reason === reason)) {
+        examples.push({ reason, row: r });
+      }
+    }
+  }
+  const hasBatchData = Boolean(process.env.BATCHDATA_API_KEY);
 
   const stats: Record<string, SourceStat> = {};
   for (const src of KNOWN_SOURCES) {
@@ -157,6 +201,58 @@ export default async function ScrapersPage() {
       </section>
 
       <RunAllControls sources={KNOWN_SOURCES.map((s) => s.route)} />
+
+      {sample.length > 0 && (
+        <section className="card p-5 space-y-3">
+          <div className="flex items-baseline justify-between">
+            <h2 className="section-title flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-300" /> Why no leads in marketplace?
+            </h2>
+            <span className="text-xs text-white/50 font-mono">{sample.length} scraped rows analyzed</span>
+          </div>
+          <p className="text-sm text-white/60">
+            Each row is checked against the 4 filter rules. Bars show how many of the {sample.length} sample rows failed each check (a row can fail multiple).
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <FailTile label="Pass" value={passes} total={sample.length} good />
+            <FailTile label="Missing name"   value={fails.name}   total={sample.length} />
+            <FailTile label="Missing phone"  value={fails.phone}  total={sample.length} />
+            <FailTile label="Not in MA"      value={fails.ma}     total={sample.length} />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <FailTile label="No contractor intent" value={fails.intent} total={sample.length} wide />
+          </div>
+
+          {fails.phone > passes && (
+            <div className={hasBatchData ? "rounded-lg bg-emerald-500/10 ring-1 ring-emerald-400/30 p-3 text-xs text-emerald-200" : "rounded-lg bg-amber-500/10 ring-1 ring-amber-400/30 p-3 text-xs text-amber-200"}>
+              {hasBatchData ? (
+                <>BatchData key is configured. If permit leads still lack phones, the API may not have a match for the address — try running permits and watch the scraper_runs error column.</>
+              ) : (
+                <>
+                  <strong>BATCHDATA_API_KEY is not set on Vercel.</strong> Permit rows arrive with phone=null and fail the phone check. Set the env var, redeploy, and run scrapers again to populate phones via reverse-lookup.
+                </>
+              )}
+            </div>
+          )}
+
+          {examples.length > 0 && (
+            <details className="text-xs">
+              <summary className="cursor-pointer font-semibold text-white/70 hover:text-white">Sample failures ({examples.length})</summary>
+              <ul className="mt-2 space-y-2">
+                {examples.slice(0, 8).map(({ reason, row }) => (
+                  <li key={`${reason}-${row.id}`} className="rounded-lg bg-white/[0.03] ring-1 ring-white/10 p-2 font-mono">
+                    <div className="text-rose-300">[{reason}]</div>
+                    <div className="text-white/80 truncate">name: {row.name ?? "<null>"}</div>
+                    <div className="text-white/60 truncate">phone: {row.phone ?? "<null>"} · city: {row.city ?? "<null>"} · zip: {row.zip ?? "<null>"}</div>
+                    <div className="text-white/40 truncate">type: {row.service_type ?? "<null>"}</div>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </section>
+      )}
 
       {grandInserted === 0 && (
         <div className="card p-4 ring-1 ring-amber-400/30 bg-amber-500/10">
@@ -230,6 +326,23 @@ function Tile({ label, value, icon: Icon, tone = "ok" }: { label: string; value:
       <div className="min-w-0">
         <div className="text-[10px] uppercase tracking-wider text-white/50 font-mono">{label}</div>
         <div className="text-2xl font-semibold text-white tabular-nums mt-0.5">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function FailTile({ label, value, total, good, wide }: { label: string; value: number; total: number; good?: boolean; wide?: boolean }) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  const bar = good ? "bg-emerald-400" : pct > 60 ? "bg-rose-400" : pct > 30 ? "bg-amber-400" : "bg-white/30";
+  return (
+    <div className={`rounded-xl bg-white/[0.03] ring-1 ring-white/10 p-3 ${wide ? "col-span-2" : ""}`}>
+      <div className="flex items-baseline justify-between">
+        <div className="text-[10px] uppercase tracking-wider text-white/50 font-mono">{label}</div>
+        <div className="text-xs font-mono text-white/60">{pct}%</div>
+      </div>
+      <div className="text-xl font-semibold text-white tabular-nums mt-0.5">{value}<span className="text-xs text-white/40 ml-1 font-normal">/ {total}</span></div>
+      <div className="mt-2 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className={`h-full ${bar} transition-all`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
