@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { type MarketplaceLead } from "@/lib/marketplace";
 import { formatDate } from "@/lib/utils";
 import { isOwnerEmail } from "@/lib/owner";
-import { isQualifiedLead } from "@/lib/lead-quality";
+import { isQualifiedLead, MAX_LEAD_AGE_DAYS } from "@/lib/lead-quality";
 import { DisputeButton } from "./DisputeButton";
 import { WalletBar } from "./WalletBar";
 import { MarketplaceCard } from "./MarketplaceCard";
@@ -32,12 +32,14 @@ export default async function MarketplacePage({
   const seeAll = isOwnerEmail(user.email) || Boolean((viewerProfile as { is_admin?: boolean } | null)?.is_admin);
 
   // Filter (server-side): non-empty name + non-empty phone + status
-  // available. MA + contractor-intent are applied below in JS via
-  // isQualifiedLead since they're multi-field rules.
+  // available + created within the last 30 days. MA + contractor-intent
+  // are applied below in JS via isQualifiedLead.
+  const sinceIso = new Date(Date.now() - MAX_LEAD_AGE_DAYS * 24 * 60 * 60 * 1000).toISOString();
   let query = supabase
     .from("marketplace_leads")
     .select("*")
     .eq("status", "available")
+    .gte("created_at", sinceIso)
     .not("name", "is", null)
     .not("phone", "is", null)
     .neq("name", "")
@@ -60,7 +62,7 @@ export default async function MarketplacePage({
     supabase.from("profiles").select("credit_cents").eq("id", user.id).single(),
   ]);
 
-  // JS-side enforcement of MA + contractor-intent (both multi-field).
+  // JS-side enforcement of MA + contractor-intent + freshness.
   const rawRows = (available ?? []) as MarketplaceLead[];
   const rows = rawRows.filter((r) => isQualifiedLead({
     name: r.name,
@@ -70,6 +72,7 @@ export default async function MarketplacePage({
     notes: r.notes,
     service_type: r.service_type,
     ai_summary: r.ai_summary,
+    created_at: r.created_at,
   }).ok).slice(0, seeAll ? 500 : 50);
 
   const mine    = (claimed ?? []) as MarketplaceLead[];

@@ -52,6 +52,9 @@ const MA_CITY_SET = new Set([
   "buckland","ashfield","hawley","plainfield",
 ]);
 
+export const MAX_LEAD_AGE_DAYS = 30;
+export const MAX_LEAD_AGE_MS = MAX_LEAD_AGE_DAYS * 24 * 60 * 60 * 1000;
+
 export interface QualityCheckInput {
   name: string | null;
   phone: string | null;
@@ -60,6 +63,7 @@ export interface QualityCheckInput {
   notes: string | null;          // post body / description / address line
   service_type?: string | null;  // headline / trade
   ai_summary?: string | null;    // model-generated headline
+  created_at?: string | null;    // ISO timestamp; freshness check
 }
 
 export interface QualityResult {
@@ -164,8 +168,15 @@ export function isQualifiedLead(lead: QualityCheckInput): QualityResult {
   const hasIntent = hasContractorIntent(intentText);
   if (!hasIntent) reasons.push("no-contractor-intent");
 
+  let isFresh = true;
+  if (lead.created_at) {
+    const age = Date.now() - new Date(lead.created_at).getTime();
+    isFresh = !Number.isNaN(age) && age <= MAX_LEAD_AGE_MS;
+    if (!isFresh) reasons.push("stale-over-30-days");
+  }
+
   return {
-    ok: hasRealName && hasPhone && isMA && hasIntent,
+    ok: hasRealName && hasPhone && isMA && hasIntent && isFresh,
     reasons,
     hasPhone,
     isMA,
@@ -210,24 +221,7 @@ interface BatchDataResponse {
   persons?: BatchDataPerson[];
 }
 
-async function enrichPhoneBatchData(input: EnrichInput, apiKey: string): Promise<string | null> {
-  const parts = input.name.trim().split(/\s+/);
-  const firstName = parts[0] ?? "";
-  const lastName  = parts.slice(1).join(" ");
-  const street    = (input.address ?? "").split(",")[0]?.trim() ?? "";
-
-  const body = {
-    requests: [{
-      propertyAddress: {
-        street,
-        city: input.city ?? "",
-        state: "MA",
-        zip: input.zip ?? "",
-      },
-      ...(firstName ? { name: { first: firstName, last: lastName } } : {}),
-    }],
-  };
-
+async function batchDataLookup(body: Record<string, unknown>, apiKey: string): Promise<string | null> {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 8_000);
@@ -255,6 +249,38 @@ async function enrichPhoneBatchData(input: EnrichInput, apiKey: string): Promise
   } catch {
     return null;
   }
+}
+
+async function enrichPhoneBatchData(input: EnrichInput, apiKey: string): Promise<string | null> {
+  const parts = input.name.trim().split(/\s+/);
+  const firstName = parts[0] ?? "";
+  const lastName  = parts.slice(1).join(" ");
+  const street    = (input.address ?? "").split(",")[0]?.trim() ?? "";
+
+  const propertyAddress = {
+    street,
+    city: input.city ?? "",
+    state: "MA",
+    zip: input.zip ?? "",
+  };
+
+  // First try: address + name (highest precision). If no hit, fall back
+  // to address-only (broader match — catches cases where owner-name
+  // parsing was off).
+  const withName: Record<string, unknown> = {
+    requests: [{
+      propertyAddress,
+      ...(firstName ? { name: { first: firstName, last: lastName } } : {}),
+    }],
+  };
+  const first = await batchDataLookup(withName, apiKey);
+  if (first) return first;
+
+  if (firstName || lastName) {
+    const addressOnly = { requests: [{ propertyAddress }] };
+    return batchDataLookup(addressOnly, apiKey);
+  }
+  return null;
 }
 
 async function enrichPhoneGeneric(input: EnrichInput, url: string, key: string): Promise<string | null> {

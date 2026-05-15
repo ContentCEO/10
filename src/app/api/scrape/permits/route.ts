@@ -504,23 +504,35 @@ async function runOnce(opts: { source?: string; limit?: number; min_cost?: numbe
   const limit = opts.limit ?? 250;
   const minCost = opts.min_cost ?? 5000;
   const admin = createAdminClient();
-  const results: Record<string, { fetched: number; inserted: number; duplicates: number; skipped_low_value: number; skipped_not_ma: number; skipped_quality: number }> = {};
+  const results: Record<string, { fetched: number; inserted: number; duplicates: number; skipped_low_value: number; skipped_not_ma: number; skipped_quality: number; skipped_no_owner: number }> = {};
 
   const toRun = opts.source ? SOURCES.filter((s) => s.key === opts.source) : SOURCES;
 
+  // Generic placeholder names that should never reach BatchData (waste
+  // of credits — the quality gate will reject them anyway).
+  const GENERIC_OWNER_RE = /^(?:[a-z]+ permit holder|[a-z]+ permittee|unknown|n\/?a)$/i;
+
   for (const src of toRun) {
     const rows = await src.fetch(limit).catch(() => [] as PermitLead[]);
-    let inserted = 0, duplicates = 0, skippedLowValue = 0, skippedNotMA = 0, skippedQuality = 0;
+    let inserted = 0, duplicates = 0, skippedLowValue = 0, skippedNotMA = 0, skippedQuality = 0, skippedNoOwner = 0;
     for (const r of rows) {
       if (r.estimated_cost != null && r.estimated_cost < minCost) { skippedLowValue++; continue; }
       if (!isMassachusettsLead({ city: r.city, zip: r.zip })) { skippedNotMA++; continue; }
+      // Skip permits without a real owner name — saves BatchData credits.
+      if (!r.name || GENERIC_OWNER_RE.test(r.name) || r.name.trim().length < 2) {
+        skippedNoOwner++; continue;
+      }
+      // Also skip if no street address — BatchData needs it for accurate match.
+      if (!r.address || r.address.trim().length < 5) {
+        skippedNoOwner++; continue;
+      }
       const { data: existing } = await admin
         .from("marketplace_leads").select("id")
         .eq("source_channel", "scraped").eq("external_id", r.externalId).maybeSingle();
       if (existing) { duplicates++; continue; }
 
-      // Phone enrichment via configured provider (BatchData / Whitepages /
-      // PeopleDataLabs / etc). Returns null if env vars unset.
+      // Phone enrichment via configured provider. Tries name+address, then
+      // falls back to address-only for higher match rate.
       const phone = await enrichPhone({
         name: r.name,
         address: r.address,
@@ -531,6 +543,7 @@ async function runOnce(opts: { source?: string; limit?: number; min_cost?: numbe
       const notes = `${r.address ? `Address: ${r.address}\n` : ""}${r.notes}`;
       const quality = isQualifiedLead({
         name: r.name, phone, city: r.city, zip: r.zip, notes,
+        service_type: r.service_type,
       });
       if (!quality.ok) { skippedQuality++; continue; }
 
@@ -555,7 +568,7 @@ async function runOnce(opts: { source?: string; limit?: number; min_cost?: numbe
     await admin.from("scraper_runs").insert({
       source: src.key, region: src.city, fetched: rows.length, inserted, duplicates,
     });
-    results[src.key] = { fetched: rows.length, inserted, duplicates, skipped_low_value: skippedLowValue, skipped_not_ma: skippedNotMA, skipped_quality: skippedQuality };
+    results[src.key] = { fetched: rows.length, inserted, duplicates, skipped_low_value: skippedLowValue, skipped_not_ma: skippedNotMA, skipped_quality: skippedQuality, skipped_no_owner: skippedNoOwner };
   }
   return results;
 }
