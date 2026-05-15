@@ -135,6 +135,17 @@ export default async function ScrapersPage() {
     }
   }
   const hasBatchData = Boolean(process.env.BATCHDATA_API_KEY);
+  const hasCronSecret = Boolean(process.env.CRON_SECRET ?? process.env.WEBHOOK_SECRET);
+
+  // "Cron is firing" = any source has a scraper_runs row in the last 15
+  // minutes (5-min cadence + some slack). If not, either CRON_SECRET is
+  // wrong, cron schedules aren't configured, or Vercel is down.
+  const mostRecentRun = (runs ?? []).reduce<string | null>((acc, r) => {
+    if (!acc || r.created_at > acc) return r.created_at;
+    return acc;
+  }, null);
+  const cronAgeMin = mostRecentRun ? Math.round((Date.now() - new Date(mostRecentRun).getTime()) / 60_000) : null;
+  const cronHealthy = cronAgeMin !== null && cronAgeMin < 15;
 
   const stats: Record<string, SourceStat> = {};
   for (const src of KNOWN_SOURCES) {
@@ -175,6 +186,37 @@ export default async function ScrapersPage() {
           Live status of every public-records ingest. Marketplace gets the raw row, then the mirror cron pushes a copy into your <code className="text-white/80">/leads</code> pipeline.
         </p>
       </header>
+
+      <section
+        className={cronHealthy
+          ? "card p-4 bg-emerald-500/10 ring-1 ring-emerald-400/30"
+          : "card p-4 bg-amber-500/10 ring-1 ring-amber-400/30"}
+      >
+        <div className="flex items-start gap-3 text-sm">
+          {cronHealthy
+            ? <CheckCircle2 className="h-5 w-5 text-emerald-300 mt-0.5 shrink-0" />
+            : <AlertCircle className="h-5 w-5 text-amber-300 mt-0.5 shrink-0" />}
+          <div className="flex-1 min-w-0">
+            <div className={cronHealthy ? "text-emerald-100 font-semibold" : "text-amber-100 font-semibold"}>
+              {cronHealthy ? "Auto-scraping is ON · 24/7" : "Auto-scraping is NOT firing"}
+            </div>
+            <div className="text-xs text-white/70 mt-1">
+              {cronHealthy
+                ? <>Last scrape ran <strong>{cronAgeMin}m ago</strong> on Vercel&apos;s servers. Scrapers fire on the cron schedule defined in <code>vercel.json</code> &mdash; no browser tab or open app required.</>
+                : <>No scrape has run in the last 15 minutes. Either <code>CRON_SECRET</code> isn&apos;t set on Vercel, the cron schedules failed to deploy, or Vercel is having an outage.</>}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-3 text-[10px] font-mono">
+              <span className={hasCronSecret ? "text-emerald-300" : "text-amber-300"}>
+                {hasCronSecret ? "✓" : "✗"} CRON_SECRET set
+              </span>
+              <span className={hasBatchData ? "text-emerald-300" : "text-amber-300"}>
+                {hasBatchData ? "✓" : "✗"} BATCHDATA_API_KEY set
+              </span>
+              <span className="text-white/40">last run: {mostRecentRun ? new Date(mostRecentRun).toLocaleString() : "never"}</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Tile label="Sources" value={String(KNOWN_SOURCES.length)} icon={Activity} />

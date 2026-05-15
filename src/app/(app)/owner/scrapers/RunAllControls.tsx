@@ -184,9 +184,9 @@ export function RunAllControls({ sources }: Props) {
     <div className="card p-4 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-white">Run controls</div>
+          <div className="text-sm font-semibold text-white">Manual run controls</div>
           <div className="text-xs text-white/50 mt-0.5">
-            Fires every source through the run-now endpoint, one at a time.
+            Auto-scraping already runs 24/7 server-side. Use these for one-off forced runs (e.g., right after fixing a setting).
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
