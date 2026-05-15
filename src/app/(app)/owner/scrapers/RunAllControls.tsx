@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Pause, Play, Repeat, Trash2, Zap } from "lucide-react";
+import { CheckCircle2, Loader2, Pause, Play, Repeat, ShieldAlert, Trash2, Zap } from "lucide-react";
 import { toast } from "@/components/Toaster";
 
 interface Props {
@@ -58,11 +58,40 @@ async function runOne(source: string): Promise<RunResult> {
   }
 }
 
+interface BatchDataTestResult {
+  ok: boolean;
+  stage: string;
+  http_status?: number;
+  latency_ms?: number;
+  persons_returned?: number;
+  phones_found?: number;
+  phones_sample?: string[];
+  error?: string;
+  body_preview?: string;
+}
+
 export function RunAllControls({ sources }: Props) {
   const [busy, setBusy] = useState(false);
   const [wiping, setWiping] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<BatchDataTestResult | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number; current: string } | null>(null);
   const [results, setResults] = useState<RunResult[]>([]);
+
+  async function testBatchData() {
+    if (testing) return;
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch("/api/owner/batchdata-test", { method: "POST", cache: "no-store" });
+      const j = await res.json().catch(() => ({ ok: false, stage: "parse", error: "Invalid JSON" } as BatchDataTestResult));
+      setTestResult(j as BatchDataTestResult);
+    } catch (e) {
+      setTestResult({ ok: false, stage: "fetch", error: (e as Error).message });
+    } finally {
+      setTesting(false);
+    }
+  }
 
   async function wipeScraped() {
     if (wiping) return;
@@ -160,7 +189,16 @@ export function RunAllControls({ sources }: Props) {
             Fires every source through the run-now endpoint, one at a time.
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <button
+            type="button"
+            onClick={testBatchData}
+            disabled={testing}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.06] ring-1 ring-white/15 text-white/80 hover:bg-white/[0.10] hover:text-white px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
+          >
+            {testing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldAlert className="h-3.5 w-3.5" />}
+            Test BatchData
+          </button>
           <button
             type="button"
             onClick={wipeScraped}
@@ -181,6 +219,37 @@ export function RunAllControls({ sources }: Props) {
           </button>
         </div>
       </div>
+
+      {testResult && (
+        <div
+          className={
+            testResult.ok
+              ? "rounded-lg bg-emerald-500/10 ring-1 ring-emerald-400/30 p-3 text-xs space-y-1"
+              : "rounded-lg bg-rose-500/10 ring-1 ring-rose-400/30 p-3 text-xs space-y-1"
+          }
+        >
+          <div className="flex items-center gap-2 font-semibold">
+            {testResult.ok
+              ? <><CheckCircle2 className="h-4 w-4 text-emerald-300" /> <span className="text-emerald-200">BatchData responded successfully</span></>
+              : <><ShieldAlert className="h-4 w-4 text-rose-300" /> <span className="text-rose-200">BatchData test failed ({testResult.stage})</span></>}
+          </div>
+          {testResult.ok && (
+            <div className="text-white/70 font-mono">
+              HTTP {testResult.http_status} · {testResult.latency_ms}ms · {testResult.persons_returned ?? 0} persons · {testResult.phones_found ?? 0} phones
+              {testResult.phones_sample && testResult.phones_sample.length > 0 && (
+                <div className="text-emerald-200">Sample: {testResult.phones_sample.join(", ")}</div>
+              )}
+            </div>
+          )}
+          {testResult.error && <div className="text-rose-200">{testResult.error}</div>}
+          {testResult.body_preview && (
+            <details className="text-white/50 font-mono">
+              <summary className="cursor-pointer">Raw response</summary>
+              <pre className="mt-1 whitespace-pre-wrap break-all">{testResult.body_preview}</pre>
+            </details>
+          )}
+        </div>
+      )}
 
       {progress && (
         <div className="space-y-1">
