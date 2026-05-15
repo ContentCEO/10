@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   coerceBudget,
@@ -8,6 +9,20 @@ import {
 } from "@/lib/lead-intake";
 
 export const runtime = "nodejs";
+
+// Verify Meta's signed payload. Returns true if signature is missing AND no
+// app secret is configured (fail-open for initial setup), false on mismatch.
+function verifyMetaSignature(rawBody: string, headerSig: string | null): boolean {
+  const appSecret = process.env.META_APP_SECRET;
+  if (!appSecret) return true; // not configured yet — accept (initial setup)
+  if (!headerSig || !headerSig.startsWith("sha256=")) return false;
+  const expected = "sha256=" + createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
+  try {
+    return timingSafeEqual(Buffer.from(headerSig), Buffer.from(expected));
+  } catch {
+    return false;
+  }
+}
 
 // Meta calls this with a verification challenge when you first subscribe a
 // webhook to the leadgen event. Echo back hub.challenge after checking that
@@ -78,7 +93,12 @@ async function fetchLeadFromGraph(leadgenId: string): Promise<MetaGraphLead | nu
 // many changes. Each change.value.leadgen_id is the lead Meta wants us to
 // fetch from Graph using a Page Access Token.
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
+  const rawBody = await request.text();
+  if (!verifyMetaSignature(rawBody, request.headers.get("x-hub-signature-256"))) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+  }
+  let body: unknown = null;
+  try { body = JSON.parse(rawBody); } catch { /* not json */ }
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
