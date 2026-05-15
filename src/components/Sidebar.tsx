@@ -205,6 +205,7 @@ const SECTIONS: NavSection[] = [
       { href: "/owner",               label: "Overseer (live)",  icon: Activity },
       { href: "/owner/scrapers",      label: "Scraper health",   icon: Activity },
       { href: "/owner/meta-setup",    label: "Facebook Lead Ads", icon: Activity },
+      { href: "/owner/lob-setup",     label: "Auto postcards",   icon: Activity },
     ],
   },
   {

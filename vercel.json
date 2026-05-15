@@ -59,6 +59,7 @@
     { "path": "/api/scrape/massdot-projects",      "schedule": "30 */6 * * *" },
     { "path": "/api/scrape/ma-school-construction","schedule": "15 */6 * * *" },
 
-    { "path": "/api/cron/mirror-marketplace",      "schedule": "*/2 * * * *" }
+    { "path": "/api/cron/mirror-marketplace",      "schedule": "*/2 * * * *" },
+    { "path": "/api/cron/lob-postcard-blast",      "schedule": "0 */6 * * *" }
   ]
 }
