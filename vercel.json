@@ -36,15 +36,24 @@
 
     { "path": "/api/scrape/reddit",                "schedule": "*/5 * * * *" },
     { "path": "/api/scrape/permits",               "schedule": "2-59/5 * * * *" },
+    { "path": "/api/scrape/craigslist",            "schedule": "1-59/5 * * * *" },
+    { "path": "/api/scrape/rss",                   "schedule": "4-59/5 * * * *" },
+    { "path": "/api/scrape/storms",                "schedule": "3-59/15 * * * *" },
+
+    { "path": "/api/scrape/nextdoor",              "schedule": "10,40 * * * *" },
+    { "path": "/api/scrape/facebook-groups",       "schedule": "15,45 * * * *" },
+    { "path": "/api/scrape/deeds",                 "schedule": "20,50 * * * *" },
 
     { "path": "/api/scrape/boston-inspections",    "schedule": "5 * * * *" },
     { "path": "/api/scrape/cambridge-inspections", "schedule": "10 * * * *" },
     { "path": "/api/scrape/boston-311",            "schedule": "15 * * * *" },
     { "path": "/api/scrape/ma-municipal",          "schedule": "20 * * * *" },
+    { "path": "/api/scrape/storm-prep",            "schedule": "25 * * * *" },
 
     { "path": "/api/scrape/ma-evictions",          "schedule": "30 */2 * * *" },
     { "path": "/api/scrape/ma-licenses",           "schedule": "35 */2 * * *" },
     { "path": "/api/scrape/ma-foreclosures",       "schedule": "45 */2 * * *" },
+    { "path": "/api/scrape/yelp",                  "schedule": "50 */2 * * *" },
 
     { "path": "/api/scrape/mass-gov-bids",         "schedule": "0 */6 * * *" },
     { "path": "/api/scrape/massdot-projects",      "schedule": "30 */6 * * *" },

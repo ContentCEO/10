@@ -13,69 +13,24 @@ export const runtime = "nodejs";
 // "real estate services" (rea) RSS feeds.
 
 const CL_SITES = [
-  // Massachusetts + immediate neighbors — full Northeast saturation
+  // Massachusetts only.
   "boston", "capecod", "western", "worcester", "southcoast",
-  "newhampshire", "vermont", "rhodeisland", "providence",
-  "hartford", "newhaven", "newlondon", "easternct", "nwct",
-  "maine", "portlandme", "bangor",
-
-  // NY metro + state
-  "newyork", "brooklyn", "manhattan", "queens", "bronx",
-  "longisland", "westchester", "hudsonvalley", "catskills",
-  "albany", "syracuse", "rochester", "buffalo", "binghamton",
-  "ithaca", "utica", "fingerlakes", "plattsburgh",
-
-  // Mid-Atlantic
-  "philadelphia", "southjersey", "centraljersey", "northjersey", "jerseyshore",
-  "pittsburgh", "allentown", "harrisburg", "lancaster", "scranton", "statecollege",
-  "baltimore", "annapolis", "delaware", "easternshore",
-  "washingtondc", "fredericksburg", "richmond", "hampton roads", "norfolk",
-  "charlottesville", "lynchburg", "roanoke", "harrisonburg",
-
-  // South Atlantic
-  "raleigh", "charlotte", "greensboro", "asheville", "wilmington", "fayetteville",
-  "charleston", "columbia", "greenville", "myrtlebeach", "hiltonhead",
-  "atlanta", "savannah", "augusta", "athensga", "columbusga", "macon",
-  "jacksonville", "orlando", "miami", "tampa", "fortmyers", "tallahassee",
-  "sarasota", "spacecoast", "gainesville", "lakeland", "ocala",
-
-  // Gulf + South Central
-  "neworleans", "batonrouge", "lafayette", "shreveport",
-  "jacksonms", "memphis", "nashville", "knoxville", "chattanooga",
-  "birmingham", "huntsville", "mobile", "montgomery",
-  "littlerock", "fayetteville-ar",
-
-  // Midwest
-  "chicago", "milwaukee", "madison", "greenbay", "appleton",
-  "detroit", "grandrapids", "lansing", "annarbor", "kalamazoo",
-  "cleveland", "columbus", "cincinnati", "dayton", "toledo",
-  "indianapolis", "fortwayne", "evansville", "southbend",
-  "stlouis", "kansascity", "springfieldmo", "columbiamo",
-  "minneapolis", "duluth", "rochestermn", "stcloud",
-  "desmoines", "iowacity", "cedarrapids",
-  "omaha", "lincoln",
-
-  // Texas
-  "houston", "dallas", "austin", "sanantonio", "fortworth",
-  "elpaso", "corpuschristi", "lubbock", "amarillo", "waco",
-  "collegestation", "killeen", "laredo", "tyler",
-
-  // Mountain
-  "denver", "coloradosprings", "fortcollins", "boulder",
-  "saltlakecity", "boise", "billings", "phoenix", "tucson", "flagstaff",
-  "albuquerque", "santafe", "lasvegas", "reno",
-
-  // Pacific
-  "losangeles", "sandiego", "orangecounty", "inlandempire", "ventura",
-  "bakersfield", "fresno", "modesto", "sacramento", "stockton", "visalia",
-  "sfbay", "monterey", "santabarbara",
-  "portland", "salem", "eugene", "bend",
-  "seattle", "tacoma", "spokane", "olympia", "bellingham",
-  "anchorage", "honolulu",
-
-  // Oklahoma/Kansas
-  "oklahomacity", "tulsa", "wichita", "topeka",
 ];
+
+// Map CL site slug -> the dominant MA city we tag the lead with.
+const CL_SITE_CITY: Record<string, string> = {
+  boston:     "Boston",
+  capecod:    "Hyannis",
+  western:    "Springfield",
+  worcester:  "Worcester",
+  southcoast: "New Bedford",
+};
+
+// Match a US phone in free-form Craigslist body text.
+const PHONE_RE = /(?:\+?1[\s.\-]?)?\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})/;
+
+// First name signed at end of post: "- John", "Thanks, John", "—John"
+const SIGNED_NAME_RE = /(?:[-—]\s*|thanks,?\s+|regards,?\s+)([A-Z][a-z]{1,20})\s*$/m;
 
 const CL_CATEGORIES = [
   "sso",  // services wanted (homeowners posting "need a pro")
@@ -209,14 +164,26 @@ async function runOnce(opts: { sites?: string[]; categories?: string[] }) {
       for (const e of entries) {
         const matched = keywordMatch(e);
         if (!matched) continue;
-        const externalId = `${e.id}:${site}`;
 
+        // Extract a 10-digit phone from the post body. No phone → skip
+        // (the quality gate would drop it anyway).
+        const phoneMatch = e.text.match(PHONE_RE);
+        if (!phoneMatch) continue;
+        const phone = `${phoneMatch[1]}${phoneMatch[2]}${phoneMatch[3]}`;
+
+        // Try to extract a first name signed at the end of the post.
+        const signedMatch = e.text.match(SIGNED_NAME_RE);
+        const name = signedMatch?.[1]?.trim();
+        if (!name || name.length < 2) continue;
+
+        const externalId = `${e.id}:${site}`;
         const { data: existing } = await admin
           .from("marketplace_leads").select("id")
           .eq("source_channel", "scraped").eq("external_id", externalId)
           .maybeSingle();
         if (existing) { duplicates++; continue; }
 
+        const cityLabel = CL_SITE_CITY[site] ?? "Boston";
         const notes =
 `Craigslist ${site} / ${cat} · matched: ${matched}
 
@@ -225,15 +192,16 @@ ${e.text.slice(0, 800)}
 Original: ${e.url}`;
 
         const { error: insertErr } = await admin.from("marketplace_leads").insert({
-          name: `Craigslist · ${site}`,
+          name,
+          phone,
           service_type: e.title.slice(0, 200),
-          city: site,
+          city: cityLabel,
           budget: "unsure",
           timeline: "flexible",
           notes,
-          ai_score: 40, // Craigslist signals are moderate intent — homeowner posted publicly
+          ai_score: 55, // homeowner posted publicly + left phone — moderate-high intent
           ai_summary: e.title.slice(0, 200),
-          price_cents: 800,
+          price_cents: 1200,
           source_channel: "scraped",
           external_id: externalId,
           raw_payload: { id: e.id, title: e.title, url: e.url, date: e.date, site, category: cat } as unknown as Record<string, unknown>,
