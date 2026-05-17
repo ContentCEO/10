@@ -73,6 +73,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/proposals/sign") ||
     path.startsWith("/yard/") ||
     path.startsWith("/local/") ||
+    path.startsWith("/quote") ||
     path.startsWith("/pros") ||
     path.startsWith("/find-pro") ||
     path.startsWith("/preview/") ||
