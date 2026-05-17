@@ -201,9 +201,11 @@ const SECTIONS: NavSection[] = [
     label: "Owner",
     ownerOnly: true,
     items: [
+      { href: "/owner/setup-plan",    label: "Setup plan (start here)", icon: Activity },
       { href: "/owner/control/board", label: "Agent board",      icon: Bot },
       { href: "/owner",               label: "Overseer (live)",  icon: Activity },
       { href: "/owner/scrapers",      label: "Scraper health",   icon: Activity },
+      { href: "/owner/lead-gen-roi",  label: "Lead-gen ROI",     icon: Activity },
       { href: "/owner/meta-setup",    label: "Facebook Lead Ads", icon: Activity },
       { href: "/owner/lob-setup",     label: "Auto postcards",   icon: Activity },
     ],
