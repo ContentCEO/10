@@ -5,6 +5,7 @@ import { type MarketplaceLead } from "@/lib/marketplace";
 import { formatDate } from "@/lib/utils";
 import { isOwnerEmail } from "@/lib/owner";
 import { isQualifiedLead, MAX_LEAD_AGE_DAYS } from "@/lib/lead-quality";
+import { TRADES, classifyTrade } from "@/lib/trades";
 import { DisputeButton } from "./DisputeButton";
 import { WalletBar } from "./WalletBar";
 import { MarketplaceCard } from "./MarketplaceCard";
@@ -18,7 +19,7 @@ function money(cents: number) {
 export default async function MarketplacePage({
   searchParams,
 }: {
-  searchParams: { service?: string; zip?: string; topup?: string };
+  searchParams: { service?: string; zip?: string; topup?: string; trade?: string };
 }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -62,18 +63,21 @@ export default async function MarketplacePage({
     supabase.from("profiles").select("credit_cents").eq("id", user.id).single(),
   ]);
 
-  // JS-side enforcement of MA + contractor-intent + freshness.
+  // JS-side enforcement of MA + contractor-intent + freshness + optional trade filter.
   const rawRows = (available ?? []) as MarketplaceLead[];
-  const rows = rawRows.filter((r) => isQualifiedLead({
-    name: r.name,
-    phone: r.phone,
-    city: r.city,
-    zip: r.zip,
-    notes: r.notes,
-    service_type: r.service_type,
-    ai_summary: r.ai_summary,
-    created_at: r.created_at,
-  }).ok).slice(0, seeAll ? 500 : 50);
+  const tradeFilter = searchParams.trade;
+  const rows = rawRows.filter((r) => {
+    if (!isQualifiedLead({
+      name: r.name, phone: r.phone, city: r.city, zip: r.zip,
+      notes: r.notes, service_type: r.service_type, ai_summary: r.ai_summary,
+      created_at: r.created_at,
+    }).ok) return false;
+    if (tradeFilter) {
+      const blob = [r.service_type, r.ai_summary, r.notes].filter(Boolean).join(" \n ");
+      return classifyTrade(blob) === tradeFilter;
+    }
+    return true;
+  }).slice(0, seeAll ? 500 : 50);
 
   const mine    = (claimed ?? []) as MarketplaceLead[];
   const balance = profile?.credit_cents ?? 0;
@@ -117,7 +121,25 @@ export default async function MarketplacePage({
 
       <WalletBar balanceCents={balance} />
 
+      <div className="flex flex-wrap gap-1.5">
+        <Link href="/marketplace"
+          className={!tradeFilter
+            ? "inline-flex items-center rounded-full bg-brand-500/20 ring-1 ring-brand-400/40 text-brand-100 px-3 py-1.5 text-xs font-semibold"
+            : "inline-flex items-center rounded-full bg-white/[0.04] ring-1 ring-white/10 text-white/70 px-3 py-1.5 text-xs font-medium hover:bg-white/[0.08]"}>
+          All trades
+        </Link>
+        {TRADES.map((t) => (
+          <Link key={t.slug} href={`/marketplace?trade=${t.slug}`}
+            className={tradeFilter === t.slug
+              ? "inline-flex items-center rounded-full bg-brand-500/20 ring-1 ring-brand-400/40 text-brand-100 px-3 py-1.5 text-xs font-semibold"
+              : "inline-flex items-center rounded-full bg-white/[0.04] ring-1 ring-white/10 text-white/70 px-3 py-1.5 text-xs font-medium hover:bg-white/[0.08]"}>
+            {t.labelPlural}
+          </Link>
+        ))}
+      </div>
+
       <form className="card p-4 grid sm:grid-cols-[1fr_140px_auto] gap-2" action="/marketplace">
+        {tradeFilter && <input type="hidden" name="trade" value={tradeFilter} />}
         <input name="service" defaultValue={searchParams.service ?? ""}
           className="input" placeholder="Filter by service (e.g. kitchen, roof, clean)" />
         <input name="zip" defaultValue={searchParams.zip ?? ""}
