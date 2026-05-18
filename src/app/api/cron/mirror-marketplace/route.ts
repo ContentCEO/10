@@ -46,7 +46,6 @@ export async function GET(request: Request) {
     .eq("source_channel", "scraped")
     .select("id");
   const autoApproved = flushed?.length ?? 0;
-
   const ownerEmail = (process.env.OWNER_EMAIL ?? HARDCODED_OWNER_EMAIL).toLowerCase();
   // Look up the owner via auth (profiles table doesn't store email).
   const { data: usersList } = await admin.auth.admin.listUsers({ perPage: 200 });
@@ -58,10 +57,13 @@ export async function GET(request: Request) {
   const ownerId = ownerUser.id;
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  // Mirror EVERY source channel into the owner's /leads pipeline —
+  // scraped permits, Meta Lead Ads, /quote calculator form-fills,
+  // marketplace forms, etc. The quality gate below filters out the
+  // unqualified ones.
   const { data: fresh, error: fetchErr } = await admin
     .from("marketplace_leads")
     .select("id,name,phone,email,city,zip,service_type,budget,ai_score,ai_summary,notes,source_channel,external_id,created_at")
-    .eq("source_channel", "scraped")
     .gte("created_at", since)
     .order("created_at", { ascending: false })
     .limit(500);

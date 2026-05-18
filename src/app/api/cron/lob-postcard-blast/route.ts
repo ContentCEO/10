@@ -50,12 +50,13 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
   const since = new Date(Date.now() - FRESH_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
-  // Count today's sends to enforce the daily cap
+  // Count today's sends to enforce the daily cap. Uses the JSONB ->>
+  // text accessor so the comparison is against a text-coerced value
+  // (avoids JSONB-vs-text comparison ambiguity).
   const todayStart = new Date(); todayStart.setUTCHours(0, 0, 0, 0);
   const { count: sentToday } = await admin
     .from("marketplace_leads")
     .select("id", { count: "exact", head: true })
-    .not("raw_payload->lob_sent_at", "is", null)
     .gte("raw_payload->>lob_sent_at", todayStart.toISOString());
 
   const remaining = Math.max(0, dailyCap - (sentToday ?? 0));
