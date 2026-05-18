@@ -84,6 +84,13 @@ export function QuoteWizard({ trade, priceMid }: { trade: TradeConfig; priceMid:
         setBusy(false);
         return;
       }
+      // Redirect to the dedicated thanks page so submissions can be
+      // analytics-tracked separately from the form page.
+      if (typeof window !== "undefined") {
+        const q = new URLSearchParams({ name: name.trim() }).toString();
+        window.location.href = `/quote/thanks?${q}`;
+        return;
+      }
       setStep("done");
     } catch (e) {
       setError((e as Error).message);
