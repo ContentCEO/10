@@ -2,15 +2,32 @@
 // large SDKs. Each function returns { ok, id?, error? } and silently no-ops
 // when the relevant env vars aren't set, which keeps local + demo deploys
 // working without configuring outbound providers.
+//
+// Test mode: set TEST_MODE=1 (or true) to log every outbound SMS/email
+// instead of actually sending. Use this to exercise crons + flows
+// without burning Twilio credits or annoying real customers.
 
 export interface SendResult {
   ok: boolean;
   id?: string;
   error?: string;
   skipped?: boolean;
+  test_mode?: boolean;
+}
+
+export function isTestMode(): boolean {
+  const v = process.env.TEST_MODE;
+  return v === "1" || v === "true";
+}
+
+function testLog(channel: "sms" | "email", to: string, body: string): SendResult {
+  // eslint-disable-next-line no-console
+  console.log(`[TEST_MODE ${channel.toUpperCase()}] to=${to} body=${body.slice(0, 200).replace(/\n/g, " ")}`);
+  return { ok: true, id: `test_${Date.now().toString(36)}`, test_mode: true };
 }
 
 export async function sendSms(to: string, body: string): Promise<SendResult> {
+  if (isTestMode()) return testLog("sms", to, body);
   const sid   = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
   const from  = process.env.TWILIO_FROM_NUMBER;
@@ -57,6 +74,7 @@ export async function sendEmail(
   text: string,
   fromName?: string,
 ): Promise<SendResult> {
+  if (isTestMode()) return testLog("email", to, `${subject} :: ${text}`);
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
   if (!key || !from) {
