@@ -14,6 +14,24 @@ const PUBLIC_PATHS = [
 ];
 
 export async function updateSession(request: NextRequest) {
+  // Auto-Outreach: rewrite *.{NEXT_PUBLIC_OUTREACH_SITES_DOMAIN} subdomains
+  // to /sites/{subdomain}. So acme-plumbing.previews.contractorflow.com
+  // serves the generated landing page at /sites/acme-plumbing.
+  const sitesDomain = process.env.NEXT_PUBLIC_OUTREACH_SITES_DOMAIN;
+  if (sitesDomain) {
+    const host = (request.headers.get("host") ?? "").toLowerCase().split(":")[0];
+    if (host.endsWith(`.${sitesDomain.toLowerCase()}`) && host !== sitesDomain.toLowerCase()) {
+      const sub = host.slice(0, -1 - sitesDomain.length);
+      if (sub && sub !== "www") {
+        const url = request.nextUrl.clone();
+        if (!url.pathname.startsWith("/sites/") && !url.pathname.startsWith("/api/") && !url.pathname.startsWith("/_next")) {
+          url.pathname = `/sites/${sub}${url.pathname === "/" ? "" : url.pathname}`;
+          return NextResponse.rewrite(url);
+        }
+      }
+    }
+  }
+
   let response = NextResponse.next({ request });
 
   const path = request.nextUrl.pathname;
@@ -82,7 +100,13 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/fsr/") ||
     path === "/tools/estimate" || path.startsWith("/tools/estimate/") ||
     path.startsWith("/nps/") || path === "/api/nps" ||
-    path.startsWith("/thanks/");
+    path.startsWith("/thanks/") ||
+    // Auto-Outreach: public-facing prospect sites + their claim/webhook endpoints.
+    path.startsWith("/sites/") ||
+    path === "/api/auto-outreach/claim" ||
+    path === "/api/auto-outreach/stripe-webhook" ||
+    path === "/api/auto-outreach/unsubscribe" ||
+    path.startsWith("/api/auto-outreach/track/");
 
   // Skip Supabase entirely for public paths (perf + works without env vars).
   if (isPublic) return response;
