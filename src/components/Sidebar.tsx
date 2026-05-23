@@ -89,7 +89,6 @@ const SECTIONS: NavSection[] = [
     label: "Leads",
     items: [
       { href: "/leads",         label: "Pipeline",      icon: Briefcase },
-      { href: "/marketplace",   label: "Marketplace",   icon: ShoppingCart },
       { href: "/opportunities", label: "Lead sources",  icon: Activity },
       { href: "/auto-bid",      label: "AI auto-bid",   icon: Bot },
     ],
@@ -201,15 +200,10 @@ const SECTIONS: NavSection[] = [
     label: "Owner",
     ownerOnly: true,
     items: [
-      { href: "/owner/setup-plan",    label: "Setup plan (start here)", icon: Activity },
       { href: "/owner/control/board", label: "Agent board",      icon: Bot },
       { href: "/owner",               label: "Overseer (live)",  icon: Activity },
-      { href: "/owner/scrapers",      label: "Scraper health",   icon: Activity },
-      { href: "/owner/lead-gen-roi",  label: "Lead-gen ROI",     icon: Activity },
-      { href: "/owner/insights",      label: "Weekly insights",  icon: Activity },
-      { href: "/owner/meta-setup",    label: "Facebook Lead Ads", icon: Activity },
-      { href: "/owner/lob-setup",     label: "Auto postcards",   icon: Activity },
-      { href: "/owner/vapi-setup",    label: "Voice receptionist", icon: Activity },
+      // Lead-gen / marketplace / Lob / Meta / Vapi / insights all moved
+      // to the marketplace app (separate repo).
     ],
   },
   {
@@ -219,8 +213,6 @@ const SECTIONS: NavSection[] = [
       { href: "/admin/insights",    label: "Insights",            icon: TrendingUp },
       { href: "/admin/cron",        label: "Cron schedule",       icon: Activity },
       { href: "/admin/audit",       label: "Audit log",           icon: ShieldCheck },
-      { href: "/admin/marketplace", label: "All leads (firehose)",icon: ShoppingCart },
-      { href: "/admin/curation",    label: "Curation queue",      icon: Sparkles },
       { href: "/admin/users",       label: "Users",               icon: Users },
       { href: "/admin/lead-paste",  label: "Manual paste",     icon: Wrench },
     ],
