@@ -147,12 +147,16 @@ curl http://localhost:3000/api/cron/daily
 - This is an MVP — there's no team/multi-user logic, no file uploads, and
   the calendar is a simple list view rather than a month grid.
 
-## Auto-Outreach engine
+## Contractor Flow Launchpad
 
-A sub-system that discovers local-service businesses, AI-scans their digital
-presence, generates a personalized landing page + Google/Meta ad strategy,
-and pitches them via email or SMS — all from one operator dashboard at
-`/owner/auto-outreach`.
+The agency sub-brand under the **Contractor Flow** umbrella. Builds custom
+websites + runs Google/Meta ads for home-services contractors. Per the
+[Contractor Flow architecture brief](#), Launchpad is sub-brand #2 (CRM is #1)
+and lives at `/owner/launchpad` (ops console, owner-only) plus
+`preview.contractorflow.com/[slug]` (public per-prospect previews).
+
+**Visual identity**: inherits the Contractor Flow logo + layout, accent color
+rust orange `#C44A26` on primary CTAs, sub-brand badges, and section headers.
 
 **Pipeline**
 
@@ -164,59 +168,80 @@ and pitches them via email or SMS — all from one operator dashboard at
 3. **Generate** — Claude builds a complete `SiteContent` payload (hero copy,
    services, about, reviews, FAQ, theme colors, SEO) plus per-platform ad
    strategies with realistic budgets, keywords, CPLs, and ad copy variants.
-4. **Outreach** — AI-personalized email / SMS that references one specific
-   scan finding and links to the live preview. Uses the shared
-   `src/lib/messaging.ts` helpers (Resend + Twilio, respects `TEST_MODE`).
-5. **Claim** — Prospect clicks "Claim this site" → Stripe Checkout (one-time,
-   monthly hosting, or done-for-you ads). Webhook flips the prospect to
-   `converted` and links the subscription.
+4. **Outreach** — AI-personalized email / SMS signed as "Davi at Contractor
+   Flow Launchpad" that references one specific scan finding and links to
+   the live preview. Uses shared `src/lib/messaging.ts` (Resend + Twilio,
+   respects `TEST_MODE`).
+5. **Claim** — Prospect clicks "Claim this site" → Stripe Checkout for one
+   of the three exact tiers from the brief Section 5:
 
-**Per-prospect preview sites** are rendered by `/sites/[slug]/page.tsx` and
-served on a wildcard subdomain (`*.{NEXT_PUBLIC_OUTREACH_SITES_DOMAIN}`) via
-a middleware rewrite. No per-site deploy — all sites are one Next.js app
-reading from `ao_sites.content` (JSONB) by slug.
+   | Tier | Setup | Recurring | Commitment |
+   | --- | --- | --- | --- |
+   | **Foundation** | $1,997 one-time | — | none |
+   | **Foundation + Growth** *(recommended)* | $997 | $997/mo | 6-month min |
+   | **Revenue Share** | $497 | $497/mo + 8% of attributed revenue | 12-month min |
+
+   Webhook flips the prospect to `converted` and stores the subscription.
+
+**Per-prospect preview URLs**: `preview.contractorflow.com/{slug}`. The
+middleware rewrites that single dedicated subdomain to the internal
+`/preview/sites/{slug}` route. No per-site deploy — every preview is one
+Next.js app reading `cf_launchpad_sites.content` (JSONB) by slug.
 
 **Module layout**
 
 ```
-src/lib/auto-outreach/
-  types.ts          shared types
+src/lib/launchpad/
+  types.ts          shared types (Plan = foundation | foundation_growth | revenue_share)
   places.ts         Google Places + synthetic fallback
   scanner.ts        website fetch + heuristic scoring + Claude audit
   generator.ts      Claude site-content generator + slug
   ads.ts            Claude Google + Meta strategy generator
-  outreach.ts       AI personalization + send + log
-  pipeline.ts       end-to-end orchestrator
+  outreach.ts       AI personalization (Davi voice) + send + log
+  pipeline.ts       end-to-end orchestrator + buildPreviewUrl
   auth.ts           owner-only API gate
 
-src/app/api/auto-outreach/
+src/app/api/launchpad/
   discover/                   POST  Places search → insert prospects
   scan/                       POST  scan + audit one prospect
   generate/                   POST  generate site + ad strategies
   outreach/                   POST  send one email or SMS
   pipeline/                   POST  scan → generate → outreach in one call
-  claim/                      POST  PUBLIC — start Stripe checkout
+  claim/                      POST  PUBLIC — start Stripe checkout (3 tiers)
   stripe-webhook/             POST  PUBLIC — handle checkout.session.completed
   track/[id]/                 GET   PUBLIC — email open pixel
   unsubscribe/                GET   PUBLIC — opt-out link
 
-src/app/(app)/owner/auto-outreach/
-  page.tsx                    dashboard (stats + recent activity)
+src/app/(app)/owner/launchpad/
+  page.tsx                    ops dashboard (stats + recent activity)
   prospects/                  filterable prospect list
   prospects/[id]/             full detail + action buttons
   discover/                   start a new Places search
   campaigns/                  reusable message templates
 
-src/app/sites/
+src/app/preview/sites/
   layout.tsx                  bare layout for public previews
-  [slug]/page.tsx             public landing page (loaded from ao_sites by slug)
-  [slug]/claim/               pricing + Stripe checkout
+  [slug]/page.tsx             public landing page (loaded from cf_launchpad_sites by slug)
+  [slug]/template-classic-hero.tsx   the rendered template (CF logo + Launchpad badge top-left)
+  [slug]/claim/               three-tier pricing + Stripe checkout
   [slug]/thanks/              post-claim thank you
 
 supabase/migrations/
-  2026-05-23_auto_outreach.sql  ao_prospects, ao_scans, ao_sites,
-                                ao_ad_strategies, ao_campaigns,
-                                ao_outreach_log, ao_subscriptions
+  2026-05-23_cf_launchpad.sql  cf_launchpad_{prospects,scans,sites,ad_strategies,
+                                              campaigns,outreach_log,subscriptions}
+```
+
+**Stripe products** (create with these exact IDs per brief Section 7):
+
+```
+cf_launchpad_foundation                  one-time   $1,997
+cf_launchpad_foundation_growth_setup     one-time   $997
+cf_launchpad_foundation_growth_monthly   recurring  $997/mo
+cf_launchpad_revenue_share_setup         one-time   $497
+cf_launchpad_revenue_share_monthly       recurring  $497/mo
+cf_launchpad_revenue_share_8pct          metered    8% of attributed revenue
+                                                    (invoiced out-of-band via
+                                                    CF CRM attribution)
 ```
 
 **Required env vars** (see `.env.example`)
@@ -224,8 +249,10 @@ supabase/migrations/
 | Var | Purpose |
 | --- | --- |
 | `GOOGLE_PLACES_API_KEY` | Real prospect discovery. Optional — falls back to synthetic data. |
-| `NEXT_PUBLIC_OUTREACH_SITES_DOMAIN` | Wildcard domain for `*.previews.contractorflow.com` previews. Optional — falls back to `/sites/[slug]` on the main domain. |
-| `STRIPE_PRICE_OUTREACH_ONETIME` / `_MONTHLY` / `_ADMGMT` | Stripe price IDs for the three claim plans. |
+| `NEXT_PUBLIC_LAUNCHPAD_PREVIEW_DOMAIN` | Dedicated preview subdomain (e.g. `preview.contractorflow.com`). Optional — falls back to `/preview/sites/[slug]` on the main domain. |
+| `STRIPE_PRICE_CF_LAUNCHPAD_FOUNDATION` | Tier 1 one-time price ID. |
+| `STRIPE_PRICE_CF_LAUNCHPAD_FOUNDATION_GROWTH_SETUP` / `_MONTHLY` | Tier 2 setup + recurring. |
+| `STRIPE_PRICE_CF_LAUNCHPAD_REVENUE_SHARE_SETUP` / `_MONTHLY` | Tier 3 setup + recurring. |
 | `ANTHROPIC_API_KEY` | Already wired (`src/lib/ai.ts`) — used for audit, site, ads, message personalization. |
 | `RESEND_API_KEY` + `RESEND_FROM_EMAIL` | Outbound cold email. |
 | `TWILIO_*` | Outbound SMS. |
@@ -233,11 +260,32 @@ supabase/migrations/
 
 **Operator workflow**
 
-1. `/owner/auto-outreach/discover` — enter trade + city → click discover.
-2. `/owner/auto-outreach/prospects` — find a fresh prospect.
+1. `/owner/launchpad/discover` — enter trade + city → click discover.
+2. `/owner/launchpad/prospects` — find a fresh prospect.
 3. On the detail page click **Run Full Pipeline** (or step through Scan →
    Generate → Send manually). When `TEST_MODE=1` the outreach is logged
    instead of sent so you can review the AI-personalized message first.
 4. Click **Preview** to see the generated site. Share the URL with the
    prospect — when they click "Claim this site" they land in Stripe
-   Checkout and the dashboard updates to `converted`.
+   Checkout with all three Launchpad tiers and the dashboard updates to
+   `converted` after payment.
+
+### Future scope (per architecture brief Section 4)
+
+- **Unified User + Subscription tables**: cross-sub-brand. Today CRM and
+  Launchpad each have their own slice; per brief, contractors must have ONE
+  Contractor Flow account that holds Subscriptions across all sub-brands
+  (`cf-crm`, `cf-launchpad`, `cf-marketplace`, `cf-academy`, `cf-capital`).
+  When the unified `subscriptions` table lands, the Stripe webhook here
+  should also write into it (with `sub_brand='cf-launchpad'`) so billing
+  rolls up across the portfolio.
+- **Customer-facing Launchpad portal** at `/launchpad` (subscription-gated):
+  the contractor sees their own website + ad campaigns + monthly report.
+  Today only the operator (Davi) sees Launchpad — at `/owner/launchpad`.
+- **Cross-sell trigger**: when a Launchpad client's CF CRM trial ends at
+  month 6 (Foundation+Growth) or month 1 (Foundation), auto-convert to paid
+  CRM at $79/mo. Currently captured in the brief but not yet wired.
+- **8% revenue-share metering**: revenue attribution from CF CRM lead source
+  tags → Stripe `cf_launchpad_revenue_share_8pct` metered usage records,
+  billed at end of month. Wire when the first Revenue Share tier client
+  signs.

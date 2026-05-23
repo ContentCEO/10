@@ -204,7 +204,7 @@ const SECTIONS: NavSection[] = [
       { href: "/owner/setup-plan",      label: "Setup plan (start here)", icon: Activity },
       { href: "/owner/control/board",   label: "Agent board",         icon: Bot },
       { href: "/owner",                 label: "Overseer (live)",     icon: Activity },
-      { href: "/owner/auto-outreach",   label: "Auto-Outreach engine", icon: Bot },
+      { href: "/owner/launchpad",       label: "Launchpad (ops)",     icon: Bot },
       { href: "/owner/scrapers",        label: "Scraper health",      icon: Activity },
       { href: "/owner/lead-gen-roi",    label: "Lead-gen ROI",        icon: Activity },
       { href: "/owner/insights",        label: "Weekly insights",     icon: Activity },

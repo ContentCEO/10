@@ -14,18 +14,29 @@ const PUBLIC_PATHS = [
 ];
 
 export async function updateSession(request: NextRequest) {
-  // Auto-Outreach: rewrite *.{NEXT_PUBLIC_OUTREACH_SITES_DOMAIN} subdomains
-  // to /sites/{subdomain}. So acme-plumbing.previews.contractorflow.com
-  // serves the generated landing page at /sites/acme-plumbing.
-  const sitesDomain = process.env.NEXT_PUBLIC_OUTREACH_SITES_DOMAIN;
-  if (sitesDomain) {
+  // CF Launchpad: when the request host matches the dedicated preview
+  // subdomain (default preview.contractorflow.com), rewrite path-based
+  // per-prospect URLs to the internal /preview/sites/{slug} route.
+  //   preview.contractorflow.com/acme-plumbing  →  /preview/sites/acme-plumbing
+  // (Per Contractor Flow architecture brief Section 6.)
+  const previewDomain = process.env.NEXT_PUBLIC_LAUNCHPAD_PREVIEW_DOMAIN;
+  if (previewDomain) {
     const host = (request.headers.get("host") ?? "").toLowerCase().split(":")[0];
-    if (host.endsWith(`.${sitesDomain.toLowerCase()}`) && host !== sitesDomain.toLowerCase()) {
-      const sub = host.slice(0, -1 - sitesDomain.length);
-      if (sub && sub !== "www") {
-        const url = request.nextUrl.clone();
-        if (!url.pathname.startsWith("/sites/") && !url.pathname.startsWith("/api/") && !url.pathname.startsWith("/_next")) {
-          url.pathname = `/sites/${sub}${url.pathname === "/" ? "" : url.pathname}`;
+    if (host === previewDomain.toLowerCase()) {
+      const url = request.nextUrl.clone();
+      const path = url.pathname;
+      // Don't rewrite internal/api/static paths or paths already targeted.
+      const passthrough =
+        path.startsWith("/preview/sites/") ||
+        path.startsWith("/api/") ||
+        path.startsWith("/_next") ||
+        path === "/favicon.ico" ||
+        path === "/robots.txt";
+      if (!passthrough) {
+        const slug = path.replace(/^\/+/, "").split("/")[0];
+        if (slug) {
+          const rest = path.slice(slug.length + 1);
+          url.pathname = `/preview/sites/${slug}${rest ? "/" + rest : ""}`.replace(/\/+$/, "") || `/preview/sites/${slug}`;
           return NextResponse.rewrite(url);
         }
       }
@@ -101,12 +112,12 @@ export async function updateSession(request: NextRequest) {
     path === "/tools/estimate" || path.startsWith("/tools/estimate/") ||
     path.startsWith("/nps/") || path === "/api/nps" ||
     path.startsWith("/thanks/") ||
-    // Auto-Outreach: public-facing prospect sites + their claim/webhook endpoints.
-    path.startsWith("/sites/") ||
-    path === "/api/auto-outreach/claim" ||
-    path === "/api/auto-outreach/stripe-webhook" ||
-    path === "/api/auto-outreach/unsubscribe" ||
-    path.startsWith("/api/auto-outreach/track/");
+    // CF Launchpad: public-facing prospect previews + claim/webhook endpoints.
+    path.startsWith("/preview/sites/") ||
+    path === "/api/launchpad/claim" ||
+    path === "/api/launchpad/stripe-webhook" ||
+    path === "/api/launchpad/unsubscribe" ||
+    path.startsWith("/api/launchpad/track/");
 
   // Skip Supabase entirely for public paths (perf + works without env vars).
   if (isPublic) return response;
