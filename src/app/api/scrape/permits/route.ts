@@ -4,6 +4,7 @@ import type { BudgetTier } from "@/lib/marketplace";
 import { enrichPhone, isQualifiedLead, isMassachusettsLead } from "@/lib/lead-quality";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 // Public-records permit ingestion across major US cities. All sources below
 // are Socrata- or ArcGIS-backed open data portals — public records, no auth,

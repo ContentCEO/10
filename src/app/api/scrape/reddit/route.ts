@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 // Reddit RSS feed reader. JSON endpoint (/r/X/new.json) is rate-limited
 // to ~zero from cloud datacenter IPs as of 2023; the .rss equivalent is
