@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+.env
+.env*.local
+.DS_Store
+*.log
+.vercel
+.turbo
+next-env.d.ts
+*.tsbuildinfo
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+src-tauri/Cargo.lock
+node_modules
