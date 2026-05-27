@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isCronAuthorized as isAuthorized } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 // Craigslist RSS harvester. Every CL section has an .rss endpoint — no auth,
 // no scraping, no ToS issue. We target the high-signal sections where

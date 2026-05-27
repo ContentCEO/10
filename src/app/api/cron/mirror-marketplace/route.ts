@@ -4,6 +4,7 @@ import { isCronAuthorized } from "@/lib/cron-auth";
 import { isQualifiedLead } from "@/lib/lead-quality";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 /*
  * Mirror new marketplace_leads rows into the owner's `leads` table.
