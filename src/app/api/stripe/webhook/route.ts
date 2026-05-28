@@ -59,6 +59,48 @@ async function applyWalletTopup(session: Stripe.Checkout.Session) {
   });
 }
 
+async function upsertCFSubscription(session: Stripe.Checkout.Session) {
+  const meta = session.metadata ?? {};
+  const userId = typeof meta.user_id === "string" ? meta.user_id : null;
+  const subBrand = typeof meta.sub_brand === "string" ? meta.sub_brand : null;
+  if (!userId || !subBrand) return;
+
+  const admin = createAdminClient();
+  const stripeSubId = typeof session.subscription === "string" ? session.subscription : null;
+
+  await admin.from("cf_subscriptions").upsert({
+    user_id: userId,
+    sub_brand: subBrand,
+    tier: typeof meta.tier === "string" ? meta.tier : null,
+    status: stripeSubId ? "active" : "active", // one-time payments also flip active
+    stripe_subscription_id: stripeSubId,
+    stripe_price_id: null,                     // filled by syncCFSubscription on next event
+    started_at: new Date().toISOString(),
+  }, { onConflict: "user_id,sub_brand" });
+}
+
+async function syncCFSubscription(sub: Stripe.Subscription) {
+  const meta = sub.metadata ?? {};
+  const userId = typeof meta.user_id === "string" ? meta.user_id : null;
+  const subBrand = typeof meta.sub_brand === "string" ? meta.sub_brand : null;
+  if (!userId || !subBrand) return;
+
+  const admin = createAdminClient();
+  const priceId = sub.items?.data?.[0]?.price?.id ?? null;
+  const periodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
+
+  await admin.from("cf_subscriptions").upsert({
+    user_id: userId,
+    sub_brand: subBrand,
+    tier: typeof meta.tier === "string" ? meta.tier : null,
+    status: mapStatus(sub.status),
+    stripe_subscription_id: sub.id,
+    stripe_price_id: priceId,
+    current_period_end: periodEnd,
+    ends_at: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
+  }, { onConflict: "user_id,sub_brand" });
+}
+
 export async function POST(request: Request) {
   const stripe = getStripe();
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -85,18 +127,25 @@ export async function POST(request: Request) {
         await applyWalletTopup(session);
         break;
       }
+      // CF module purchase (one-time or subscription).
+      if (session.metadata?.sub_brand) {
+        await upsertCFSubscription(session);
+      }
       if (session.subscription) {
         const subId = typeof session.subscription === "string"
           ? session.subscription : session.subscription.id;
         const sub = await stripe.subscriptions.retrieve(subId);
         await syncSubscription(sub);
+        await syncCFSubscription(sub);
       }
       break;
     }
     case "customer.subscription.created":
     case "customer.subscription.updated":
     case "customer.subscription.deleted": {
-      await syncSubscription(event.data.object as Stripe.Subscription);
+      const sub = event.data.object as Stripe.Subscription;
+      await syncSubscription(sub);
+      await syncCFSubscription(sub);
       break;
     }
   }
