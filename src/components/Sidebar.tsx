@@ -197,6 +197,7 @@ const SECTIONS: NavSection[] = [
       { href: "/distribution",  label: "Routes",        icon: Compass },
       { href: "/custom-domain", label: "Custom domain", icon: Globe },
       { href: "/billing",       label: "Billing",       icon: Wallet },
+      { href: "/account/modules", label: "Modules",     icon: Sparkles },
       { href: "/settings/export", label: "Data export",  icon: Download },
     ],
   },

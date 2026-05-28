@@ -44,10 +44,9 @@ interface UserProfile {
  *
  * Resolution rules (in order):
  *   1. Owner email always gets every module.
- *   2. profiles.is_admin = true → CRM + Marketplace by default.
- *   3. Otherwise: only modules with an active subscriptions row.
- *
- * Future: when the subscriptions table is wired up, query it here.
+ *   2. profiles.is_admin = true → CRM + Marketplace baseline.
+ *   3. Query cf_subscriptions for any active row → that module set.
+ *   4. Everyone signed-in gets cf-crm by default (the base product).
  */
 export async function getUserModules(
   supabase: SupabaseClient,
@@ -58,22 +57,23 @@ export async function getUserModules(
     return ["cf-crm", "cf-launchpad", "cf-marketplace", "cf-academy", "cf-capital"];
   }
 
-  if (profile?.is_admin) {
-    return ["cf-crm", "cf-marketplace"];
+  const set = new Set<CFModule>(["cf-crm"]); // base
+  if (profile?.is_admin) set.add("cf-marketplace");
+
+  try {
+    const { data } = await supabase
+      .from("cf_subscriptions")
+      .select("sub_brand")
+      .eq("user_id", user.id)
+      .in("status", ["trialing", "active"]);
+    for (const r of (data ?? []) as { sub_brand: string }[]) {
+      set.add(r.sub_brand as CFModule);
+    }
+  } catch {
+    // Table may not exist yet in some envs — fall back to baseline.
   }
 
-  // TODO: replace with real subscription lookup once Stripe products are set up.
-  //
-  // const { data } = await supabase
-  //   .from("subscriptions")
-  //   .select("sub_brand")
-  //   .eq("user_id", user.id)
-  //   .eq("status", "active");
-  // return (data ?? []).map((r) => r.sub_brand as CFModule);
-
-  // Default for now: every signed-in user gets CRM.
-  void supabase;
-  return ["cf-crm"];
+  return Array.from(set);
 }
 
 export function hasModule(userModules: CFModule[], required: CFModule): boolean {
