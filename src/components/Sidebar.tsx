@@ -63,11 +63,13 @@ import {
   Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { CFModule } from "@/lib/subscriptions";
 
 interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  module?: CFModule;            // hide unless user has this module
 }
 
 interface NavSection {
@@ -75,6 +77,7 @@ interface NavSection {
   items: NavItem[];
   adminOnly?: boolean;
   ownerOnly?: boolean;
+  module?: CFModule;           // hide entire section unless user has this module
 }
 
 const SECTIONS: NavSection[] = [
@@ -89,7 +92,7 @@ const SECTIONS: NavSection[] = [
     label: "Leads",
     items: [
       { href: "/leads",         label: "Pipeline",      icon: Briefcase },
-      { href: "/marketplace",   label: "Marketplace",   icon: ShoppingCart },
+      { href: "/marketplace",   label: "Marketplace",   icon: ShoppingCart, module: "cf-marketplace" },
       { href: "/opportunities", label: "Lead sources",  icon: Activity },
       { href: "/auto-bid",      label: "AI auto-bid",   icon: Bot },
     ],
@@ -204,12 +207,15 @@ const SECTIONS: NavSection[] = [
       { href: "/owner/setup-plan",    label: "Setup plan (start here)", icon: Activity },
       { href: "/owner/control/board", label: "Agent board",      icon: Bot },
       { href: "/owner",               label: "Overseer (live)",  icon: Activity },
-      { href: "/owner/scrapers",      label: "Scraper health",   icon: Activity },
-      { href: "/owner/lead-gen-roi",  label: "Lead-gen ROI",     icon: Activity },
-      { href: "/owner/insights",      label: "Weekly insights",  icon: Activity },
-      { href: "/owner/meta-setup",    label: "Facebook Lead Ads", icon: Activity },
-      { href: "/owner/lob-setup",     label: "Auto postcards",   icon: Activity },
-      { href: "/owner/vapi-setup",    label: "Voice receptionist", icon: Activity },
+      // The lead-gen tooling below is the Marketplace module — only
+      // visible to users who hold the cf-marketplace subscription
+      // (owner auto-grants all modules).
+      { href: "/owner/scrapers",      label: "Scraper health",   icon: Activity, module: "cf-marketplace" },
+      { href: "/owner/lead-gen-roi",  label: "Lead-gen ROI",     icon: Activity, module: "cf-marketplace" },
+      { href: "/owner/insights",      label: "Weekly insights",  icon: Activity, module: "cf-marketplace" },
+      { href: "/owner/meta-setup",    label: "Facebook Lead Ads", icon: Activity, module: "cf-marketplace" },
+      { href: "/owner/lob-setup",     label: "Auto postcards",   icon: Activity, module: "cf-marketplace" },
+      { href: "/owner/vapi-setup",    label: "Voice receptionist", icon: Activity, module: "cf-marketplace" },
     ],
   },
   {
@@ -219,8 +225,8 @@ const SECTIONS: NavSection[] = [
       { href: "/admin/insights",    label: "Insights",            icon: TrendingUp },
       { href: "/admin/cron",        label: "Cron schedule",       icon: Activity },
       { href: "/admin/audit",       label: "Audit log",           icon: ShieldCheck },
-      { href: "/admin/marketplace", label: "All leads (firehose)",icon: ShoppingCart },
-      { href: "/admin/curation",    label: "Curation queue",      icon: Sparkles },
+      { href: "/admin/marketplace", label: "All leads (firehose)",icon: ShoppingCart, module: "cf-marketplace" },
+      { href: "/admin/curation",    label: "Curation queue",      icon: Sparkles, module: "cf-marketplace" },
       { href: "/admin/users",       label: "Users",               icon: Users },
       { href: "/admin/lead-paste",  label: "Manual paste",     icon: Wrench },
     ],
@@ -234,9 +240,10 @@ function sectionContainsActive(section: NavSection, path: string): boolean {
 }
 
 export function Sidebar({
-  email, isAdmin, isOwner,
-}: { email: string | null; isAdmin?: boolean; isOwner?: boolean }) {
+  email, isAdmin, isOwner, modules = [],
+}: { email: string | null; isAdmin?: boolean; isOwner?: boolean; modules?: CFModule[] }) {
   const path = usePathname();
+  const moduleSet = new Set(modules);
 
   // Which sections are expanded? Default: only the section containing the
   // current page. Persist on every toggle.
@@ -283,11 +290,17 @@ export function Sidebar({
         {SECTIONS.filter((s) => {
           if (s.ownerOnly && !isOwner) return false;
           if (s.adminOnly && !isAdmin) return false;
+          if (s.module && !moduleSet.has(s.module)) return false;
           return true;
         }).map((section, idx) => {
+          // Per-item module gating: hide individual links the user lacks.
+          const visibleItems = section.items.filter(
+            (it) => !it.module || moduleSet.has(it.module),
+          );
+          if (visibleItems.length === 0) return null;
           const isCollapsible = !!section.label;
           const isOpen = !isCollapsible || expanded.has(section.label!);
-          const activeCount = section.items.filter(
+          const activeCount = visibleItems.filter(
             (it) => path === it.href || path.startsWith(it.href + "/"),
           ).length;
 
@@ -316,7 +329,7 @@ export function Sidebar({
               )}
               {isOpen && (
                 <div className="space-y-0.5">
-                  {section.items.map(({ href, label, icon: Icon }) => {
+                  {visibleItems.map(({ href, label, icon: Icon }) => {
                     const active = path === href || path.startsWith(href + "/");
                     return (
                       <Link

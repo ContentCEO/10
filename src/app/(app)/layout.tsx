@@ -12,6 +12,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { FullscreenOnMount } from "@/components/FullscreenOnMount";
 import { DesktopLockGate } from "@/components/DesktopLockGate";
 import { isOwnerEmail } from "@/lib/owner";
+import { getUserModules } from "@/lib/subscriptions";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -40,12 +41,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     profile?.business_name && Array.isArray(profile?.services) && profile.services.length > 0,
   );
 
+  const userModules = await getUserModules(
+    supabase,
+    { id: user.id, email: user.email ?? null },
+    profile ? { id: user.id, is_admin: profile.is_admin } : null,
+  );
+
   return (
     <div data-theme="dark-app" className="min-h-screen flex bg-transparent text-white">
       <Sidebar
         email={user.email ?? null}
         isAdmin={Boolean(profile?.is_admin)}
         isOwner={isOwner}
+        modules={userModules}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <AppTopBar />
