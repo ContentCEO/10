@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDate } from "@/lib/utils";
+import { requireModule } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export default async function AdminMarketplacePage({
 }: {
   searchParams: { status?: string; source?: string; q?: string };
 }) {
+  await requireModule("cf-marketplace");
   const admin = createAdminClient();
   let query = admin.from("marketplace_leads").select("*")
     .order("created_at", { ascending: false }).limit(200);

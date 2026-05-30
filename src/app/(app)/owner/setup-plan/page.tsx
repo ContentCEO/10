@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isOwnerEmail } from "@/lib/owner";
 import { CheckCircle2, Circle, ExternalLink, AlertCircle, Clock, Target } from "lucide-react";
+import { requireModule } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ interface Step {
 }
 
 export default async function SetupPlanPage() {
+  await requireModule("cf-marketplace");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");

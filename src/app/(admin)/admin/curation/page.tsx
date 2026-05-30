@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { type MarketplaceLead } from "@/lib/marketplace";
 import { CurationList } from "./CurationList";
 import { AutoApproveControl } from "./AutoApproveControl";
+import { requireModule } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export default async function CurationPage({
 }: {
   searchParams: { source?: string; min_score?: string; state?: string };
 }) {
+  await requireModule("cf-marketplace");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

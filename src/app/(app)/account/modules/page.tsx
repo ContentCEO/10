@@ -19,7 +19,7 @@ const MODULE_BLURB: Record<CFModule, string> = {
   "cf-capital":      "Invoice factoring — get paid same-day, customer pays us later. (Coming.)",
 };
 
-export default async function ModulesPage({ searchParams }: { searchParams: { status?: string; module?: string } }) {
+export default async function ModulesPage({ searchParams }: { searchParams: { status?: string; module?: string; locked?: string } }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -43,6 +43,15 @@ export default async function ModulesPage({ searchParams }: { searchParams: { st
           Unlock more of Contractor Flow. One login, one bill — features just appear in your sidebar as you add them.
         </p>
       </header>
+
+      {searchParams.locked && (
+        <div className="card p-4 bg-brand-500/[0.10] ring-1 ring-brand-400/40 text-brand-100 text-sm flex items-start gap-2">
+          <Sparkles className="h-4 w-4 text-brand-300 mt-0.5 shrink-0" />
+          <div>
+            <strong>Unlock {MODULE_LABELS[searchParams.locked as CFModule] ?? searchParams.locked}</strong> to access that page. Pick a tier below to enable it instantly.
+          </div>
+        </div>
+      )}
 
       {searchParams.status === "success" && (
         <div className="card p-4 bg-emerald-500/10 ring-1 ring-emerald-400/30 text-emerald-100 text-sm flex items-start gap-2">

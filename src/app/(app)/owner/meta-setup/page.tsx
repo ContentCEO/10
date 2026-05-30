@@ -4,10 +4,12 @@ import { CheckCircle2, Facebook, ExternalLink, AlertCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/server";
 import { isOwnerEmail } from "@/lib/owner";
 import { CopyField } from "@/app/(app)/integrations/CopyField";
+import { requireModule } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
 export default async function MetaSetupPage() {
+  await requireModule("cf-marketplace");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");

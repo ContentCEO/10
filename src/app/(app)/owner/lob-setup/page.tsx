@@ -3,10 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { isOwnerEmail } from "@/lib/owner";
 import { CheckCircle2, Mail, AlertCircle, ExternalLink } from "lucide-react";
 import { LobTestButton } from "./LobTestButton";
+import { requireModule } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
 export default async function LobSetupPage() {
+  await requireModule("cf-marketplace");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
