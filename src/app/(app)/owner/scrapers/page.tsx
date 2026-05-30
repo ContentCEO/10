@@ -6,6 +6,7 @@ import { Activity, AlertCircle, CheckCircle2, RefreshCw } from "lucide-react";
 import { isQualifiedLead } from "@/lib/lead-quality";
 import { ScraperRunNowButton } from "./RunNow";
 import { RunAllControls } from "./RunAllControls";
+import { requireModule } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,7 @@ function ago(iso: string | null): string {
 }
 
 export default async function ScrapersPage() {
+  await requireModule("cf-marketplace");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");

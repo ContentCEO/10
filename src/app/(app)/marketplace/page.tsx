@@ -9,6 +9,7 @@ import { TRADES, classifyTrade } from "@/lib/trades";
 import { DisputeButton } from "./DisputeButton";
 import { WalletBar } from "./WalletBar";
 import { MarketplaceCard } from "./MarketplaceCard";
+import { requireModule } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function MarketplacePage({
 }: {
   searchParams: { service?: string; zip?: string; topup?: string; trade?: string };
 }) {
+  await requireModule("cf-marketplace");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

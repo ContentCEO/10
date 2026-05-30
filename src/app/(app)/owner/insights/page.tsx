@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isOwnerEmail } from "@/lib/owner";
 import { generateText } from "@/lib/ai";
+import { requireModule } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -102,6 +103,7 @@ Return STRICT JSON with this shape, no markdown, no prose:
 }
 
 export default async function InsightsPage() {
+  await requireModule("cf-marketplace");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");

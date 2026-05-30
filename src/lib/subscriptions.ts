@@ -79,3 +79,35 @@ export async function getUserModules(
 export function hasModule(userModules: CFModule[], required: CFModule): boolean {
   return userModules.includes(required);
 }
+
+/*
+ * Server-side route gate. Use at the top of any page.tsx that requires
+ * an active subscription to a module. Redirects to /account/modules
+ * with an upsell flag if the user lacks it.
+ *
+ *   import { requireModule } from "@/lib/subscriptions";
+ *   export default async function MarketplacePage() {
+ *     await requireModule("cf-marketplace");
+ *     // … render gated content
+ *   }
+ */
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+
+export async function requireModule(required: CFModule): Promise<void> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login?next=/account/modules");
+  }
+  const { data: profile } = await supabase
+    .from("profiles").select("id,is_admin").eq("id", user.id).maybeSingle();
+  const modules = await getUserModules(
+    supabase,
+    { id: user.id, email: user.email ?? null },
+    profile ? { id: user.id, is_admin: (profile as { is_admin?: boolean }).is_admin } : null,
+  );
+  if (!modules.includes(required)) {
+    redirect(`/account/modules?locked=${required}`);
+  }
+}
