@@ -221,6 +221,7 @@ const SECTIONS: NavSection[] = [
       { href: "/owner/setup-plan",    label: "Setup plan (start here)", icon: Activity },
       { href: "/owner/control/board", label: "Agent board",      icon: Bot },
       { href: "/owner",               label: "Overseer (live)",  icon: Activity },
+      { href: "/owner/launchpad",     label: "Launchpad clients", icon: Rocket },
       // The lead-gen tooling below is the Marketplace module — only
       // visible to users who hold the cf-marketplace subscription
       // (owner auto-grants all modules).
