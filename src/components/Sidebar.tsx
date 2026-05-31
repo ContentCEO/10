@@ -89,6 +89,17 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
+    label: "Launchpad",
+    module: "cf-launchpad",
+    items: [
+      { href: "/launchpad",          label: "Dashboard",         icon: Rocket },
+      { href: "/launchpad/website",  label: "Website",           icon: Globe },
+      { href: "/launchpad/ads",      label: "Ad campaigns",      icon: TrendingUp },
+      { href: "/launchpad/reports",  label: "Monthly reports",   icon: FileText },
+      { href: "/launchpad/messages", label: "Messages",          icon: MessageSquare },
+    ],
+  },
+  {
     label: "Leads",
     items: [
       { href: "/leads",         label: "Pipeline",      icon: Briefcase },
