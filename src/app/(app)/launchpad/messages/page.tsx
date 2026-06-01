@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export default async function LaunchpadMessages() {
   await requireModule("cf-launchpad");
 
-  const supportEmail = "davi@contractorflow.com"; // TODO: env var
+  const supportEmail = process.env.NEXT_PUBLIC_LAUNCHPAD_SUPPORT_EMAIL ?? "davi@contractorflowstore.com";
 
   return (
     <div className="space-y-6 max-w-3xl">

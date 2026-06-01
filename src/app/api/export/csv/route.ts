@@ -52,7 +52,7 @@ export async function GET(request: Request) {
 
   const lines: string[] = [];
   lines.push(config.cols.map(csvEscape).join(","));
-  for (const row of (rows ?? []) as Record<string, unknown>[]) {
+  for (const row of (rows ?? []) as unknown as Record<string, unknown>[]) {
     lines.push(config.cols.map((c) => csvEscape(row[c])).join(","));
   }
 
