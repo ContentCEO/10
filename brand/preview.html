@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Contractor Flow — brand preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; }
+  .font-serif { font-family: 'Instrument Serif', Georgia, serif; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+<div class="max-w-5xl mx-auto px-6 py-12">
+
+  <header class="mb-10">
+    <div class="text-[10px] uppercase tracking-[0.18em] text-indigo-600 font-mono">Brand · v1</div>
+    <h1 class="mt-2 font-serif text-5xl tracking-tight">Contractor <em class="text-indigo-600">Flow</em> brand kit</h1>
+    <p class="mt-2 text-sm text-slate-600">Logos, colors, type, and sub-brand variants. Save as PNG by right-clicking any SVG below.</p>
+  </header>
+
+  <!-- Logo lockups -->
+  <section class="space-y-6">
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Logo lockups</h2>
+
+    <div class="rounded-xl bg-white ring-1 ring-slate-200 p-8 flex items-center justify-center min-h-[140px]">
+      <img src="logo.svg" alt="Primary logo" class="max-h-20">
+    </div>
+    <div class="rounded-xl bg-[#06060A] ring-1 ring-slate-700 p-8 flex items-center justify-center min-h-[140px]">
+      <img src="logo-dark.svg" alt="Dark logo" class="max-h-20">
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="rounded-xl bg-white ring-1 ring-slate-200 p-6 flex items-center justify-center"><img src="logo-crm.svg" alt="CF CRM" class="max-h-14"></div>
+      <div class="rounded-xl bg-white ring-1 ring-slate-200 p-6 flex items-center justify-center"><img src="logo-marketplace.svg" alt="CF Marketplace" class="max-h-14"></div>
+      <div class="rounded-xl bg-white ring-1 ring-slate-200 p-6 flex items-center justify-center"><img src="logo-launchpad.svg" alt="CF Launchpad" class="max-h-14"></div>
+    </div>
+    <div class="grid grid-cols-4 gap-4">
+      <div class="rounded-xl bg-white ring-1 ring-slate-200 p-4 aspect-square flex items-center justify-center"><img src="icon.svg" class="w-20 h-20"></div>
+      <div class="rounded-xl bg-white ring-1 ring-slate-200 p-4 aspect-square flex items-center justify-center"><img src="icon.svg" class="w-12 h-12"></div>
+      <div class="rounded-xl bg-white ring-1 ring-slate-200 p-4 aspect-square flex items-center justify-center"><img src="icon.svg" class="w-8 h-8"></div>
+      <div class="rounded-xl bg-white ring-1 ring-slate-200 p-4 aspect-square flex items-center justify-center"><img src="icon.svg" class="w-5 h-5"></div>
+    </div>
+  </section>
+
+  <!-- Color palette -->
+  <section class="mt-12 space-y-3">
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Color palette</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+      <Swatch hex="#6366f1" name="Parent / CRM" sub="brand-500" />
+      <Swatch hex="#8b5cf6" name="Parent accent" sub="violet-500" />
+      <Swatch hex="#10b981" name="Marketplace" sub="emerald-500" />
+      <Swatch hex="#f97316" name="Launchpad" sub="orange-500" />
+      <Swatch hex="#06060A" name="Dark bg" sub="near-black" />
+      <Swatch hex="#f8fafc" name="Light bg" sub="stone-50" />
+    </div>
+    <script>
+      // tiny custom element-ish: replace <Swatch /> tags above with rendered DOM
+      document.querySelectorAll('Swatch').forEach((s) => {
+        const hex = s.getAttribute('hex'), name = s.getAttribute('name'), sub = s.getAttribute('sub');
+        const div = document.createElement('div');
+        div.className = 'rounded-xl overflow-hidden ring-1 ring-slate-200';
+        const isDark = ['#06060A','#6366f1','#8b5cf6','#10b981','#f97316'].includes(hex);
+        div.innerHTML = `<div class="aspect-[4/3] flex items-end p-3" style="background:${hex}"><span class="text-[10px] font-mono ${isDark?'text-white/90':'text-slate-900/80'}">${hex}</span></div><div class="p-3 bg-white"><div class="text-xs font-semibold">${name}</div><div class="text-[10px] text-slate-500 font-mono">${sub}</div></div>`;
+        s.replaceWith(div);
+      });
+    </script>
+  </section>
+
+  <!-- Type -->
+  <section class="mt-12 space-y-4">
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Typography</h2>
+    <div class="rounded-xl bg-white ring-1 ring-slate-200 p-6">
+      <div class="text-xs uppercase tracking-wider text-slate-500 font-mono">Headlines · Instrument Serif</div>
+      <div class="mt-2 font-serif text-5xl tracking-tight">Built where the <em class="text-indigo-600">work</em> is.</div>
+    </div>
+    <div class="rounded-xl bg-white ring-1 ring-slate-200 p-6">
+      <div class="text-xs uppercase tracking-wider text-slate-500 font-mono">Body · Geist Sans (Inter shown)</div>
+      <p class="mt-2 text-base text-slate-700">Contractor Flow is the operating system for Massachusetts contractors. Three modules — CRM, Marketplace, and Launchpad — built by one person, for the trades.</p>
+    </div>
+    <div class="rounded-xl bg-white ring-1 ring-slate-200 p-6">
+      <div class="text-xs uppercase tracking-wider text-slate-500 font-mono">Labels · Geist Mono (JetBrains shown)</div>
+      <div class="mt-2 font-mono text-xs tracking-wider uppercase text-slate-600">CF · MA · v1 · 2026</div>
+    </div>
+  </section>
+
+  <!-- Voice samples -->
+  <section class="mt-12 space-y-3">
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Voice in action</h2>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="rounded-xl ring-1 ring-emerald-200 bg-emerald-50 p-5">
+        <div class="text-[10px] uppercase tracking-wider text-emerald-700 font-mono font-bold">✓ On brand</div>
+        <p class="mt-2 font-serif text-2xl text-slate-900">"We answer the phone when you call."</p>
+        <p class="mt-3 font-serif text-2xl text-slate-900">"27 minutes to first contact. Average."</p>
+        <p class="mt-3 font-serif text-2xl text-slate-900">"Built for Mike in Marblehead, not Mike in Mountain View."</p>
+      </div>
+      <div class="rounded-xl ring-1 ring-rose-200 bg-rose-50 p-5">
+        <div class="text-[10px] uppercase tracking-wider text-rose-700 font-mono font-bold">✗ Off brand</div>
+        <p class="mt-2 text-base text-slate-700">"Our customer success team is available during standard business hours."</p>
+        <p class="mt-3 text-base text-slate-700">"Lightning-fast response times via our scalable cloud platform."</p>
+        <p class="mt-3 text-base text-slate-700">"Industry-leading SaaS solution trusted by thousands of SMBs nationwide."</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mt-16 pb-12 text-xs text-slate-400 font-mono text-center">
+    Contractor Flow brand kit · v1 · 2026
+  </footer>
+</div>
+</body>
+</html>
