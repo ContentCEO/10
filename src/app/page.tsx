@@ -421,34 +421,43 @@ function LiveBadge() {
 function Hero() {
   const D = {
     start: 200,
-    gradLand: 200 + "The contractor ".length * 24,
-    c2: 200 + "The contractor CRM".length * 24,
-    c3: 200 + "The contractor CRMthat lives on your ".length * 24,
+    gradLand: 200 + "Real Massachusetts ".length * 24,
+    c2: 200 + "Real Massachusetts contractor leads".length * 24,
   };
   return (
     <section className="relative pt-16 pb-12 px-5 overflow-hidden">
       <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[680px] h-[440px] rounded-full pointer-events-none"
         style={{
-          background: `radial-gradient(circle, ${P.indigo}55 0%, transparent 60%)`,
+          background: `radial-gradient(circle, #10b98155 0%, transparent 60%)`,
           filter: "blur(60px)",
           animation: "breathe 6s ease-in-out infinite",
         }} />
       <div className="absolute top-40 -left-10 w-[320px] h-[320px] rounded-full pointer-events-none"
         style={{
-          background: `radial-gradient(circle, ${P.violet}3a 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${P.indigo}3a 0%, transparent 70%)`,
           filter: "blur(54px)",
           animation: "floatY 9s ease-in-out infinite",
         }} />
       <div className="absolute top-32 -right-10 w-[300px] h-[300px] rounded-full pointer-events-none"
         style={{
-          background: `radial-gradient(circle, ${P.pink}2e 0%, transparent 70%)`,
+          background: `radial-gradient(circle, #f9731633 0%, transparent 70%)`,
           filter: "blur(54px)",
           animation: "floatY 11s ease-in-out infinite 2s",
         }} />
 
       <div className="max-w-4xl mx-auto relative">
         <Reveal>
-          <div className="flex justify-center mb-6"><LiveBadge /></div>
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-[0.18em]"
+              style={{
+                background: "rgba(16, 185, 129, 0.12)",
+                color: "#34d399",
+                border: "1px solid rgba(16, 185, 129, 0.32)",
+              }}>
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Launching Sept 23
+            </div>
+          </div>
         </Reveal>
 
         <h1 className="text-center leading-[0.95]" style={{
@@ -458,51 +467,81 @@ function Hero() {
           color: P.text,
           letterSpacing: "-0.03em",
         }}>
-          {letters("The contractor ", D.start)}
+          {letters("Real Massachusetts ", D.start)}
           <span className="inline-block" style={{
-            backgroundImage: `linear-gradient(135deg, ${P.indigoHi} 0%, ${P.indigo} 35%, ${P.violet} 70%, ${P.pink} 100%)`,
+            backgroundImage: `linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)`,
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             WebkitTextFillColor: "transparent",
             color: "transparent",
             fontStyle: "italic",
             animation: `gradientPunch 950ms cubic-bezier(.2,.9,.3,1.25) ${D.gradLand}ms backwards`,
-            filter: `drop-shadow(0 8px 30px ${P.indigo}66)`,
-          }}>CRM</span>
+            filter: `drop-shadow(0 8px 30px #10b98166)`,
+          }}>contractor leads</span>
+          <span style={{ color: P.text }}>.</span>
           <br />
-          {letters("that lives on your ", D.c2)}
           <span className="inline-block" style={{
             fontStyle: "italic",
-            animation: `letterIn 800ms cubic-bezier(.2,.7,.2,1) ${D.c3}ms backwards`,
-          }}>desktop.</span>
+            animation: `letterIn 800ms cubic-bezier(.2,.7,.2,1) ${D.c2}ms backwards`,
+            color: P.muted,
+            fontSize: "0.7em",
+          }}>Launches Sept 23.</span>
         </h1>
 
         <Reveal delay={1400}>
           <p className="text-center mt-6 max-w-xl mx-auto"
             style={{ color: P.muted, fontFamily: SANS, fontSize: 17, lineHeight: 1.55 }}>
-            Native installer. AI that drafts your proposals and follow-ups.{" "}
-            <span style={{ color: P.text }}>500+ fresh leads</span> pulled in daily. One window. Everything.
+            Exclusive homeowner leads — <span style={{ color: P.text }}>name, phone, address</span> — delivered to MA contractors at $49/month. No contract. No resold leads.
           </p>
         </Reveal>
 
         <Reveal delay={1550}>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mt-8">
-            <MagneticButton href="/download">
-              <Download size={15} /> Download for free <ArrowRight size={14} />
-            </MagneticButton>
-            <MagneticButton primary={false} href="#see-it-work">
-              <Play size={13} /> See it work
-            </MagneticButton>
-          </div>
+          <WaitlistForm />
         </Reveal>
 
         <Reveal delay={1700}>
           <div className="text-center mt-4 text-xs" style={{ color: P.subtle, fontFamily: SANS }}>
-            Free 14-day trial · No credit card · Cancel anytime
+            First 50 contractors get founding-member pricing locked for life.
           </div>
         </Reveal>
       </div>
     </section>
+  );
+}
+
+function WaitlistForm() {
+  return (
+    <form
+      action="/api/waitlist"
+      method="POST"
+      className="flex flex-col sm:flex-row gap-2 justify-center items-stretch mt-8 max-w-md mx-auto"
+    >
+      <input
+        name="email"
+        type="email"
+        required
+        placeholder="you@yourbusiness.com"
+        className="flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2"
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: `1px solid ${P.borderHi}`,
+          color: P.text,
+          fontFamily: SANS,
+        }}
+      />
+      <button
+        type="submit"
+        className="px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02] inline-flex items-center justify-center gap-1.5"
+        style={{
+          background: "linear-gradient(135deg, #10b981, #059669)",
+          color: "#fff",
+          fontFamily: SANS,
+          boxShadow: "0 10px 22px -8px #10b98188",
+        }}
+      >
+        Get notified <ArrowRight size={14} />
+      </button>
+    </form>
   );
 }
 
@@ -1177,32 +1216,25 @@ function FinalCTA() {
         <div className="relative max-w-3xl mx-auto text-center">
           <h2 style={{ fontFamily: SERIF, fontSize: "clamp(38px, 7vw, 72px)",
                        fontWeight: 400, color: P.text, letterSpacing: "-0.03em", lineHeight: 1 }}>
-            Ready to{" "}
+            Be first when{" "}
             <span style={{
-              backgroundImage: `linear-gradient(135deg, ${P.indigoHi}, ${P.violet}, ${P.pink})`,
+              backgroundImage: `linear-gradient(135deg, #34d399, #10b981, #059669)`,
               WebkitBackgroundClip: "text",
               backgroundClip: "text",
               WebkitTextFillColor: "transparent",
               color: "transparent",
               fontStyle: "italic",
-              filter: `drop-shadow(0 6px 20px ${P.indigo}55)`,
+              filter: `drop-shadow(0 6px 20px #10b98155)`,
             }}>
-              ditch the spreadsheet?
+              Marketplace launches.
             </span>
           </h2>
           <p className="mt-5 text-base" style={{ color: P.muted, fontFamily: SANS }}>
-            Native desktop · AI follow-ups · 500+ leads/day
+            Sept 23, 2026 · Founding-member pricing locked for life
           </p>
-          <div className="flex justify-center gap-3 mt-7 flex-wrap">
-            <MagneticButton href="/download">
-              <Download size={15} /> Download for free
-            </MagneticButton>
-            <MagneticButton primary={false} href="#pricing">
-              See pricing
-            </MagneticButton>
-          </div>
+          <WaitlistForm />
           <div className="mt-4 text-xs" style={{ color: P.subtle, fontFamily: SANS }}>
-            macOS · Windows · Linux
+            CRM + Launchpad — coming soon after.
           </div>
         </div>
       </Reveal>
@@ -1250,13 +1282,9 @@ export default function LandingV3() {
 
         <TopNav />
         <Hero />
-        <DashboardMockup />
-        <ActivityMarquee />
-        <StatsStrip />
-        <KineticPhrase />
-        <Features />
-        <PricingPreview />
         <EditionPicker />
+        <ActivityMarquee />
+        <Features />
         <FinalCTA />
 
         <footer className="text-center py-8 text-xs"
