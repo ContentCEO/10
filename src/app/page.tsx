@@ -1050,6 +1050,99 @@ function PricingPreview() {
 }
 
 /* ================================================================== */
+/*  EDITION PICKER — download CRM / Marketplace / Launchpad           */
+/* ================================================================== */
+function EditionPicker() {
+  const editions = [
+    {
+      slug:    "crm",
+      title:   "CRM",
+      tagline: "The dashboard that runs your day.",
+      grad:    "linear-gradient(135deg, #4f46e5, #6366f1)",
+      accent:  "#6366f1",
+      bullets: ["Pipeline, customers, jobs, invoices", "AI follow-ups + sequences", "Native push notifications"],
+    },
+    {
+      slug:    "marketplace",
+      title:   "Marketplace",
+      tagline: "Real MA homeowner leads.",
+      grad:    "linear-gradient(135deg, #059669, #10b981)",
+      accent:  "#10b981",
+      bullets: ["Exclusive leads — name + phone + address", "Push alerts the moment a lead lands", "Filter by trade + ZIP"],
+    },
+    {
+      slug:    "launchpad",
+      title:   "Launchpad",
+      tagline: "Website + ads, managed by us.",
+      grad:    "linear-gradient(135deg, #ea580c, #f97316)",
+      accent:  "#f97316",
+      bullets: ["Live website build tracking", "Real-time Google + Meta ad spend", "Monthly reports + direct messaging"],
+    },
+  ];
+
+  return (
+    <section id="editions" className="px-5 py-12 scroll-mt-20">
+      <Reveal>
+        <h2 className="text-center mb-2"
+          style={{ fontFamily: SERIF, fontSize: "clamp(36px, 6vw, 56px)",
+                   fontWeight: 400, color: P.text, letterSpacing: "-0.025em" }}>
+          Choose your <span style={{ fontStyle: "italic", color: P.muted }}>edition.</span>
+        </h2>
+        <p className="text-center mb-8 text-sm" style={{ color: P.muted, fontFamily: SANS }}>
+          Same installer, your modules unlock based on subscription. Pick where to start.
+        </p>
+      </Reveal>
+      <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-3">
+        {editions.map((e, i) => (
+          <Reveal key={e.slug} delay={i * 100}>
+            <div className="relative h-full p-5 rounded-2xl overflow-hidden"
+              style={{
+                background: P.bg2,
+                border: `1px solid ${P.border}`,
+                boxShadow: `0 10px 30px -16px ${e.accent}44`,
+              }}>
+              <div className="absolute -top-16 -right-16 w-44 h-44 rounded-full pointer-events-none"
+                style={{ background: `radial-gradient(circle, ${e.accent}55 0%, transparent 70%)`, filter: "blur(28px)" }} />
+              <div className="relative">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-glow"
+                  style={{ background: e.grad }}>
+                  <Download size={18} />
+                </div>
+                <div className="mt-4 text-2xl"
+                  style={{ fontFamily: SERIF, color: P.text, fontWeight: 400, letterSpacing: "-0.01em" }}>
+                  ContractorFlow <span style={{ fontStyle: "italic" }}>{e.title}</span>
+                </div>
+                <div className="text-sm mt-1" style={{ color: P.muted, fontFamily: SANS }}>{e.tagline}</div>
+                <ul className="mt-4 space-y-1.5">
+                  {e.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2 text-xs" style={{ color: P.muted, fontFamily: SANS }}>
+                      <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full shrink-0" style={{ background: e.accent }} />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+                <Link href={`/download/${e.slug}`}
+                  className="mt-5 block text-center w-full py-2.5 rounded-lg text-sm transition-all hover:scale-[1.02]"
+                  style={{
+                    background: e.grad, color: "#fff",
+                    fontFamily: SANS, fontWeight: 600,
+                    boxShadow: `0 10px 22px -8px ${e.accent}88`,
+                  }}>
+                  Download {e.title}
+                </Link>
+              </div>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+      <div className="mt-6 text-center text-xs" style={{ color: P.subtle, fontFamily: SANS }}>
+        One installer · macOS · Windows · Linux · auto-updates
+      </div>
+    </section>
+  );
+}
+
+/* ================================================================== */
 /*  FINAL CTA                                                         */
 /* ================================================================== */
 function FinalCTA() {
@@ -1146,6 +1239,7 @@ export default function LandingV3() {
         <KineticPhrase />
         <Features />
         <PricingPreview />
+        <EditionPicker />
         <FinalCTA />
 
         <footer className="text-center py-8 text-xs"
