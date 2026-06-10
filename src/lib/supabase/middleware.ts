@@ -44,6 +44,7 @@ export async function updateSession(request: NextRequest) {
     path === "/sw.js" ||
     path === "/offline" ||
     path === "/download" ||
+    path.startsWith("/download/") ||
     path === "/cost-calculator" ||
     path.startsWith("/api/desktop/") ||
     (path.startsWith("/google") && path.endsWith(".html")) ||
