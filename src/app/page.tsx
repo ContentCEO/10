@@ -1061,6 +1061,8 @@ function EditionPicker() {
       grad:    "linear-gradient(135deg, #4f46e5, #6366f1)",
       accent:  "#6366f1",
       bullets: ["Pipeline, customers, jobs, invoices", "AI follow-ups + sequences", "Native push notifications"],
+      status:  "soon" as const,
+      statusLabel: "Coming soon",
     },
     {
       slug:    "marketplace",
@@ -1069,6 +1071,8 @@ function EditionPicker() {
       grad:    "linear-gradient(135deg, #059669, #10b981)",
       accent:  "#10b981",
       bullets: ["Exclusive leads — name + phone + address", "Push alerts the moment a lead lands", "Filter by trade + ZIP"],
+      status:  "dated" as const,
+      statusLabel: "Launches Sept 23",
     },
     {
       slug:    "launchpad",
@@ -1077,6 +1081,8 @@ function EditionPicker() {
       grad:    "linear-gradient(135deg, #ea580c, #f97316)",
       accent:  "#f97316",
       bullets: ["Live website build tracking", "Real-time Google + Meta ad spend", "Monthly reports + direct messaging"],
+      status:  "soon" as const,
+      statusLabel: "Coming soon",
     },
   ];
 
@@ -1104,9 +1110,20 @@ function EditionPicker() {
               <div className="absolute -top-16 -right-16 w-44 h-44 rounded-full pointer-events-none"
                 style={{ background: `radial-gradient(circle, ${e.accent}55 0%, transparent 70%)`, filter: "blur(28px)" }} />
               <div className="relative">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-glow"
-                  style={{ background: e.grad }}>
-                  <Download size={18} />
+                <div className="flex items-start justify-between gap-2">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-glow"
+                    style={{ background: e.grad }}>
+                    <Download size={18} />
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-mono uppercase tracking-wider"
+                    style={{
+                      background: e.status === "dated" ? `${e.accent}22` : "rgba(255,255,255,0.06)",
+                      color: e.status === "dated" ? e.accent : P.muted,
+                      border: `1px solid ${e.status === "dated" ? `${e.accent}55` : P.border}`,
+                      fontFamily: SANS, fontWeight: 600,
+                    }}>
+                    {e.statusLabel}
+                  </span>
                 </div>
                 <div className="mt-4 text-2xl"
                   style={{ fontFamily: SERIF, color: P.text, fontWeight: 400, letterSpacing: "-0.01em" }}>
@@ -1121,15 +1138,15 @@ function EditionPicker() {
                     </li>
                   ))}
                 </ul>
-                <Link href={`/download/${e.slug}`}
-                  className="mt-5 block text-center w-full py-2.5 rounded-lg text-sm transition-all hover:scale-[1.02]"
+                <div className="mt-5 block text-center w-full py-2.5 rounded-lg text-sm pointer-events-none"
                   style={{
-                    background: e.grad, color: "#fff",
+                    background: "transparent",
+                    color: P.muted,
+                    border: `1px dashed ${P.borderHi}`,
                     fontFamily: SANS, fontWeight: 600,
-                    boxShadow: `0 10px 22px -8px ${e.accent}88`,
                   }}>
-                  Download {e.title}
-                </Link>
+                  {e.status === "dated" ? `Available ${e.statusLabel.replace("Launches ", "")}` : "Not yet available"}
+                </div>
               </div>
             </div>
           </Reveal>
