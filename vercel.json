@@ -60,6 +60,9 @@
     { "path": "/api/scrape/ma-school-construction","schedule": "15 */6 * * *" },
 
     { "path": "/api/cron/mirror-marketplace",      "schedule": "*/2 * * * *" },
-    { "path": "/api/cron/lob-postcard-blast",      "schedule": "0 */6 * * *" }
+    { "path": "/api/cron/lob-postcard-blast",      "schedule": "0 */6 * * *" },
+
+    { "path": "/api/cron/marketplace-digest?mode=daily",  "schedule": "0 11 * * *" },
+    { "path": "/api/cron/marketplace-digest?mode=weekly", "schedule": "0 11 * * 1" }
   ]
 }

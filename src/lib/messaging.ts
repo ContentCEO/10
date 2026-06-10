@@ -73,6 +73,7 @@ export async function sendEmail(
   subject: string,
   text: string,
   fromName?: string,
+  html?: string,
 ): Promise<SendResult> {
   if (isTestMode()) return testLog("email", to, `${subject} :: ${text}`);
   const key = process.env.RESEND_API_KEY;
@@ -95,6 +96,7 @@ export async function sendEmail(
         to:      [to],
         subject: subject.slice(0, 200),
         text:    text.slice(0, 50_000),
+        ...(html ? { html: html.slice(0, 200_000) } : {}),
       }),
     });
     if (!res.ok) {

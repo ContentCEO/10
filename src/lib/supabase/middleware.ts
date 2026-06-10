@@ -45,6 +45,10 @@ export async function updateSession(request: NextRequest) {
     path === "/offline" ||
     path === "/download" ||
     path.startsWith("/download/") ||
+    path === "/privacy" ||
+    path === "/terms" ||
+    path === "/about" ||
+    path === "/pricing" ||
     path === "/cost-calculator" ||
     path.startsWith("/api/desktop/") ||
     (path.startsWith("/google") && path.endsWith(".html")) ||
