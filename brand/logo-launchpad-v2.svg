@@ -7,7 +7,7 @@
   </defs>
   <!-- Big icon: rocket -->
   <rect x="40" y="40" width="200" height="200" rx="44" fill="url(#g-lp)"/>
-  <g transform="translate(140 76) rotate(-20)">
+  <g transform="translate(140 116) rotate(-20)">
     <!-- Rocket body -->
     <path d="M0 -42 C18 -42 24 -16 24 16 L24 50 L-24 50 L-24 16 C-24 -16 -18 -42 0 -42 Z"
           fill="#fff" opacity="0.96"/>
