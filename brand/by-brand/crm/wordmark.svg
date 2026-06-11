@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 110" width="760" height="110">
+  <text x="20" y="80" font-family="ui-serif, 'Instrument Serif', Georgia, serif"
+        font-size="84" font-weight="400" fill="#0f172a" letter-spacing="-2.5">
+    Contractor <tspan font-style="italic" fill="#6366f1">Flow</tspan>
+  </text>
+  <line x1="540" y1="32" x2="540" y2="86" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="558" y="78" font-family="ui-sans-serif, 'Inter', system-ui"
+        font-size="46" font-weight="700" fill="#4f46e5" letter-spacing="-1.2">
+    CRM
+  </text>
+</svg>

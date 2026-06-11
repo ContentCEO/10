@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="g-lp" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#g-lp)"/>
+  <g transform="translate(128 98) rotate(-20)">
+    <!-- Rocket body -->
+    <path d="M0 -50 C22 -50 30 -20 30 20 L30 62 L-30 62 L-30 20 C-30 -20 -22 -50 0 -50 Z"
+          fill="#fff" opacity="0.97"/>
+    <!-- Window -->
+    <circle cx="0" cy="-6" r="11" fill="#f97316"/>
+    <!-- Fins -->
+    <path d="M-30 22 L-56 62 L-30 62 Z" fill="#fff" opacity="0.85"/>
+    <path d="M30 22 L56 62 L30 62 Z" fill="#fff" opacity="0.85"/>
+    <!-- Flame -->
+    <path d="M-18 62 L0 110 L18 62 Z" fill="#fef3c7" opacity="0.95"/>
+    <path d="M-10 70 L0 96 L10 70 Z" fill="#fff" opacity="0.7"/>
+  </g>
+</svg>

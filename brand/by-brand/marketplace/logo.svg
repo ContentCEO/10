@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" width="900" height="280">
+  <defs>
+    <linearGradient id="g-mkt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <!-- Big icon: storefront / awning -->
+  <rect x="40" y="40" width="200" height="200" rx="44" fill="url(#g-mkt)"/>
+  <g transform="translate(70 76)" fill="#fff">
+    <!-- Awning -->
+    <path d="M0 0 L140 0 L130 20 L10 20 Z" opacity="0.95"/>
+    <!-- Awning stripes -->
+    <rect x="14" y="0" width="14" height="20" opacity="0.18" fill="#000"/>
+    <rect x="42" y="0" width="14" height="20" opacity="0.18" fill="#000"/>
+    <rect x="70" y="0" width="14" height="20" opacity="0.18" fill="#000"/>
+    <rect x="98" y="0" width="14" height="20" opacity="0.18" fill="#000"/>
+    <!-- Building -->
+    <rect x="10" y="22" width="120" height="100" rx="4" opacity="0.85"/>
+    <!-- Door -->
+    <rect x="56" y="62" width="28" height="60" rx="3" fill="#10b981"/>
+    <!-- Windows -->
+    <rect x="20" y="40" width="22" height="18" rx="2" fill="#10b981" opacity="0.6"/>
+    <rect x="98" y="40" width="22" height="18" rx="2" fill="#10b981" opacity="0.6"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="276" y="138" font-family="ui-serif, 'Instrument Serif', Georgia, serif"
+        font-size="76" font-weight="400" fill="#0f172a" letter-spacing="-2">
+    Contractor <tspan font-style="italic" fill="#6366f1">Flow</tspan>
+  </text>
+  <text x="280" y="220" font-family="ui-sans-serif, 'Inter', system-ui"
+        font-size="72" font-weight="700" fill="#059669" letter-spacing="-2">
+    Marketplace
+  </text>
+  <text x="685" y="218" font-family="ui-sans-serif, 'Geist Mono', monospace"
+        font-size="18" fill="#64748b" letter-spacing="2.5" font-weight="500">
+    REAL LEADS
+  </text>
+</svg>
