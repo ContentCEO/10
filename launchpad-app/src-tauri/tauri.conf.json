@@ -54,8 +54,7 @@
       }
     },
     "macOS": {
-      "minimumSystemVersion": "10.15",
-      "signingIdentity": "-"
+      "minimumSystemVersion": "10.15"
     },
     "createUpdaterArtifacts": true
   },
