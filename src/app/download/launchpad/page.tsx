@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const theme = MODULE_THEMES.launchpad;
 
 export default async function DownloadLaunchpadPage() {
-  const { version, downloads } = await fetchLatestRelease();
+  const { version, downloads } = await fetchLatestRelease("launchpad");
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-stone-50">

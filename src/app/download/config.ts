@@ -37,7 +37,13 @@ export const MODULE_THEMES: Record<"marketplace" | "launchpad" | "crm", ModuleDo
   },
 };
 
-const REPO = process.env.GITHUB_RELEASES_REPO ?? "contentceo/10";
+// Per-module repo mapping — each app publishes its own Tauri releases to
+// its own GitHub repo. Override at runtime via env if any repo moves.
+export const MODULE_REPOS: Record<"marketplace" | "launchpad" | "crm", string> = {
+  crm:         process.env.GITHUB_RELEASES_REPO_CRM         ?? "ContentCEO/10",
+  marketplace: process.env.GITHUB_RELEASES_REPO_MARKETPLACE ?? "ContentCEO/contractor-flow-marketplace",
+  launchpad:   process.env.GITHUB_RELEASES_REPO_LAUNCHPAD   ?? "ContentCEO/contractor-flow-launchpad",
+};
 
 interface GhRelease {
   tag_name: string;
@@ -56,9 +62,12 @@ export interface ResolvedDownloads {
   } | null;
 }
 
-export async function fetchLatestRelease(): Promise<ResolvedDownloads> {
+export async function fetchLatestRelease(
+  module: "marketplace" | "launchpad" | "crm" = "crm",
+): Promise<ResolvedDownloads> {
+  const repo = MODULE_REPOS[module];
   try {
-    const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+    const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
       headers: { Accept: "application/vnd.github+json" },
       next: { revalidate: 600 },
     });

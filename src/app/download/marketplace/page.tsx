@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const theme = MODULE_THEMES.marketplace;
 
 export default async function DownloadMarketplacePage() {
-  const { version, downloads } = await fetchLatestRelease();
+  const { version, downloads } = await fetchLatestRelease("marketplace");
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-stone-50">

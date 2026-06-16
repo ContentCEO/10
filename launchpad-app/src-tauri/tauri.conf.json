@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Contractor Flow CRM",
-  "version": "0.2.0",
-  "identifier": "com.contractorflow.crm",
+  "productName": "Contractor Flow Launchpad",
+  "version": "0.1.0",
+  "identifier": "com.contractorflow.launchpad",
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Contractor Flow CRM",
+        "title": "Contractor Flow Launchpad",
         "width": 1440,
         "height": 900,
         "minWidth": 1024,
@@ -21,8 +21,8 @@
         "maximized": true,
         "decorations": true,
         "transparent": false,
-        "url": "https://contractorflowstore.com/dashboard",
-        "userAgent": "ContractorFlowCRM/0.2.0 (Tauri Desktop)"
+        "url": "https://launchpad.contractorflowstore.com/dashboard",
+        "userAgent": "ContractorFlowLaunchpad/0.1.0 (Tauri Desktop)"
       }
     ],
     "security": {
@@ -34,8 +34,8 @@
     "targets": "all",
     "publisher": "Contractor Flow",
     "category": "Business",
-    "shortDescription": "AI CRM for Massachusetts contractors",
-    "longDescription": "Contractor Flow CRM — pipeline, customers, jobs, invoices, AI follow-ups. Built in Massachusetts, for Massachusetts contractors.",
+    "shortDescription": "Website + ads, managed for you — desktop",
+    "longDescription": "Contractor Flow Launchpad — we build your website + run your Google + Meta ads + report back monthly. Track your build progress, ad spend, and direct messages from your desktop.",
     "copyright": "© 2026 Contractor Flow",
     "icon": [
       "icons/32x32.png",
@@ -61,9 +61,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc0MjJFRDRFNDlCQTU2QzAKUldUQVZycEpUdTBpZEltMzdRZkJTSVMxQnpFTVFwd2lIdWlxRzNDMm5ZeFlxNDNBdUlpclNzVW0K",
+      "pubkey": "REPLACE_ME_GENERATE_VIA_TAURI_SIGNER",
       "endpoints": [
-        "https://github.com/ContentCEO/10/releases/latest/download/latest.json"
+        "https://github.com/ContentCEO/contractor-flow-launchpad/releases/latest/download/latest.json"
       ]
     }
   }
