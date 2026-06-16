@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Bell, ChevronRight, LayoutDashboard, LogOut, Menu, Settings, Sliders, Store, Wallet, X } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, Settings, Sliders, Wallet, X } from "lucide-react";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -14,8 +14,6 @@ const EMERALD = "#10b981";
 
 const NAV = [
   { href: "/dashboard",        label: "Leads",        icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/hot",    label: "Hot now",       icon: Bell,            exact: false },
-  { href: "/dashboard/mine",   label: "My claimed",    icon: ChevronRight,    exact: false },
   { href: "/wallet",           label: "Wallet",        icon: Wallet,          exact: false },
   { href: "/preferences",      label: "Preferences",   icon: Sliders,         exact: false },
   { href: "/account",          label: "Account",       icon: Settings,        exact: false },
