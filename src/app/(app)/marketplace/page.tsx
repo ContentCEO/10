@@ -136,49 +136,71 @@ export default async function MarketplacePage({
 
   const mine    = (claimed ?? []) as MarketplaceLead[];
   const balance = profile?.credit_cents ?? 0;
-  const hotCount = rows.filter((r) => r.ai_score >= 80).length;
+  const hotCount   = rows.filter((r) => r.ai_score >= 85).length;
+  const freshCount = rows.filter((r) => (Date.now() - new Date(r.created_at).getTime()) < 60 * 60 * 1000).length;
+  const minePeriod = mine.filter((l) => {
+    if (!l.bought_at) return false;
+    return new Date(l.bought_at).getTime() > Date.now() - 30 * 24 * 3600 * 1000;
+  }).length;
 
   return (
-    <div className="space-y-6 max-w-6xl">
-      <header className="relative card p-6 sm:p-7 overflow-hidden">
-        <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-brand-gradient opacity-15 blur-3xl" />
-        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div className="space-y-6 max-w-6xl" style={{ ["--emerald" as never]: "#10b981" }}>
+      {/* ───── HERO — emerald-themed marketplace identity ─────────── */}
+      <header className="relative overflow-hidden rounded-3xl p-6 sm:p-8"
+        style={{
+          background:
+            "radial-gradient(900px 320px at 80% -20%, rgba(16,185,129,0.32), transparent 60%)," +
+            "radial-gradient(700px 320px at -10% 110%, rgba(5,150,105,0.20), transparent 60%)," +
+            "rgba(255,255,255,0.025)",
+          border: "1px solid rgba(16,185,129,0.22)",
+          boxShadow: "0 20px 60px -28px rgba(16,185,129,0.45)",
+        }}>
+        <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
           <div className="min-w-0">
-            <span className="section-eyebrow"><Store className="h-3.5 w-3.5" /> Marketplace</span>
-            <h1 className="mt-2 display-h2">Lead marketplace</h1>
-            <p className="mt-2 text-sm text-ink-600">
-              Fresh homeowner project requests, scored by AI. Claim a lead — your wallet
-              is charged automatically.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="badge bg-brand-100 text-brand-700 ring-brand-200">
-                {rows.length} available
+            <div className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] mb-2"
+              style={{ color: "#6ee7b7" }}>
+              <span className="relative inline-flex h-2 w-2">
+                <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping" />
+                <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
               </span>
-              {hotCount > 0 && (
-                <span className="badge bg-rose-100 text-rose-700 ring-rose-200">
-                  🔥 {hotCount} hot
-                </span>
-              )}
+              Live · Lead marketplace
             </div>
+            <h1 className="display-h2">
+              Real <em style={{
+                fontStyle: "italic",
+                background: "linear-gradient(135deg, #34d399, #10b981)",
+                WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent",
+              }}>MA homeowner</em> leads.
+            </h1>
+            <p className="mt-2 text-sm text-white/65 max-w-md">
+              Fresh, AI-scored project requests. Claim a lead — your wallet is charged automatically. Each lead is yours alone.
+            </p>
           </div>
-          <a href="/find-pro" target="_blank" rel="noreferrer" className="btn-secondary hidden sm:inline-flex shrink-0">
-            <Sparkles className="h-4 w-4" /> Homeowner view
-          </a>
+
+          {/* Hero stats — 4 tiles */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 shrink-0">
+            <StatTile label="Available" value={String(rows.length)} accent="#10b981" />
+            <StatTile label="Hot now"   value={String(hotCount)}    accent="#fb7185" pulse={hotCount > 0} />
+            <StatTile label="Fresh <1h" value={String(freshCount)}  accent="#34d399" />
+            <StatTile label="Yours/30d" value={String(minePeriod)}  accent="#fcd34d" />
+          </div>
         </div>
       </header>
 
       {searchParams.topup === "success" && (
-        <div className="card p-4 bg-emerald-50 border-emerald-200 text-emerald-900 text-sm">
-          ✅ Top-up successful! Your wallet will reflect the new balance once Stripe finishes processing
-          (usually a few seconds). Refresh if you don&apos;t see it yet.
+        <div className="rounded-2xl p-4 text-sm"
+          style={{ background: "rgba(16,185,129,0.10)", border: "1px solid rgba(16,185,129,0.35)", color: "#a7f3d0" }}>
+          ✅ Top-up successful! Wallet updates within a few seconds.
         </div>
       )}
 
       {(prefsActive || filtersOff) && (
-        <div className={`card p-4 flex items-start gap-3 ${
-          filtersOff ? "bg-amber-500/[0.08] ring-1 ring-amber-400/30" : "bg-emerald-500/[0.06] ring-1 ring-emerald-400/25"
-        }`}>
-          <Sliders className={`h-4 w-4 mt-0.5 shrink-0 ${filtersOff ? "text-amber-300" : "text-emerald-300"}`} />
+        <div className="rounded-2xl p-4 flex items-start gap-3"
+          style={{
+            background: filtersOff ? "rgba(245,158,11,0.08)" : "rgba(16,185,129,0.06)",
+            border: filtersOff ? "1px solid rgba(245,158,11,0.30)" : "1px solid rgba(16,185,129,0.25)",
+          }}>
+          <Sliders className="h-4 w-4 mt-0.5 shrink-0" style={{ color: filtersOff ? "#fcd34d" : "#34d399" }} />
           <div className="flex-1 min-w-0 text-sm">
             {filtersOff ? (
               <div>
@@ -216,75 +238,100 @@ export default async function MarketplacePage({
 
       <WalletBar balanceCents={balance} />
 
-      <div className="flex flex-wrap gap-1.5">
+      {/* Trade pills — emerald-tinted */}
+      <div className="flex flex-wrap gap-1.5 sticky top-0 z-10 -mx-1 px-1 py-2 backdrop-blur-md"
+        style={{ background: "rgba(6,6,10,0.65)" }}>
         <Link href="/marketplace"
           className={!tradeFilter
-            ? "inline-flex items-center rounded-full bg-brand-500/20 ring-1 ring-brand-400/40 text-brand-100 px-3 py-1.5 text-xs font-semibold"
-            : "inline-flex items-center rounded-full bg-white/[0.04] ring-1 ring-white/10 text-white/70 px-3 py-1.5 text-xs font-medium hover:bg-white/[0.08]"}>
+            ? "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-emerald-400/40 text-emerald-100"
+            : "inline-flex items-center rounded-full bg-white/[0.04] ring-1 ring-white/10 text-white/70 px-3 py-1.5 text-xs font-medium hover:bg-white/[0.08]"}
+          style={!tradeFilter ? { background: "rgba(16,185,129,0.18)" } : undefined}>
           All trades
         </Link>
         {TRADES.map((t) => (
           <Link key={t.slug} href={`/marketplace?trade=${t.slug}`}
             className={tradeFilter === t.slug
-              ? "inline-flex items-center rounded-full bg-brand-500/20 ring-1 ring-brand-400/40 text-brand-100 px-3 py-1.5 text-xs font-semibold"
-              : "inline-flex items-center rounded-full bg-white/[0.04] ring-1 ring-white/10 text-white/70 px-3 py-1.5 text-xs font-medium hover:bg-white/[0.08]"}>
+              ? "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-emerald-400/40 text-emerald-100"
+              : "inline-flex items-center rounded-full bg-white/[0.04] ring-1 ring-white/10 text-white/70 px-3 py-1.5 text-xs font-medium hover:bg-white/[0.08]"}
+            style={tradeFilter === t.slug ? { background: "rgba(16,185,129,0.18)" } : undefined}>
             {t.labelPlural}
           </Link>
         ))}
       </div>
 
-      <form className="card p-4 grid sm:grid-cols-[1fr_140px_auto] gap-2" action="/marketplace">
+      {/* Filter form — emerald submit */}
+      <form className="rounded-2xl p-4 grid sm:grid-cols-[1fr_140px_auto] gap-2 ring-1 ring-white/10 bg-white/[0.03]" action="/marketplace">
         {tradeFilter && <input type="hidden" name="trade" value={tradeFilter} />}
         <input name="service" defaultValue={searchParams.service ?? ""}
-          className="input" placeholder="Filter by service (e.g. kitchen, roof, clean)" />
+          className="rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/10 text-white placeholder:text-white/40 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
+          placeholder="Filter by service (e.g. kitchen, roof, painting)" />
         <input name="zip" defaultValue={searchParams.zip ?? ""}
-          className="input" placeholder="ZIP" inputMode="numeric" />
-        <button className="btn-primary">Filter</button>
+          className="rounded-xl bg-white/[0.04] ring-1 ring-inset ring-white/10 text-white placeholder:text-white/40 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
+          placeholder="ZIP" inputMode="numeric" />
+        <button className="inline-flex items-center justify-center gap-2 rounded-xl text-white font-semibold px-5 py-2.5 text-sm hover:opacity-90 transition"
+          style={{ background: "linear-gradient(135deg, #10b981, #059669)", boxShadow: "0 8px 20px -8px rgba(16,185,129,0.7)" }}>
+          Filter
+        </button>
       </form>
 
+      {/* Available leads grid */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="section-title">Available now</h2>
-          <span className="text-xs text-ink-500">Sorted by AI score</span>
+          <h2 className="section-title text-white">Available now</h2>
+          <span className="text-xs text-white/45">Sorted by AI score · then freshness</span>
         </div>
 
         {rows.length ? (
-          <ul className="grid md:grid-cols-2 gap-4">
+          <ul className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {rows.map((l) => (
               <MarketplaceCard key={l.id} lead={l} balanceCents={balance} />
             ))}
           </ul>
         ) : (
-          <div className="card p-10 text-center">
-            <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-glow mb-4">
-              <Store className="h-6 w-6" />
+          <div className="rounded-3xl p-12 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(16,185,129,0.25)" }}>
+            <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl text-white mb-4"
+              style={{ background: "linear-gradient(135deg, #10b981, #059669)", boxShadow: "0 10px 24px -10px rgba(16,185,129,0.8)" }}>
+              <Store className="h-7 w-7" />
             </div>
-            <p className="text-sm text-ink-600 max-w-sm mx-auto">
-              No leads match that filter right now. Try the <strong>Seed samples</strong> button
-              above to generate 5 AI-crafted sample leads for testing.
+            <h3 className="text-lg font-semibold text-white">No leads match this view.</h3>
+            <p className="mt-2 text-sm text-white/55 max-w-sm mx-auto">
+              Adjust your filters above, widen your preferences, or wait for the scrapers — fresh leads land every few minutes.
             </p>
+            <div className="mt-5 flex items-center justify-center gap-2">
+              <Link href="/marketplace?nofilter=1"
+                className="inline-flex items-center gap-1.5 rounded-lg ring-1 ring-emerald-400/30 bg-emerald-500/10 text-emerald-100 px-4 py-2 text-xs font-semibold hover:bg-emerald-500/20">
+                Show all leads
+              </Link>
+              <Link href="/marketplace/preferences"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.06] ring-1 ring-white/10 text-white/75 px-4 py-2 text-xs font-semibold hover:bg-white/[0.10]">
+                <Sliders className="h-3 w-3" /> Edit preferences
+              </Link>
+            </div>
           </div>
         )}
       </section>
 
+      {/* Your claimed leads */}
       {mine.length > 0 && (
         <section>
-          <h2 className="section-title mb-4 flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" /> Your claimed leads
+          <h2 className="section-title mb-4 flex items-center gap-2 text-white">
+            <ShoppingCart className="h-4 w-4 text-emerald-300" /> Your claimed leads
+            <span className="text-xs text-white/45 font-normal">({mine.length})</span>
           </h2>
-          <ul className="card divide-y divide-ink-100">
+          <ul className="rounded-2xl ring-1 ring-white/10 bg-white/[0.02] divide-y divide-white/5 overflow-hidden">
             {mine.map((l) => (
-              <li key={l.id} className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-ink-50/50 transition-colors">
+              <li key={l.id} className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors">
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium truncate">{l.name} · {l.service_type}</div>
-                  <div className="text-xs text-ink-500">
+                  <div className="font-medium truncate text-white">{l.name} · {l.service_type}</div>
+                  <div className="text-xs text-white/50">
                     {[l.city, l.zip].filter(Boolean).join(" · ") || "—"} ·
                     Claimed {l.bought_at ? formatDate(l.bought_at) : "—"} ·
-                    {" "}<span className="tabular-nums font-medium text-ink-700">{money(l.price_cents)}</span>
+                    {" "}<span className="tabular-nums font-medium text-emerald-300">{money(l.price_cents)}</span>
                   </div>
                   <DisputeButton leadId={l.id} />
                 </div>
-                <Link href={`/leads?source=Marketplace`} className="btn-secondary !py-1.5 text-xs shrink-0">
+                <Link href={`/leads?source=Marketplace`}
+                  className="inline-flex items-center gap-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] ring-1 ring-white/10 px-3 py-1.5 text-xs font-semibold text-white/80 shrink-0">
                   Open in pipeline
                 </Link>
               </li>
@@ -292,6 +339,27 @@ export default async function MarketplacePage({
           </ul>
         </section>
       )}
+    </div>
+  );
+}
+
+function StatTile({ label, value, accent, pulse }: {
+  label: string; value: string; accent: string; pulse?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl p-3 min-w-[110px]"
+      style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${accent}33` }}>
+      <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider"
+        style={{ color: accent }}>
+        {pulse && (
+          <span className="relative inline-flex h-1.5 w-1.5">
+            <span className="absolute inset-0 rounded-full animate-ping" style={{ background: accent }} />
+            <span className="relative h-1.5 w-1.5 rounded-full" style={{ background: accent }} />
+          </span>
+        )}
+        {label}
+      </div>
+      <div className="text-2xl font-bold tabular-nums text-white mt-1 leading-none">{value}</div>
     </div>
   );
 }

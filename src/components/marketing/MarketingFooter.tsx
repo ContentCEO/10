@@ -19,9 +19,9 @@ export function MarketingFooter() {
           <div>
             <div className="text-[10px] uppercase tracking-wider font-mono" style={{ color: "rgba(255,255,255,0.40)" }}>Products</div>
             <ul className="mt-3 space-y-2 text-sm">
-              <li><Link href="/crm" className="hover:text-white" style={{ color: "rgba(255,255,255,0.70)" }}>CRM</Link></li>
-              <li><Link href="/marketplace" className="hover:text-white" style={{ color: "rgba(255,255,255,0.70)" }}>Marketplace</Link></li>
-              <li><Link href="/launchpad" className="hover:text-white" style={{ color: "rgba(255,255,255,0.70)" }}>Launchpad</Link></li>
+              <li><Link href="/products/crm" className="hover:text-white" style={{ color: "rgba(255,255,255,0.70)" }}>CRM</Link></li>
+              <li><Link href="/products/marketplace" className="hover:text-white" style={{ color: "rgba(255,255,255,0.70)" }}>Marketplace</Link></li>
+              <li><Link href="/products/launchpad" className="hover:text-white" style={{ color: "rgba(255,255,255,0.70)" }}>Launchpad</Link></li>
               <li><Link href="/pricing" className="hover:text-white" style={{ color: "rgba(255,255,255,0.70)" }}>Pricing</Link></li>
             </ul>
           </div>

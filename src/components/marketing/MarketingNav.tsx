@@ -33,7 +33,7 @@ export function MarketingNav({ current }: NavProps) {
             const Icon = m.icon;
             const active = current === m.slug;
             return (
-              <Link key={m.slug} href={`/${m.slug}`}
+              <Link key={m.slug} href={`/products/${m.slug}`}
                 className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
                 style={{
                   color: active ? "#fff" : "rgba(255,255,255,0.70)",
@@ -79,7 +79,7 @@ export function MarketingNav({ current }: NavProps) {
             {modules.map((m) => {
               const Icon = m.icon;
               return (
-                <Link key={m.slug} href={`/${m.slug}`} onClick={() => setOpen(false)}
+                <Link key={m.slug} href={`/products/${m.slug}`} onClick={() => setOpen(false)}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm"
                   style={{ color: "rgba(255,255,255,0.85)" }}>
                   <Icon className="h-4 w-4" style={{ color: m.accent }} />
