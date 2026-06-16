@@ -58,12 +58,10 @@ jobs:
 
       # Unsigned build (default). Signed builds use a separate workflow,
       # keyed off the optional APPLE_* / WINDOWS_* secrets when set.
-      - name: Build & release (unsigned)
+      - name: Build & release (unsigned, no updater)
         uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN:                       ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY:          ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName:        ${{ github.ref_name }}
           releaseName:    "Contractor Flow Marketplace ${{ github.ref_name }}"
