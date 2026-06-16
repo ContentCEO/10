@@ -1,14 +1,15 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-// Public marketing site — no auth required. Middleware only sets
-// security headers + handles trailing slashes. No Supabase session
-// logic since none of these pages need a signed-in user.
-export function middleware(request: NextRequest) {
-  const res = NextResponse.next();
+// Marketplace contractor app. Public marketing routes (homeowner quote
+// forms, /local SEO pages, /preview slugs) stay public. Contractor app
+// routes (everything under /dashboard, /wallet, /preferences, /account)
+// require auth via the Supabase session helper.
+export async function middleware(request: NextRequest) {
+  const res = await updateSession(request);
   res.headers.set("X-Frame-Options", "SAMEORIGIN");
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  void request;
   return res;
 }
 
