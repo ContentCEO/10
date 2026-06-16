@@ -61,7 +61,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "REPLACE_ME_GENERATE_VIA_TAURI_SIGNER",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU1RTlCQjkzMEREQjhCNzcKUldSM2k5c05rN3ZwVmNUSmVDQzBlYUVkWXpnNVBuQnM3QXBXRWxsK3REd2RKc2VUc0szbVl6NTMK",
       "endpoints": [
         "https://github.com/ContentCEO/contractor-flow-marketplace/releases/latest/download/latest.json"
       ]
