@@ -1,11 +1,3 @@
-# Build & release the Contractor Flow CRM desktop app.
-# Trigger: push a tag matching v* (e.g. v0.2.1).
-#
-# This workflow produces unsigned installers across macOS (universal),
-# Windows, and Linux. Code signing requires Apple Developer ID
-# certificate + Windows EV cert — add those secrets later and Tauri
-# will pick them up automatically via the env vars below.
-
 name: tauri-release-crm
 
 on:
@@ -22,9 +14,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest"   # Apple Silicon
+          - platform: "macos-latest"
             args:    "--target aarch64-apple-darwin"
-          - platform: "macos-latest"   # Intel
+          - platform: "macos-latest"
             args:    "--target x86_64-apple-darwin"
           - platform: "ubuntu-22.04"
             args:    ""
@@ -64,19 +56,12 @@ jobs:
       - name: Install JS deps
         run: npm install --no-audit --no-fund
 
-      - name: Build & release
+      - name: Build & release (unsigned)
         uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN:           ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN:                       ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY:          ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          # Optional Apple Developer ID signing — set these secrets to enable.
-          APPLE_CERTIFICATE:                  ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD:         ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY:             ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID:                           ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD:                     ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID:                      ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName:        ${{ github.ref_name }}
           releaseName:    "Contractor Flow CRM ${{ github.ref_name }}"
