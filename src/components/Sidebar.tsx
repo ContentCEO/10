@@ -89,22 +89,13 @@ const SECTIONS: NavSection[] = [
       { href: "/onboarding",  label: "Get started", icon: Sparkles },
     ],
   },
-  {
-    label: "Launchpad",
-    module: "cf-launchpad",
-    items: [
-      { href: "/launchpad",          label: "Dashboard",         icon: Rocket },
-      { href: "/launchpad/website",  label: "Website",           icon: Globe },
-      { href: "/launchpad/ads",      label: "Ad campaigns",      icon: TrendingUp },
-      { href: "/launchpad/reports",  label: "Monthly reports",   icon: FileText },
-      { href: "/launchpad/messages", label: "Messages",          icon: MessageSquare },
-    ],
-  },
+  // Note: Launchpad + Marketplace nav removed — they live on their own
+  // subdomains (launchpad.contractorflowstore.com / marketplace.contractorflowstore.com)
+  // with their own apps. The CRM sidebar focuses purely on CRM features.
   {
     label: "Leads",
     items: [
       { href: "/leads",         label: "Pipeline",      icon: Briefcase },
-      { href: "/marketplace",   label: "Marketplace",   icon: ShoppingCart, module: "cf-marketplace" },
       { href: "/opportunities", label: "Lead sources",  icon: Activity },
       { href: "/auto-bid",      label: "AI auto-bid",   icon: Bot },
     ],
