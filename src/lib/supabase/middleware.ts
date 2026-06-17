@@ -49,6 +49,8 @@ export async function updateSession(request: NextRequest) {
     path === "/terms" ||
     path === "/about" ||
     path === "/pricing" ||
+    path.startsWith("/products/") ||
+    path === "/api/waitlist" ||
     path === "/cost-calculator" ||
     path.startsWith("/api/desktop/") ||
     (path.startsWith("/google") && path.endsWith(".html")) ||
