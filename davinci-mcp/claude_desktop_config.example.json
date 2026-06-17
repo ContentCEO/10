@@ -1,0 +1,12 @@
+{
+  "//": "Copy the 'davinci-resolve' block into your Claude Desktop config.",
+  "//mac": "~/Library/Application Support/Claude/claude_desktop_config.json",
+  "//win": "%APPDATA%\\Claude\\claude_desktop_config.json",
+  "//note": "Use the FULL path to your python AND to server.py. Restart Claude Desktop after editing.",
+  "mcpServers": {
+    "davinci-resolve": {
+      "command": "/REPLACE/with/full/path/to/python",
+      "args": ["/REPLACE/with/full/path/to/davinci-mcp/server.py"]
+    }
+  }
+}
