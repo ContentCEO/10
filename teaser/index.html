@@ -421,6 +421,12 @@ document.getElementById('rec').onclick=async function(){
   }catch(err){console.warn(err);btn.textContent='● Record .webm';}
 };
 
+/* export / bare mode: ?bare=1 hides all on-screen controls for clean capture */
+if(/[?&]bare/.test(location.search)){
+  document.getElementById('hud').style.display='none';
+  document.getElementById('progress').style.display='none';
+}
+
 /* boot */
 setRevealDelays();
 play();

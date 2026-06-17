@@ -77,10 +77,13 @@ node teaser/render.mjs                  # → teaser/contractor-flow-teaser.mp4
 node teaser/render.mjs --fps 30 --out reel.mp4   # options
 ```
 
-`render.mjs` opens the page headless at exactly 1080×1920, hides the controls,
-plays one full loop while grabbing frames, then encodes them to MP4 with ffmpeg.
-Requires `ffmpeg` on PATH. (It auto-detects a Playwright-managed Chromium, or set
-`CHROME_PATH` to point at any Chromium/Chrome binary.)
+`render.mjs` opens the page headless at exactly 1080×1920 in `?bare=1` export mode
+(controls hidden), records one full loop in real time with Playwright's native video
+capture, then trims + transcodes it to a clean H.264 MP4 with ffmpeg. Requires
+`ffmpeg` on PATH. (Set `CHROME_PATH` to point at a specific Chromium/Chrome binary.)
+
+A pre-rendered **`contractor-flow-teaser.mp4`** (1080×1920, ~23s, H.264) is checked
+into this folder. Append `?bare=1` to the URL to preview without the on-screen controls.
 
 ## Customize
 
