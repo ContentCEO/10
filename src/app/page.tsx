@@ -5,7 +5,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export const metadata: Metadata = {
-  title: "Contractor Flow — built where the work is",
+  title: "Contractor Flow — one lead, one contractor",
   description: "The operating system for Massachusetts contractors. CRM, Marketplace, Launchpad — one ecosystem, three modules. Built in MA, founder-led, hyper-local.",
 };
 

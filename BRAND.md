@@ -1,6 +1,6 @@
 # Contractor Flow — Brand Foundation
 
-> *"Built where the work is."*
+> *"One lead. One contractor."*
 
 This doc is the single source of truth for the Contractor Flow brand: what we
 stand for, who we serve, how we sound, and how every sub-brand fits together.
@@ -156,9 +156,10 @@ to the trades.
 ## 7. Taglines + headlines
 
 **Primary tagline:**
-> Built where the work is.
+> One lead. One contractor.
 
 **Alt taglines (rotate by context):**
+- *Built where the work is.*
 - *Your work. Our flow.*
 - *Massachusetts contractors, ahead.*
 - *Lead. Land. Launch.*
@@ -266,7 +267,7 @@ icon block.
 ```
 Davi Chaves
 Founder, Contractor Flow
-"Built where the work is."
+"One lead. One contractor."
 
 contractorflowstore.com  ·  (617) 555-0123
 ```

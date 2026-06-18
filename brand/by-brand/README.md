@@ -34,7 +34,7 @@ For anything that needs to scale beyond 1800px, use the `.svg` source.
 The parent brand folder has dark-background variants:
 - `wordmark-dark.svg` / `wordmark-dark-*.png` — for dark surfaces
 - `logo-dark.svg` / `logo-dark-*.png` — for dark surfaces
-- `logo-large.svg` / `logo-large-*.png` — full lockup + "BUILT WHERE THE WORK IS" tagline
+- `logo-large.svg` / `logo-large-*.png` — full lockup + "ONE LEAD · ONE CONTRACTOR" tagline
 
 ## Quick decisions
 
