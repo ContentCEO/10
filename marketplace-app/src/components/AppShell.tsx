@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, LogOut, Menu, Moon, Settings, Sliders, Sun, Wallet, X } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, Moon, Settings, Shield, Sliders, Sun, Wallet, X } from "lucide-react";
 import { ThemeProvider, useTheme } from "./ThemeProvider";
 
 interface AppShellProps {
@@ -14,7 +14,8 @@ interface AppShellProps {
 const EMERALD = "#10b981";
 
 const NAV = [
-  { href: "/dashboard",        label: "Leads",        icon: LayoutDashboard, exact: true },
+  { href: "/dashboard",        label: "Leads",         icon: LayoutDashboard, exact: true  },
+  { href: "/verification",     label: "Verification",  icon: Shield,          exact: false },
   { href: "/wallet",           label: "Wallet",        icon: Wallet,          exact: false },
   { href: "/preferences",      label: "Preferences",   icon: Sliders,         exact: false },
   { href: "/account",          label: "Account",       icon: Settings,        exact: false },

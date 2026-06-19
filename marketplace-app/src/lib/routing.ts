@@ -36,7 +36,10 @@ interface CandidateContractor {
   zips: string[];               // marketplace_preferences.zips
   min_budget_cents: number;
   paused_until: string | null;
-  // Aggregates for scoring:
+  // Aggregates for scoring (read from the seal-tier nightly recompute):
+  seal_tier: "none" | "verified" | "verified_pro" | "top_pro";
+  median_response_mins: number | null;
+  win_rate: number | null;
   recent_offer_count: number;   // how many active offers does this contractor already hold?
   declined_30d: number;         // declines in last 30 days (penalize over-decliners)
 }
@@ -213,19 +216,27 @@ async function loadSeenContractors(admin: SupabaseClient, leadId: string): Promi
  * doesn't need to round-trip back to the DB per contractor.
  */
 async function rankCandidates(admin: SupabaseClient, lead: LeadRow): Promise<CandidateContractor[]> {
-  // Eligible = has active marketplace subscription.
-  const { data: subs } = await admin
-    .from("marketplace_subscriptions")
-    .select("user_id")
-    .in("status", ["active", "trialing"]);
-  const eligible = new Set((subs ?? []).map((s: { user_id: string }) => s.user_id));
-  if (eligible.size === 0) return [];
+  // ── Eligibility comes from the `eligible_contractors` view, which
+  // joins subscriptions + approved-and-current verifications. Routing
+  // never offers a lead to an unverified or expired-insurance pro. ──
+  const { data: eligibleRows } = await admin
+    .from("eligible_contractors")
+    .select("user_id, seal_tier, median_response_mins, win_rate");
+  type Eligible = {
+    user_id: string;
+    seal_tier: "none" | "verified" | "verified_pro" | "top_pro";
+    median_response_mins: number | null;
+    win_rate: number | null;
+  };
+  const eligibleMap = new Map<string, Eligible>();
+  for (const r of (eligibleRows ?? []) as Eligible[]) eligibleMap.set(r.user_id, r);
+  if (eligibleMap.size === 0) return [];
 
   // Pull preferences for all eligible contractors in one query.
   const { data: prefs } = await admin
     .from("marketplace_preferences")
     .select("user_id, trades, zips, min_budget_cents, paused_until")
-    .in("user_id", Array.from(eligible));
+    .in("user_id", Array.from(eligibleMap.keys()));
 
   // Recent-offer counts per contractor (the freshness-fairness signal).
   const { data: activeOffers } = await admin
@@ -275,14 +286,18 @@ async function rankCandidates(admin: SupabaseClient, lead: LeadRow): Promise<Can
       const minLeadCents = budgetMinCents(lead.budget);
       if (minLeadCents !== null && minLeadCents < p.min_budget_cents) continue;
     }
+    const elig = eligibleMap.get(p.user_id)!;
     candidates.push({
       user_id: p.user_id,
       trades: p.trades ?? [],
       zips: p.zips ?? [],
       min_budget_cents: p.min_budget_cents ?? 0,
       paused_until: p.paused_until,
-      recent_offer_count: offerCount.get(p.user_id) ?? 0,
-      declined_30d: declineCount.get(p.user_id) ?? 0,
+      seal_tier:            elig.seal_tier,
+      median_response_mins: elig.median_response_mins,
+      win_rate:             elig.win_rate,
+      recent_offer_count:   offerCount.get(p.user_id) ?? 0,
+      declined_30d:         declineCount.get(p.user_id) ?? 0,
     });
   }
 
@@ -305,23 +320,51 @@ function scoreMatch(
   c: CandidateContractor,
   tradeOfLead: string | null,
 ): number {
-  // tradeTownFit: 1.0 if ZIP listed by contractor matches lead's ZIP,
-  // 0.7 if trade matches but ZIP doesn't (or contractor lists no ZIPs),
-  // 0.3 if neither matches but they were still pulled (subscription open).
+  // tradeTownFit (0.30): 1.0 if ZIP listed by contractor matches lead's ZIP,
+  // 0.7 if trade matches but ZIP doesn't, 0.3 fallback.
   let tradeTownFit = 0.3;
   if (lead.zip && c.zips.includes(lead.zip)) tradeTownFit = 1.0;
   else if (tradeOfLead && c.trades.includes(tradeOfLead)) tradeTownFit = 0.7;
 
-  // freshnessFairness: fewer active offers = higher priority. New + quiet
-  // contractors get shots they wouldn't get under pure-score sorting.
+  // responseSpeed (0.25): faster median response → higher. <30min = 1.0,
+  // 4hrs = 0.5, 24hrs+ = 0.0. New contractors with no data get 0.6
+  // (neutral) so they aren't starved.
+  let responseSpeed = 0.6;
+  if (typeof c.median_response_mins === "number") {
+    const m = c.median_response_mins;
+    if (m <= 30) responseSpeed = 1.0;
+    else if (m >= 1440) responseSpeed = 0.0;
+    else responseSpeed = Math.max(0, 1 - (m - 30) / 1410);
+  }
+
+  // sealTierWeight (0.20): the seal directly affects who sees the lead first.
+  const sealTierWeight = (
+    c.seal_tier === "top_pro"      ? 1.0 :
+    c.seal_tier === "verified_pro" ? 0.75 :
+    c.seal_tier === "verified"     ? 0.5 :
+                                     0.0
+  );
+
+  // winRate (0.15): % of accepted offers that became won jobs. Neutral 0.5
+  // for new contractors so they aren't starved before they have a record.
+  const winRate = c.win_rate ?? 0.5;
+
+  // freshnessFairness (0.10): new + quiet pros get shots they wouldn't get
+  // under pure-score sorting. Prevents the top 3 hogging every lead.
   const freshnessFairness = 1 / (1 + Math.min(c.recent_offer_count, 5));
 
-  // declineHealth: penalize over-decliners (>5 declines / 30d).
+  // declineHealth (multiplicative penalty): if a contractor declines 20+
+  // in 30 days, score → 0. Keeps the queue clean.
   const declineHealth = Math.max(0, 1 - c.declined_30d / 20);
 
-  // Until seal/winRate/responseSpeed land:
-  //   0.30 tradeTownFit + 0.55 freshnessFairness + 0.15 declineHealth = 1.0
-  return 0.30 * tradeTownFit + 0.55 * freshnessFairness + 0.15 * declineHealth;
+  const composite =
+      0.30 * tradeTownFit
+    + 0.25 * responseSpeed
+    + 0.20 * sealTierWeight
+    + 0.15 * winRate
+    + 0.10 * freshnessFairness;
+
+  return composite * declineHealth;
 }
 
 async function offerToNext(
