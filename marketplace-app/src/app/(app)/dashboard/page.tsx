@@ -27,32 +27,49 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pa
   if (!user) return null;
 
   const admin = createAdminClient();
-  const sinceIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const nowIso = new Date().toISOString();
 
-  // Build lead query.
-  let leadQuery = admin
-    .from("marketplace_leads")
-    .select("*")
-    .eq("status", "available")
-    .gte("created_at", sinceIso)
-    .not("name", "is", null)
-    .not("phone", "is", null)
-    .neq("name", "")
-    .neq("phone", "")
-    .order("ai_score", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(80);
-  if (searchParams.service) leadQuery = leadQuery.ilike("service_type", `%${searchParams.service}%`);
-  if (searchParams.zip)     leadQuery = leadQuery.eq("zip", searchParams.zip);
+  // ── The contractor's exclusive-offer queue. ──
+  // Per spec §6.2: only show leads currently OFFERED to this contractor.
+  // No "browse all available" mode — that defeats the never-resold promise.
+  // (Owner / admin gets the full firehose via the existing /admin route.)
+  const { data: matchRows } = await admin
+    .from("matches")
+    .select("lead_id, expires_at, score")
+    .eq("contractor_user_id", user.id)
+    .eq("status", "offered")
+    .gt("expires_at", nowIso)
+    .order("expires_at", { ascending: true });
 
-  const [{ data: leads }, { data: profile }] = await Promise.all([
-    leadQuery,
-    admin.from("profiles").select("credit_cents").eq("id", user.id).maybeSingle(),
-  ]);
+  const offered = (matchRows ?? []) as Array<{ lead_id: string; expires_at: string; score: number }>;
+  const expiresByLead = new Map(offered.map((m) => [m.lead_id, m.expires_at]));
 
-  const rawRows = (leads ?? []) as MarketplaceLead[];
+  let leads: MarketplaceLead[] = [];
+  if (offered.length > 0) {
+    let leadQuery = admin
+      .from("marketplace_leads")
+      .select("*")
+      .in("id", offered.map((m) => m.lead_id));
+    if (searchParams.service) leadQuery = leadQuery.ilike("service_type", `%${searchParams.service}%`);
+    if (searchParams.zip)     leadQuery = leadQuery.eq("zip", searchParams.zip);
+    const { data } = await leadQuery;
+    leads = (data ?? []) as MarketplaceLead[];
+    // Preserve expires-soon order from the match query.
+    leads.sort((a, b) => {
+      const ea = expiresByLead.get(a.id) ?? "";
+      const eb = expiresByLead.get(b.id) ?? "";
+      return ea.localeCompare(eb);
+    });
+  }
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("credit_cents")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const tradeFilter = searchParams.trade;
-  const rows = rawRows.filter((r) => {
+  const rows = leads.filter((r) => {
     if (tradeFilter) {
       const blob = [r.service_type, r.ai_summary, r.notes].filter(Boolean).join(" \n ");
       return classifyTrade(blob) === tradeFilter;
@@ -65,6 +82,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pa
   const view: ViewMode = (searchParams.view === "grid" || searchParams.view === "table" || searchParams.view === "map") ? searchParams.view as ViewMode : "split";
   const selectedId = searchParams.lead;
   const selected = (rows.find((r) => r.id === selectedId) ?? rows[0] ?? null) as MarketplaceLead | null;
+  const selectedExpiresAt = selected ? expiresByLead.get(selected.id) ?? null : null;
 
   const hotCount = rows.filter((r) => r.ai_score >= 85).length;
   const freshCount = rows.filter((r) => (Date.now() - new Date(r.created_at).getTime()) < 60 * 60 * 1000).length;
@@ -183,7 +201,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pa
 
       {/* ───── VIEW BODY ──────────────────────────────────────────────── */}
       {view === "split" && (
-        <SplitView rows={rows} selected={selected} balanceCents={balanceCents} />
+        <SplitView rows={rows} selected={selected} balanceCents={balanceCents} selectedExpiresAt={selectedExpiresAt} />
       )}
       {view === "grid" && (
         rows.length ? (
@@ -226,8 +244,8 @@ function Chip({ label, accent, pulse }: { label: string; accent: string; pulse?:
   );
 }
 
-function SplitView({ rows, selected, balanceCents }: {
-  rows: MarketplaceLead[]; selected: MarketplaceLead | null; balanceCents: number;
+function SplitView({ rows, selected, balanceCents, selectedExpiresAt }: {
+  rows: MarketplaceLead[]; selected: MarketplaceLead | null; balanceCents: number; selectedExpiresAt: string | null;
 }) {
   return (
     <div className="grid lg:grid-cols-[minmax(280px,360px)_1fr] gap-4 items-start">
@@ -253,7 +271,7 @@ function SplitView({ rows, selected, balanceCents }: {
       </div>
 
       {/* Right detail */}
-      <LeadDetailPanel lead={selected} balanceCents={balanceCents} />
+      <LeadDetailPanel lead={selected} balanceCents={balanceCents} offerExpiresAt={selectedExpiresAt} />
     </div>
   );
 }
@@ -266,9 +284,9 @@ function EmptyState() {
         style={{ background: "linear-gradient(135deg, var(--emerald), var(--emerald-deep))" }}>
         <Store className="h-7 w-7" />
       </div>
-      <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>No leads match this view.</h3>
-      <p className="mt-2 text-sm max-w-sm mx-auto" style={{ color: "var(--text-muted)" }}>
-        Widen your trade/ZIP filters or wait — fresh leads land every few minutes.
+      <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>No offers in your queue right now.</h3>
+      <p className="mt-2 text-sm max-w-md mx-auto" style={{ color: "var(--text-muted)" }}>
+        Leads are routed to one contractor at a time — never broadcast. When a homeowner matches your trade + ZIP, you&apos;ll be the first (and only) pro offered. Check back, or widen your preferences.
       </p>
     </div>
   );

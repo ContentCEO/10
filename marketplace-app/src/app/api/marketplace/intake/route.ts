@@ -5,6 +5,7 @@ import {
   coerceTimeline,
   insertMarketplaceLead,
 } from "@/lib/lead-intake";
+import { routeLead } from "@/lib/routing";
 
 export const runtime = "nodejs";
 
@@ -97,5 +98,19 @@ export async function POST(request: Request) {
         .eq("code", refCode);
     }
   }
+
+  // ── THE WEDGE — route the new lead to ONE contractor exclusively. ──
+  // We don't await deeply — if routing fails for any reason (no candidate,
+  // transient DB issue), the lead still lives in the DB and the cron will
+  // pick it up. The homeowner's experience never depends on routing
+  // succeeding right now.
+  if (result.id && !result.deduped) {
+    try {
+      await routeLead(admin, result.id);
+    } catch {
+      // Routing failures are non-fatal at intake time.
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

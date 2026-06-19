@@ -1,13 +1,16 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useTransition } from "react";
-import { CheckCircle2, Lock, MapPin, Phone, Shield, SkipForward, Sparkles, Store } from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
+import { CheckCircle2, Clock, Lock, MapPin, Phone, Shield, SkipForward, Sparkles, Store } from "lucide-react";
 import { type MarketplaceLead, BUDGET_LABELS, TIMELINE_LABELS } from "@/lib/marketplace";
 
 interface Props {
   lead: MarketplaceLead | null;
   balanceCents: number;
+  /** Optional ISO timestamp at which the current offer expires.
+   * Present only when the lead is offered to the current contractor. */
+  offerExpiresAt?: string | null;
 }
 
 function money(cents: number) { return `$${(cents / 100).toLocaleString()}`; }
@@ -29,11 +32,12 @@ function scoreColor(score: number) {
   return "#94a3b8";
 }
 
-export function LeadDetailPanel({ lead, balanceCents }: Props) {
+export function LeadDetailPanel({ lead, balanceCents, offerExpiresAt }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const countdown = useCountdown(offerExpiresAt ?? null);
 
   if (!lead) {
     return (
@@ -59,18 +63,27 @@ export function LeadDetailPanel({ lead, balanceCents }: Props) {
   const fresh = ageMin < 60;
   const ring = scoreColor(lead.ai_score);
 
-  const skip = () => {
-    startTransition(() => {
+  const skip = async () => {
+    // Skip = decline, which triggers cascade to next contractor immediately.
+    startTransition(async () => {
+      try {
+        await fetch("/api/leads/decline", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lead_id: lead.id, reason: "skipped" }),
+        });
+      } catch { /* non-fatal */ }
       const next = new URLSearchParams(params);
       next.delete("lead");
       router.replace(`${pathname}${next.toString() ? `?${next.toString()}` : ""}`, { scroll: false });
+      router.refresh();
     });
   };
 
-  const claim = async () => {
+  const accept = async () => {
     startTransition(async () => {
       try {
-        const res = await fetch("/api/leads/claim", {
+        const res = await fetch("/api/leads/accept", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lead_id: lead.id }),
@@ -79,7 +92,8 @@ export function LeadDetailPanel({ lead, balanceCents }: Props) {
           router.push(`/dashboard/${lead.id}?claimed=1`);
         } else {
           const data = await res.json().catch(() => ({}));
-          alert(data?.error ?? "Could not claim that lead — it may already be taken.");
+          alert(data?.error ?? "This offer is no longer available.");
+          router.refresh();
         }
       } catch {
         alert("Network issue — try again.");
@@ -105,7 +119,14 @@ export function LeadDetailPanel({ lead, balanceCents }: Props) {
               <span className="relative h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
             </span>
           )}
-          {hot ? "HOT" : "AVAILABLE"} · {timeAgo(lead.created_at).toUpperCase()} · EXCLUSIVE
+          {hot ? "HOT" : "OFFERED"} · {timeAgo(lead.created_at).toUpperCase()} · EXCLUSIVE
+          {countdown && (
+            <span className="inline-flex items-center gap-1 ml-2 pl-2"
+              style={{ borderLeft: "1px solid color-mix(in srgb, currentColor 40%, transparent)" }}>
+              <Clock className="h-3 w-3" />
+              {countdown}
+            </span>
+          )}
         </div>
 
         <h2 className="mt-4 leading-[1.05]"
@@ -167,26 +188,15 @@ export function LeadDetailPanel({ lead, balanceCents }: Props) {
       {/* Footer CTAs */}
       <div className="px-6 pb-6 pt-5 mt-5 border-t flex items-center gap-3"
         style={{ borderColor: "var(--border)" }}>
-        <button onClick={claim} disabled={pending || !affordable}
+        <button onClick={accept} disabled={pending}
           className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition disabled:opacity-60"
           style={{
-            background: affordable
-              ? "linear-gradient(135deg, var(--emerald-bright), var(--emerald-deep))"
-              : "var(--surface-raised)",
-            color: affordable ? "#fff" : "var(--text-muted)",
-            boxShadow: affordable ? "0 10px 24px -10px color-mix(in srgb, var(--emerald) 70%, transparent)" : "none",
+            background: "linear-gradient(135deg, var(--emerald-bright), var(--emerald-deep))",
+            color: "#fff",
+            boxShadow: "0 10px 24px -10px color-mix(in srgb, var(--emerald) 70%, transparent)",
           }}>
-          {affordable ? (
-            <>
-              <CheckCircle2 className="h-4 w-4" />
-              Claim this lead · {money(lead.price_cents)}
-            </>
-          ) : (
-            <>
-              <Phone className="h-4 w-4" />
-              Need {money(lead.price_cents - balanceCents)} more in wallet
-            </>
-          )}
+          <CheckCircle2 className="h-4 w-4" />
+          {pending ? "Accepting…" : `Accept · ${money(lead.price_cents)}`}
         </button>
         <button onClick={skip} disabled={pending}
           className="inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-3 text-sm font-semibold"
@@ -196,7 +206,7 @@ export function LeadDetailPanel({ lead, balanceCents }: Props) {
             color: "var(--text-muted)",
           }}>
           <SkipForward className="h-4 w-4" />
-          Skip
+          Decline
         </button>
       </div>
     </div>
@@ -211,4 +221,21 @@ function StatBlock({ label, value, accent }: { label: string; value: string; acc
       <div className="mt-1.5 text-base font-semibold tabular-nums" style={{ color: accent }}>{value}</div>
     </div>
   );
+}
+
+/** Tiny live countdown ("23:14") for an exclusive-offer window. */
+function useCountdown(iso: string | null): string | null {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!iso) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [iso]);
+  if (!iso) return null;
+  const ms = Math.max(0, new Date(iso).getTime() - now);
+  if (ms === 0) return "Expired";
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, "0")} left`;
 }
