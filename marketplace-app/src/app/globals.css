@@ -2,21 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* ─── Theme tokens — toggle via [data-theme] on <html>. ──────────────
+ * Components style themselves from these vars so the same JSX works in
+ * both modes. Default is dark (locked brand for contractor app per spec);
+ * light is a warm off-white per the homeowner-mode tokens. */
+
+:root, :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #06060A;
+  --canvas:        #06060A;
+  --surface:       rgba(255,255,255,0.03);
+  --surface-raised:rgba(255,255,255,0.05);
+  --border:        rgba(255,255,255,0.10);
+  --border-strong: rgba(255,255,255,0.18);
+  --emerald:       #10B981;
+  --emerald-bright:#34D399;
+  --emerald-deep:  #059669;
+  --emerald-soft:  rgba(16,185,129,0.10);
+  --text:          #FAFAFA;
+  --text-muted:    rgba(255,255,255,0.65);
+  --text-faint:    rgba(255,255,255,0.45);
+  --gold:          #E0B84C;
+  --danger:        #F87171;
+  --hot:           #FB7185;
+  --bg-gradient:
+    radial-gradient(900px 500px at 80% -10%, rgba(16,185,129,0.18), transparent 60%),
+    radial-gradient(700px 400px at -10% 10%, rgba(99,102,241,0.10), transparent 60%);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --canvas:        #FAF9F6;        /* warm off-white per spec */
+  --surface:       #FFFFFF;
+  --surface-raised:#FFFFFF;
+  --border:        #E8E5DE;
+  --border-strong: #D6D2C7;
+  --emerald:       #047857;        /* deepened for WCAG AA on light */
+  --emerald-bright:#10B981;
+  --emerald-deep:  #064E3B;
+  --emerald-soft:  rgba(4,120,87,0.08);
+  --text:          #0F1A15;
+  --text-muted:    #5A6B62;
+  --text-faint:    #8A9890;
+  --gold:          #B8860B;
+  --danger:        #B91C1C;
+  --hot:           #E11D48;
+  --bg-gradient:
+    radial-gradient(900px 500px at 80% -10%, rgba(4,120,87,0.05), transparent 60%),
+    radial-gradient(700px 400px at -10% 10%, rgba(184,134,11,0.04), transparent 60%);
 }
 
 html, body {
   @apply antialiased font-sans;
-  background-color: #06060A;
-  color: #FAFAFA;
-  background-image:
-    radial-gradient(900px 500px at 80% -10%, rgba(99, 102, 241, 0.20), transparent 60%),
-    radial-gradient(700px 400px at -10% 10%, rgba(167, 139, 250, 0.12), transparent 60%),
-    radial-gradient(ellipse 70% 50% at 50% 92%, rgba(236, 72, 153, 0.08), transparent 60%);
+  background-color: var(--canvas);
+  color: var(--text);
+  background-image: var(--bg-gradient);
   background-attachment: fixed;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11"; /* nicer numerals */
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 /* Match the dashboard's typographic identity everywhere:
