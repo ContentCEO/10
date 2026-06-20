@@ -81,5 +81,9 @@ insert into public.agents (slug, name, description, category, cadence_minutes, c
 
   ('cron-watchdog',         'Cron Watchdog',
    'Polls scraper_runs to detect any source that has not run in 2× its expected interval; alerts owner.',
-   'operations', 60, '{"alert_multiplier":2}'::jsonb)
+   'operations', 60, '{"alert_multiplier":2}'::jsonb),
+
+  ('subscription-winback',  'Subscription Win-Back',
+   'Protects MRR: catches ContractorFlow trials ending soon, payments that failed (past_due), and recent cancellations, then drafts a tailored SMS + email to retain or win back the customer. Owner approves before send.',
+   'sales', 720, '{"trial_warn_days":3,"winback_grace_days":30,"redraft_cooldown_days":14}'::jsonb)
 on conflict (slug) do nothing;

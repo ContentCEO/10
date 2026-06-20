@@ -11,6 +11,7 @@ import { runCustomerHealth } from "@/lib/agents/customer-health";
 import { runReviewRequester } from "@/lib/agents/review-requester";
 import { runAppointmentScheduler } from "@/lib/agents/appointment-scheduler";
 import { runWeeklyDigest } from "@/lib/agents/weekly-digest";
+import { runSubscriptionWinback } from "@/lib/agents/subscription-winback";
 
 export const runtime = "nodejs";
 
@@ -51,6 +52,7 @@ const RUNNERS: Record<string, (config: Record<string, unknown>) => Promise<Agent
   "review-requester":      runReviewRequester,
   "appointment-scheduler": runAppointmentScheduler,
   "weekly-digest":         runWeeklyDigest,
+  "subscription-winback":  runSubscriptionWinback,
 };
 
 async function runOnce() {
