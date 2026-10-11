@@ -8,6 +8,9 @@ The livestream camera was mounted sideways, so frames are rotated back to
 by finding his blue suit in each shot. Within a clip, the framing alternates
 between a wide and a tight shot at natural pauses so a static camera feels edited.
 
+Look: see style.py (Montserrat word-by-word captions, hook title, gold
+progress bar, dark end card) plus a slow push-in zoom on every shot.
+
 Captions come from transcript.json (word timestamps on the livestream).
 Clip choices, titles and end cards are in CLIPS below.
 """
@@ -21,7 +24,8 @@ import numpy as np
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE.parent / "shorts"))
-import make_shorts as ms  # noqa: E402  (shared caption/title/end-card drawing)
+import make_shorts as ms  # noqa: E402  (shared timing constants)
+import style  # noqa: E402
 
 W, H, FPS, S = ms.W, ms.H, ms.FPS, ms.S
 OUT = HERE / "out" / ("4k" if S > 1 else "")
@@ -31,6 +35,7 @@ WIDE = (405, 720)   # full height 9:16 crop
 TIGHT = (304, 540)  # 1.33x punch-in, top kept at TIGHT_Y
 TIGHT_Y = 120
 SHOT_MIN, SHOT_MAX = 4.5, 8.0  # seconds per shot before cutting at the next pause
+ZOOM = 0.07  # slow push-in over each shot (7%)
 
 WORD_FIX = {"Jesus": "Jesus", "deus": "Deus"}
 
@@ -135,8 +140,8 @@ def chunk_words(words, max_words=3, max_chars=20, hard_chars=24):
                 chunks.append(cur); cur = []
     if cur:
         chunks.append(cur)
-    out = [{"text": " ".join(x["w"] for x in c).rstrip(",."), "s": c[0]["s"], "e": c[-1]["e"]}
-           for c in chunks]
+    out = [{"text": " ".join(x["w"] for x in c).rstrip(",."), "s": c[0]["s"], "e": c[-1]["e"],
+            "words": c} for c in chunks]
     if out:
         out[0]["text"] = out[0]["text"][0].upper() + out[0]["text"][1:]
     return out
@@ -193,37 +198,35 @@ def render(src, clip, words, tmp):
     length = t1 - t0
     shots = plan_shots(words, t0, t1)
 
-    title, card = tmp / "title.png", tmp / "card.png"
-    ms.title_png(title, clip["title"])
-    ms.end_card_png(card, END_LABEL, clip["end_lines"])
-    inputs = ["-ss", f"{t0:.3f}", "-t", f"{length + 0.5:.3f}", "-i", str(src),
-              "-loop", "1", "-t", f"{ms.TITLE_SECS:.2f}", "-i", str(title),
-              "-loop", "1", "-t", f"{ms.END_CARD + ms.XFADE:.2f}", "-i", str(card)]
-
+    # captions in clip time, each shown until the next one starts
     words = apply_fixes([w for w in words if t0 - 0.05 <= w["s"] < t1], clip["fixes"])
-    caps = chunk_words(words)
+    caps = chunk_words([{**w, "s": w["s"] - t0, "e": w["e"] - t0} for w in words])
     for i, c in enumerate(caps):
-        p = tmp / f"cap{i:03d}.png"
-        ms.caption_png(c["text"], p)
-        inputs += ["-i", str(p)]
+        c["until"] = caps[i + 1]["s"] if i + 1 < len(caps) else min(c["e"] + 0.6, length)
+
+    card, bar = tmp / "card.png", tmp / "bar.png"
+    style.end_card(W, H, S, END_LABEL, clip["end_lines"], card)
+    style.progress_bar(W, S, bar)
+    inputs = ["-ss", f"{t0:.3f}", "-t", f"{length + 0.5:.3f}", "-i", str(src),
+              "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "pipe:0",
+              "-loop", "1", "-t", f"{ms.END_CARD + ms.XFADE:.2f}", "-i", str(card),
+              "-loop", "1", "-i", str(bar)]
 
     fc = [f"[0:v]transpose=1,fps={FPS},split={len(shots)}" + "".join(f"[s{i}]" for i in range(len(shots)))]
     for i, (a, b, framing) in enumerate(shots):
         w, h, x, y = crop_for(framing, preacher_x(src, a, b))
+        n = max(1, round((b - a) * FPS))
+        # crop to 9:16, upscale 2x so the slow zoom stays smooth, push in, then scale to size
         fc.append(f"[s{i}]trim=start={a - t0:.3f}:end={b - t0:.3f},setpts=PTS-STARTPTS,"
-                  f"crop={w}:{h}:{x}:{y},scale={W}:{H}:flags=lanczos,setsar=1,"
-                  f"eq=contrast=1.05:saturation=1.08,unsharp=5:5:0.7[c{i}]")
+                  f"crop={w}:{h}:{x}:{y},scale={2 * W}:{2 * H}:flags=lanczos,"
+                  f"zoompan=z='1+{ZOOM}*on/{n}':d=1:x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':"
+                  f"s={W}x{H}:fps={FPS},setsar=1,"
+                  f"eq=contrast=1.06:saturation=1.12,unsharp=5:5:0.7[c{i}]")
     fc.append("".join(f"[c{i}]" for i in range(len(shots))) + f"concat=n={len(shots)}:v=1:a=0[cat]")
-    fc.append(f"[1:v]fps={FPS},format=rgba,fade=t=out:st={ms.TITLE_SECS - 0.5:.2f}:d=0.5:alpha=1[title]")
-    fc.append("[cat][title]overlay=0:0:eof_action=pass[v0]")
-    last = "v0"
-    for i, c in enumerate(caps):
-        s = c["s"] - t0
-        e = (caps[i + 1]["s"] - t0) if i + 1 < len(caps) else min(c["e"] - t0 + 0.6, length)
-        fc.append(f"[{last}][{3 + i}:v]overlay=0:0:enable='between(t,{s:.3f},{e - 0.001:.3f})'[v{i + 1}]")
-        last = f"v{i + 1}"
+    fc.append(f"[cat][1:v]overlay=0:0:eof_action=pass[v0]")
+    fc.append(f"[v0][3:v]overlay=x='-w+w*t/{length:.3f}':y=0:shortest=1[v1]")
     fc.append(f"[2:v]fps={FPS},format=yuv420p,setsar=1,settb=1/{FPS}[card]")
-    fc.append(f"[{last}]fps={FPS},format=yuv420p,settb=1/{FPS}[main]")
+    fc.append(f"[v1]fps={FPS},format=yuv420p,settb=1/{FPS}[main]")
     fc.append(f"[main][card]xfade=transition=fade:duration={ms.XFADE}:offset={length - ms.XFADE:.3f}[vout]")
     fc.append(f"[0:a]atrim=start=0:end={length:.3f},asetpts=PTS-STARTPTS,"
               f"highpass=f=80,afade=t=in:d=0.12,afade=t=out:st={length - 0.5:.3f}:d=0.5,"
@@ -233,11 +236,19 @@ def render(src, clip, words, tmp):
     out = OUT / name
     cmd = ["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(fc),
            "-map", "[vout]", "-map", "[aout]",
-           "-c:v", "libx264", "-preset", "slow" if S == 1 else "medium", "-crf", "18",
+           "-c:v", "libx264", "-preset", "slow" if S == 1 else "medium", "-crf", "19",
            *(["-maxrate", "12M", "-bufsize", "24M"] if S > 1 else []), "-pix_fmt", "yuv420p",
            "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
            "-t", f"{length + ms.END_CARD:.3f}", "-movflags", "+faststart", str(out)]
-    subprocess.run(cmd, check=True)
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    try:
+        for frame in style.overlay_frames(W, H, S, FPS, length, clip["title"], caps):
+            proc.stdin.write(frame)
+    except BrokenPipeError:
+        pass
+    proc.stdin.close()
+    if proc.wait():
+        raise RuntimeError(f"ffmpeg failed for {name}")
     print(f"wrote {out.relative_to(HERE)}  ({length + ms.END_CARD:.1f}s, {len(shots)} shots)")
 
 
