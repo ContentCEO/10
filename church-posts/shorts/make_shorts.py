@@ -1,7 +1,7 @@
 """Edit vertical church shorts (1080x1920) from two synced camera angles.
 
-Usage:  python3 make_shorts.py
-Output: out/*.mp4
+Usage:  python3 make_shorts.py          -> out/*.mp4      (1080x1920, Reels/TikTok/Shorts)
+        python3 make_shorts.py --4k     -> out/4k/*.mp4   (2160x3840, YouTube Shorts)
 
 Angle A (source/angle-a.mp4) is the master: its audio is used throughout and
 all times below are on its timeline. Angle B starts SYNC_B seconds into A.
@@ -9,6 +9,7 @@ Captions come from source/transcript-words.json (word timestamps on A).
 """
 import json
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -19,7 +20,16 @@ SRC = HERE / "source"
 OUT = HERE / "out"
 FONTS = HERE.parent / "fonts"
 
-W, H, FPS = 1080, 1920, 30
+# Layout is designed at 1080x1920; S scales every drawn size (2 for the 4K render).
+S = 2 if "--4k" in sys.argv else 1
+W, H, FPS = 1080 * S, 1920 * S, 30
+if S > 1:
+    OUT = OUT / "4k"
+
+
+def px(v):
+    return round(v * S)
+
 SYNC_B = 10.202  # angle B's first frame = this time on angle A
 END_CARD = 2.6
 XFADE = 0.4
@@ -116,13 +126,13 @@ def chunk_words(words, max_words=3, max_chars=20):
 def caption_png(text, path):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    f = font("Inter-ExtraBold.otf", 72)
-    y = 1330
+    f = font("Inter-ExtraBold.otf", px(72))
+    y = px(1330)
     # soft shadow, then white text with a thin dark outline
-    d.text((W // 2 + 3, y + 4), text, font=f, fill=(0, 0, 0, 140), anchor="ms",
-           stroke_width=6, stroke_fill=(0, 0, 0, 90))
+    d.text((W // 2 + px(3), y + px(4)), text, font=f, fill=(0, 0, 0, 140), anchor="ms",
+           stroke_width=px(6), stroke_fill=(0, 0, 0, 90))
     d.text((W // 2, y), text, font=f, fill=(255, 255, 255, 255), anchor="ms",
-           stroke_width=5, stroke_fill=(15, 15, 18, 255))
+           stroke_width=px(5), stroke_fill=(15, 15, 18, 255))
     img.save(path)
 
 
@@ -136,7 +146,7 @@ def draw_lines(d, cx, baseline, lines, size, fill, leading=1.14, shadow=False):
         for t, it in line:
             f = serif(size, it)
             if shadow:
-                d.text((x + 2, y + 3), t, font=f, fill=(0, 0, 0, 120), anchor="ls")
+                d.text((x + px(2), y + px(3)), t, font=f, fill=(0, 0, 0, 120), anchor="ls")
             d.text((x, y), t, font=f, fill=fill, anchor="ls")
             x += d.textlength(t, font=f)
 
@@ -144,13 +154,14 @@ def draw_lines(d, cx, baseline, lines, size, fill, leading=1.14, shadow=False):
 def title_png(path):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     # top gradient so the title reads on any background
-    grad = Image.new("L", (1, 520))
-    for y in range(520):
-        grad.putpixel((0, y), round(170 * (1 - y / 520) ** 1.6))
-    shade = Image.new("RGBA", (W, 520), (10, 10, 12, 255))
-    shade.putalpha(grad.resize((W, 520)))
+    gh = px(520)
+    grad = Image.new("L", (1, gh))
+    for y in range(gh):
+        grad.putpixel((0, y), round(170 * (1 - y / gh) ** 1.6))
+    shade = Image.new("RGBA", (W, gh), (10, 10, 12, 255))
+    shade.putalpha(grad.resize((W, gh)))
     img.alpha_composite(shade)
-    draw_lines(ImageDraw.Draw(img), W // 2, 250, TITLE, 74, (255, 255, 255, 255), shadow=True)
+    draw_lines(ImageDraw.Draw(img), W // 2, px(250), TITLE, px(74), (255, 255, 255, 255), shadow=True)
     img.save(path)
 
 
@@ -166,10 +177,10 @@ def tracked_center(d, cx, y, text, f, fill, tracking=0.22):
 def end_card_png(path):
     img = Image.new("RGBA", (W, H), CREAM)
     d = ImageDraw.Draw(img)
-    tracked_center(d, W // 2, 760, "DEUS NOS CONSTITUIU", font("Inter-SemiBold.otf", 28), INK)
-    d.line([(W // 2 - 30, 800), (W // 2 + 30, 800)], fill=INK, width=2)
-    draw_lines(d, W // 2, 960, [[("Para", False)], [("servir.", True)]], 150, INK, leading=1.05)
-    d.text((W // 2, 1290), "Compartilhe com alguém.", font=font("Inter-Medium.otf", 36),
+    tracked_center(d, W // 2, px(760), "DEUS NOS CONSTITUIU", font("Inter-SemiBold.otf", px(28)), INK)
+    d.line([(W // 2 - px(30), px(800)), (W // 2 + px(30), px(800))], fill=INK, width=px(2))
+    draw_lines(d, W // 2, px(960), [[("Para", False)], [("servir.", True)]], px(150), INK, leading=1.05)
+    d.text((W // 2, px(1290)), "Compartilhe com alguém.", font=font("Inter-Medium.otf", px(36)),
            fill=GREY, anchor="ms")
     img.convert("RGB").save(path)
 
@@ -185,7 +196,7 @@ def angle_chain(idx, cut, label):
     if crop:
         f.append("crop={2}:{3}:{0}:{1}".format(*crop))
     f += [f"scale={W}:{H}:flags=lanczos", "setsar=1",
-          "eq=contrast=1.04:saturation=1.06", "unsharp=5:5:0.6"]
+          "eq=contrast=1.04:saturation=1.06", "unsharp=5:5:0.6" if S == 1 else "unsharp=7:7:0.5"]
     return ",".join(f) + f"[{label}]"
 
 
@@ -228,10 +239,11 @@ def render(short, words, tmp):
               f"afade=t=in:d=0.12,afade=t=out:st={length - 0.5:.3f}:d=0.5,"
               f"apad=pad_dur={END_CARD:.2f},loudnorm=I=-14:TP=-1.5:LRA=11[aout]")
 
-    out = OUT / short["file"]
+    out = OUT / (short["file"] if S == 1 else short["file"].replace(".mp4", "-4k.mp4"))
     cmd = ["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(fc),
            "-map", "[vout]", "-map", "[aout]",
-           "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p",
+           "-c:v", "libx264", "-preset", "slow" if S == 1 else "medium", "-crf", "18",
+           *(["-maxrate", "12M", "-bufsize", "24M"] if S > 1 else []), "-pix_fmt", "yuv420p",
            "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
            "-t", f"{length - XFADE + END_CARD + XFADE:.3f}",
            "-movflags", "+faststart", str(out)]
@@ -240,7 +252,7 @@ def render(short, words, tmp):
 
 
 def main():
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     words = load_words()
     for short in SHORTS:
         with tempfile.TemporaryDirectory() as tmp:
