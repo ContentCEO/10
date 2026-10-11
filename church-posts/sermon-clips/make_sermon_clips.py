@@ -34,8 +34,51 @@ SHOT_MIN, SHOT_MAX = 4.5, 8.0  # seconds per shot before cutting at the next pau
 
 WORD_FIX = {"Jesus": "Jesus", "deus": "Deus"}
 
-# Each clip: file, start/end (seconds on the livestream), title + end card text.
-CLIPS = []
+END_LABEL = "ASSEMBLEIA COLHEITA · MEDFORD"
+
+# Each clip: file, start/end (seconds on the livestream), title + end card text,
+# and caption fixes for words the transcriber misheard: (heard words, correct words).
+CLIPS = [
+    {
+        "file": "01-suas-decisoes.mp4", "start": 806.85, "end": 852.15,
+        "title": [[("Suas decisões de hoje", False)], [("decidem o seu amanhã.", True)]],
+        "end_lines": [[("Decida", False)], [("bem.", True)]],
+        "fixes": [("com sequências", "as consequências"), ("que o sobrevier", "que sobrevier")],
+    },
+    {
+        "file": "02-ele-e-poderoso.mp4", "start": 1136.55, "end": 1171.45,
+        "title": [[("Ele foi o meu auxílio.", False)], [("Ele socorre você também.", True)]],
+        "end_lines": [[("Ele é", False)], [("poderoso.", True)]],
+        "fixes": [("forta já,", "fortalece,"), ("irmão Montema,", "irmão,")],
+    },
+    {
+        "file": "03-ouvir-e-praticar.mp4", "start": 1533.80, "end": 1550.30,
+        "title": [[("Ouvir a Deus", False)], [("é praticar na segunda.", True)]],
+        "end_lines": [[("Ouvir é", False)], [("praticar.", True)]],
+        "fixes": [],
+    },
+    {
+        "file": "04-muitas-vozes.mp4", "start": 1617.30, "end": 1661.05,
+        "title": [[("Muitas vozes.", False)], [("Qual você tem ouvido?", True)]],
+        "end_lines": [[("A voz", False)], [("de Deus.", True)]],
+        "fixes": [("tem ecoado,", "têm ecoado,"), ("ouvidos, a voz", "ouvidos à voz"),
+                  ("diz, a igreja,", "diz à igreja.")],
+    },
+    {
+        "file": "05-nao-basta-comecar-bem.mp4", "start": 1944.05, "end": 1968.70,
+        "title": [[("Não basta", False)], [("começar bem.", True)]],
+        "end_lines": [[("Termine", False)], [("bem.", True)]],
+        "fixes": [("a fé,", "a fé.")],
+    },
+    {
+        "file": "06-e-a-sua-familia.mp4", "start": 2314.00, "end": 2334.60,
+        "title": [[("Não é o dólar.", False)], [("É a sua família.", True)]],
+        "end_lines": [[("Sua", False)], [("família.", True)]],
+        "fixes": [("Paulo escrevendo, Timóteo diz,", "Paulo, escrevendo a Timóteo, diz,"),
+                  ("transpassaram assim mesmo,", "traspassaram a si mesmos"),
+                  ("da fé,", "da fé.")],
+    },
+]
 
 
 # ---------------------------------------------------------------- transcript
@@ -49,12 +92,54 @@ def load_words():
             if not text:
                 continue
             text = WORD_FIX.get(text, text)
-            if text.startswith(".") and words:  # "3" + ".500" -> "3.500"
+            if text[0] in ".-" and words:  # "3" + ".500" -> "3.500", "segunda" + "-feira"
                 words[-1]["w"] += text
                 words[-1]["e"] = w["e"]
                 continue
             words.append({"w": text, "s": w["s"], "e": w["e"]})
     return words
+
+
+def apply_fixes(words, fixes):
+    """Replace misheard word sequences, spreading the new words over the old timing."""
+    words = list(words)
+    for heard, correct in fixes:
+        heard, correct = heard.split(), correct.split()
+        for i in range(len(words) - len(heard) + 1):
+            if [w["w"] for w in words[i:i + len(heard)]] == heard:
+                s, e = words[i]["s"], words[i + len(heard) - 1]["e"]
+                step = (e - s) / len(correct)
+                words[i:i + len(heard)] = [{"w": c, "s": s + k * step, "e": s + (k + 1) * step}
+                                           for k, c in enumerate(correct)]
+                break
+        else:
+            raise ValueError(f"caption fix not found: {' '.join(heard)!r}")
+    return words
+
+
+WEAK = {"a", "o", "as", "os", "de", "do", "da", "dos", "das", "e", "que", "com", "na", "no",
+        "nas", "nos", "em", "para", "por", "um", "uma", "à", "ao", "se", "não",
+        "sua", "seu", "suas", "seus", "minha", "meu", "nossa", "nosso", "si"}
+
+
+def chunk_words(words, max_words=3, max_chars=20, hard_chars=24):
+    """Caption chunks of ~3 words; never end a line on a small word like "de" or "a"."""
+    chunks, cur = [], []
+    for w in words:
+        cur.append(w)
+        text = " ".join(x["w"] for x in cur)
+        if w["w"][-1] in ",.?!":
+            chunks.append(cur); cur = []
+        elif len(cur) >= max_words or len(text) >= max_chars:
+            if w["w"].lower() not in WEAK or len(text) >= hard_chars:
+                chunks.append(cur); cur = []
+    if cur:
+        chunks.append(cur)
+    out = [{"text": " ".join(x["w"] for x in c).rstrip(",."), "s": c[0]["s"], "e": c[-1]["e"]}
+           for c in chunks]
+    if out:
+        out[0]["text"] = out[0]["text"][0].upper() + out[0]["text"][1:]
+    return out
 
 
 def plan_shots(words, t0, t1):
@@ -110,12 +195,13 @@ def render(src, clip, words, tmp):
 
     title, card = tmp / "title.png", tmp / "card.png"
     ms.title_png(title, clip["title"])
-    ms.end_card_png(card, clip["end_label"], clip["end_lines"])
+    ms.end_card_png(card, END_LABEL, clip["end_lines"])
     inputs = ["-ss", f"{t0:.3f}", "-t", f"{length + 0.5:.3f}", "-i", str(src),
               "-loop", "1", "-t", f"{ms.TITLE_SECS:.2f}", "-i", str(title),
               "-loop", "1", "-t", f"{ms.END_CARD + ms.XFADE:.2f}", "-i", str(card)]
 
-    caps = [c for c in ms.chunk_words(words) if t0 - 0.05 <= c["s"] < t1]
+    words = apply_fixes([w for w in words if t0 - 0.05 <= w["s"] < t1], clip["fixes"])
+    caps = chunk_words(words)
     for i, c in enumerate(caps):
         p = tmp / f"cap{i:03d}.png"
         ms.caption_png(c["text"], p)

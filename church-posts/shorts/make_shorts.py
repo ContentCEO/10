@@ -126,7 +126,10 @@ def chunk_words(words, max_words=3, max_chars=20):
 def caption_png(text, path):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    f = font("Inter-ExtraBold.otf", px(72))
+    size = px(72)
+    while d.textlength(text, font=font("Inter-ExtraBold.otf", size)) > W * 0.86:
+        size -= px(2)  # shrink long lines to stay inside the safe area
+    f = font("Inter-ExtraBold.otf", size)
     y = px(1330)
     # soft shadow, then white text with a thin dark outline
     d.text((W // 2 + px(3), y + px(4)), text, font=f, fill=(0, 0, 0, 140), anchor="ms",
