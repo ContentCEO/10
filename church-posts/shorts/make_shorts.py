@@ -151,7 +151,7 @@ def draw_lines(d, cx, baseline, lines, size, fill, leading=1.14, shadow=False):
             x += d.textlength(t, font=f)
 
 
-def title_png(path):
+def title_png(path, lines=TITLE):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     # top gradient so the title reads on any background
     gh = px(520)
@@ -161,7 +161,7 @@ def title_png(path):
     shade = Image.new("RGBA", (W, gh), (10, 10, 12, 255))
     shade.putalpha(grad.resize((W, gh)))
     img.alpha_composite(shade)
-    draw_lines(ImageDraw.Draw(img), W // 2, px(250), TITLE, px(74), (255, 255, 255, 255), shadow=True)
+    draw_lines(ImageDraw.Draw(img), W // 2, px(250), lines, px(74), (255, 255, 255, 255), shadow=True)
     img.save(path)
 
 
@@ -174,12 +174,16 @@ def tracked_center(d, cx, y, text, f, fill, tracking=0.22):
         x += d.textlength(c, font=f) + extra
 
 
-def end_card_png(path):
+END_LABEL = "DEUS NOS CONSTITUIU"
+END_LINES = [[("Para", False)], [("servir.", True)]]
+
+
+def end_card_png(path, label=END_LABEL, lines=END_LINES):
     img = Image.new("RGBA", (W, H), CREAM)
     d = ImageDraw.Draw(img)
-    tracked_center(d, W // 2, px(760), "DEUS NOS CONSTITUIU", font("Inter-SemiBold.otf", px(28)), INK)
+    tracked_center(d, W // 2, px(760), label, font("Inter-SemiBold.otf", px(28)), INK)
     d.line([(W // 2 - px(30), px(800)), (W // 2 + px(30), px(800))], fill=INK, width=px(2))
-    draw_lines(d, W // 2, px(960), [[("Para", False)], [("servir.", True)]], px(150), INK, leading=1.05)
+    draw_lines(d, W // 2, px(960), lines, px(150), INK, leading=1.05)
     d.text((W // 2, px(1290)), "Compartilhe com alguém.", font=font("Inter-Medium.otf", px(36)),
            fill=GREY, anchor="ms")
     img.convert("RGB").save(path)
