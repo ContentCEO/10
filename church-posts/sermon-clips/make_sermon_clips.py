@@ -39,15 +39,15 @@ ZOOM = 0.07  # slow push-in over each shot (7%)
 
 WORD_FIX = {"Jesus": "Jesus", "deus": "Deus"}
 
-END_LABEL = "ASSEMBLEIA COLHEITA · MEDFORD"
+END_LABEL = "ADD COLHEITA MEDFORD"
 
 # Each clip: file, start/end (seconds on the livestream), title + end card text,
 # and caption fixes for words the transcriber misheard: (heard words, correct words).
 CLIPS = [
     {
         "file": "01-suas-decisoes.mp4", "start": 806.85, "end": 852.15,
-        "title": [[("Suas decisões de hoje", False)], [("decidem o seu amanhã.", True)]],
-        "end_lines": [[("Decida", False)], [("bem.", True)]],
+        "title": [[("Suas decisões de hoje,", False)], [("determinam o seu amanhã!", True)]],
+        "end_lines": [[("Decida", False)], [("em Jesus!", True)]],
         "fixes": [("com sequências", "as consequências"), ("que o sobrevier", "que sobrevier")],
     },
     {
@@ -64,21 +64,21 @@ CLIPS = [
     },
     {
         "file": "04-muitas-vozes.mp4", "start": 1617.30, "end": 1661.05,
-        "title": [[("Muitas vozes.", False)], [("Qual você tem ouvido?", True)]],
-        "end_lines": [[("A voz", False)], [("de Deus.", True)]],
+        "title": [[("Muitas vozes.", False)], [("Ouça a voz de Deus!", True)]],
+        "end_lines": [[("Ouça a voz", False)], [("de Deus!", True)]],
         "fixes": [("tem ecoado,", "têm ecoado,"), ("ouvidos, a voz", "ouvidos à voz"),
                   ("diz, a igreja,", "diz à igreja.")],
     },
     {
         "file": "05-nao-basta-comecar-bem.mp4", "start": 1944.05, "end": 1968.70,
         "title": [[("Não basta", False)], [("começar bem.", True)]],
-        "end_lines": [[("Termine", False)], [("bem.", True)]],
+        "end_lines": [[("Ouça a voz", False)], [("de Deus!", True)]],
         "fixes": [("a fé,", "a fé.")],
     },
     {
         "file": "06-e-a-sua-familia.mp4", "start": 2314.00, "end": 2334.60,
         "title": [[("Não é o dólar.", False)], [("É a sua família.", True)]],
-        "end_lines": [[("Sua", False)], [("família.", True)]],
+        "end_lines": [[("Uma só família,", False)], [("uma só voz!", True)]],
         "fixes": [("Paulo escrevendo, Timóteo diz,", "Paulo, escrevendo a Timóteo, diz,"),
                   ("transpassaram assim mesmo,", "traspassaram a si mesmos"),
                   ("da fé,", "da fé.")],
